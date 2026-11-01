@@ -1,0 +1,31 @@
+{
+  "name": "05_보스_검사99x3_vs_화염룡",
+  "description": "보스 페이즈(AI_BOSS_DRAGON) 확인",
+  "masterSeed": 12345,
+  "runs": 50,
+  "maxBattleSec": 300,
+  "spawnDistance": 10,
+  "spawnSpacing": 1.5,
+  "teams": [
+    {
+      "teamId": 0,
+      "name": "아군",
+      "members": [
+        {
+          "definitionId": "20099",
+          "count": 3
+        }
+      ]
+    },
+    {
+      "teamId": 1,
+      "name": "적군",
+      "members": [
+        {
+          "definitionId": "10183",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

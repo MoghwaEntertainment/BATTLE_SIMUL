@@ -1,0 +1,7 @@
+﻿<Solution>
+  <Project Path="ARPG.Core.csproj" />
+  <Project Path="ARPG.Runtime.csproj" />
+  <Project Path="Assembly-CSharp.csproj" />
+  <Project Path="ARPG.Editor.csproj" />
+  <Project Path="Assembly-CSharp-Editor.csproj" />
+</Solution>

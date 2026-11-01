@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 1,
+  "toolVersion": "1.0.0",
+  "generatedAt": "2026-11-01T16:05:28",
+  "dataHash": "e3b32153437ff369",
+  "formulaPolicy": "openpyxl 캐시값 사용(재계산 아님)",
+  "sources": [
+    {
+      "file": "SKILL.xlsm",
+      "sha256": "1a1dc7983eb64842b67157f6653ccc768db2773eafae893af4ea95c7544eea9e",
+      "modified": "2026-11-01T16:04:55"
+    },
+    {
+      "file": "EX_PC_STAT.xlsm",
+      "sha256": "8e3ad71b0af0b698214c99c33b538c3e9b3097ba8d06bea9b6e979330ce5f748",
+      "modified": "2026-08-13T13:53:23"
+    },
+    {
+      "file": "MONSTER.xlsm",
+      "sha256": "859dc4c823e485ad35d206e3edb215d9a6a78856364eb58dc8313f4e5a0bd4a0",
+      "modified": "2026-11-01T16:04:59"
+    },
+    {
+      "file": "ITEM.xlsm",
+      "sha256": "536dd31fc53f223c50c35b2eb339642918e92fc1344c42e671183d210554b978",
+      "modified": "2026-08-13T03:29:41"
+    },
+    {
+      "file": "AI.xlsx",
+      "sha256": "99d9dd67b812dd94ef54df5b47bda6d9212a17c39ee3a792c25be8d2955ac7a5",
+      "modified": "2026-11-01T15:16:44"
+    }
+  ],
+  "outputs": [
+    {
+      "file": "characters.json",
+      "sha256": "cbdda485a0b251b317880fa206d4f9c8e89574d3673b1b9f32780b93c43e077b"
+    },
+    {
+      "file": "skills.json",
+      "sha256": "ed69b3e397fb61633fabe1b945fa47948dd36ef5c90233462c5bf4577a6ecd0f"
+    },
+    {
+      "file": "movesets.json",
+      "sha256": "cf5a3952ef53e9f9e236e6d8a7126e8a7100a475750f83a3adea83e0ded22bc0"
+    },
+    {
+      "file": "ai.json",
+      "sha256": "01fc20b3673d98bf7101d5413934b6402e91f68ae298813d7f4c47765a89ddab"
+    }
+  ],
+  "counts": {
+    "characters": 1398,
+    "charactersEnabled": 1398,
+    "skills": 1808,
+    "skillsInvalid": 11,
+    "movesetNodes": 1751,
+    "aiBehaviors": 200
+  },
+  "errorCount": 0,
+  "disabledCount": 11,
+  "warningCount": 8
+}

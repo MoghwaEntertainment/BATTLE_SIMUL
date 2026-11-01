@@ -1,0 +1,19 @@
+{
+    "name": "ARPG.Editor",
+    "rootNamespace": "ARPG.EditorTools",
+    "references": [
+        "ARPG.Core",
+        "ARPG.Runtime"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
