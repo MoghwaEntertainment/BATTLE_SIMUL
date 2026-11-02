@@ -32,6 +32,8 @@ namespace ARPG.Runtime
                 case BattleEventType.GuardBroken:
                 case BattleEventType.Staggered:
                 case BattleEventType.StatusApplied:
+                case BattleEventType.BuffApplied:
+                case BattleEventType.BuffExpired:
                 case BattleEventType.PhaseChanged:
                 case BattleEventType.EntityDied:
                 case BattleEventType.BattleEnded:
@@ -124,6 +126,17 @@ namespace ARPG.Runtime
                 case BattleEventType.PhaseChanged:
                     sb.Append(Who(info, e.ActorId)).Append(" 페이즈 ").Append(e.Result).Append(" | ").Append(e.Reason);
                     break;
+                case BattleEventType.BuffApplied:
+                    sb.Append(Who(info, e.ActorId)).Append(' ').Append(e.StatusId).Append(e.Result == "REFRESH" ? " 갱신" : " 적용")
+                      .Append(" ← ").Append(Who(info, e.TargetId)).Append(' ').Append(e.SkillId).Append(" | ").Append(e.Reason);
+                    if (!double.IsNaN(e.ActorHpBefore) && e.ActorHpBefore != e.ActorHpAfter)
+                        sb.Append(" | HP ").Append(N(e.ActorHpBefore)).Append(" → ").Append(N(e.ActorHpAfter));
+                    break;
+                case BattleEventType.BuffExpired:
+                    sb.Append(Who(info, e.ActorId)).Append(' ').Append(e.StatusId).Append(" 해제 | ").Append(e.Reason);
+                    if (!double.IsNaN(e.ActorHpBefore) && e.ActorHpBefore != e.ActorHpAfter)
+                        sb.Append(" | HP ").Append(N(e.ActorHpBefore)).Append(" → ").Append(N(e.ActorHpAfter));
+                    break;
                 case BattleEventType.TargetChanged:
                     sb.Append(Who(info, e.ActorId)).Append(" 타겟 → ").Append(Who(info, e.TargetId));
                     break;
@@ -156,11 +169,14 @@ namespace ARPG.Runtime
         public int ScreenCapacity = 200;
         private BattleStartInfo _info;
         public readonly LinkedList<string> Recent = new LinkedList<string>();
+        /// <summary>화면 로그가 바뀔 때마다 1 증가(로그창이 새 줄을 알아채 맨 아래로 따라가는 데 사용).</summary>
+        public long Version { get; private set; }
 
         public void OnBattleStarted(BattleStartInfo info)
         {
             _info = info;
             Recent.Clear();
+            Version++;
         }
 
         public void OnEvent(in BattleEvent e)
@@ -174,6 +190,7 @@ namespace ARPG.Runtime
             {
                 Recent.AddLast(line.Replace('\n', ' '));
                 while (Recent.Count > ScreenCapacity) Recent.RemoveFirst();
+                Version++;
             }
         }
 

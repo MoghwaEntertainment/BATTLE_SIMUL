@@ -24,6 +24,9 @@ namespace ARPG.Core.Events
         TargetChanged,
         EntityDied,
         BattleEnded,
+        // 아래는 버프 추가(2026-11-02). 기존 값의 번호가 바뀌지 않도록 끝에 붙인다(이벤트 해시 호환).
+        BuffApplied,     // ActorId = 받은 개체, TargetId = 건 개체, StatusId = BUFF_<id>, Result = APPLY/REFRESH
+        BuffExpired,     // ActorId = 받은 개체, StatusId = BUFF_<id>
     }
 
     /// <summary>

@@ -1,0 +1,101 @@
+# =========================================================
+# BATTLE_SIMUL 저장소 .gitignore
+# 실제 Unity 프로젝트: Unity_Project/BalanceMaker
+# =========================================================
+
+# ---------------------------------------------------------
+# 1. Unity 자동 생성 폴더 (BalanceMaker)
+# ---------------------------------------------------------
+/Unity_Project/BalanceMaker/[Ll]ibrary/
+/Unity_Project/BalanceMaker/[Tt]emp/
+/Unity_Project/BalanceMaker/[Oo]bj/
+/Unity_Project/BalanceMaker/[Bb]uild/
+/Unity_Project/BalanceMaker/[Bb]uilds/
+/Unity_Project/BalanceMaker/[Ll]ogs/
+/Unity_Project/BalanceMaker/[Uu]ser[Ss]ettings/
+/Unity_Project/BalanceMaker/[Mm]emoryCaptures/
+/Unity_Project/BalanceMaker/[Rr]ecordings/
+
+# ---------------------------------------------------------
+# 2. Unity_Project 폴더 자체를 Unity 로 열어서 생긴 빈 프로젝트
+#    (Library/Bee/APIUpdater 등 잡파일의 원인)
+# ---------------------------------------------------------
+/Unity_Project/[Aa]ssets/
+/Unity_Project/[Ll]ibrary/
+/Unity_Project/[Tt]emp/
+/Unity_Project/[Oo]bj/
+/Unity_Project/[Ll]ogs/
+/Unity_Project/[Pp]ackages/
+/Unity_Project/[Pp]roject[Ss]ettings/
+/Unity_Project/[Uu]ser[Ss]ettings/
+/Unity_Project/*.slnx
+/Unity_Project/*.sln
+
+# ---------------------------------------------------------
+# 3. IDE 자동 생성 파일 (Unity 가 다시 만들어 줌)
+# ---------------------------------------------------------
+.vs/
+.idea/
+.consulo/
+*.csproj
+*.unityproj
+*.sln
+*.slnx
+*.suo
+*.tmp
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+*.pdb.meta
+*.mdb.meta
+.vsconfig
+ExportedObj/
+
+# Rider 플러그인 자동 생성
+/Unity_Project/BalanceMaker/[Aa]ssets/Plugins/Editor/JetBrains*
+
+# ---------------------------------------------------------
+# 4. Unity 빌드/크래시 산출물
+# ---------------------------------------------------------
+sysinfo.txt
+crashlytics-build.properties
+*.apk
+*.aab
+*.unitypackage
+*.app
+*.stackdump
+
+# ---------------------------------------------------------
+# 5. Python (Tools/ExcelExport, venv)
+# ---------------------------------------------------------
+__pycache__/
+*.py[cod]
+venv/
+.venv/
+
+# ---------------------------------------------------------
+# 6. 엑셀·오피스 임시 파일 (파일 열려 있을 때 생기는 잠금 파일)
+# ---------------------------------------------------------
+~$*
+*.~lock.*#
+
+# ---------------------------------------------------------
+# 7. OS 잡파일
+# ---------------------------------------------------------
+Thumbs.db
+ehthumbs.db
+desktop.ini
+$RECYCLE.BIN/
+.DS_Store
+
+# ---------------------------------------------------------
+# (선택) 수동 백업 폴더 — git 이력으로 대신할 거면 주석 해제
+# ---------------------------------------------------------
+# /Unity_Plan/backup/
+# /Table_ARPG/backup/

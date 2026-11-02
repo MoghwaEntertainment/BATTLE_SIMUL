@@ -78,6 +78,33 @@ namespace ARPG.Core
         public int nameKey;
     }
 
+    /// <summary>buffs.json (BUFF.xlsx 의 BUFF 시트). 버프 하나 = 능력치 변경 여러 개.</summary>
+    [Serializable]
+    public sealed class BuffFileDto
+    {
+        public int schemaVersion;
+        public BuffDto[] buffs;
+    }
+
+    [Serializable]
+    public sealed class BuffDto
+    {
+        public int id;                 // Buff_ID (SKILL 의 Buff_ID 가 가리킴)
+        public bool enabled;
+        public string name;            // ~Name
+        public BuffEffectDto[] effects;
+    }
+
+    [Serializable]
+    public sealed class BuffEffectDto
+    {
+        public int abilityId;          // ABILITY Index (예: 17 = 물리 공격력)
+        public string stat;            // ABILITY ENUM_Name = 캐릭터 스탯 이름 (예: PHYSICAL_ATTACK)
+        public string name;            // ABILITY ~name (표시용)
+        public double value;           // 더할 수치(스탯과 같은 단위, 음수 = 감소)
+        public int dataType;           // ABILITY Data_Type (0 정수, 1 비율 10만분율) - 표시용
+    }
+
     [Serializable]
     public sealed class MovesetFileDto
     {

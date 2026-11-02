@@ -51,6 +51,25 @@ namespace ARPG.Core
         Frost = 3,  // 빙결
     }
 
+    /// <summary>SKILL Buff_Target. Default = 미설정(0) → Skill_Type 으로 결정(BUFF 는 자신, 그 외는 적).</summary>
+    public enum BuffTarget
+    {
+        Default = 0,
+        Self,
+        Enemy,
+        Ally,
+    }
+
+    /// <summary>SKILL Trigger_Condition 중 시뮬레이터가 처리하는 것. Default(NONE) = ATTACK 은 적중 시, 그 외는 시전 시.</summary>
+    public enum BuffTrigger
+    {
+        Default = 0,
+        OnCast,
+        OnHit,
+        OnEnd,
+        Unsupported,   // ON_KILL / ON_GUARD / ON_DAMAGED 등(미구현, 걸리지 않음)
+    }
+
     public enum BattleEndReason
     {
         None = 0,
@@ -115,6 +134,29 @@ namespace ARPG.Core
                 case "DEBUFF": t = SkillType.DEBUFF; return true;
                 case "DEFENCE": t = SkillType.DEFENCE; return true;
                 default: t = SkillType.ATTACK; return false;
+            }
+        }
+
+        public static BuffTarget ParseBuffTarget(string s)
+        {
+            switch ((s ?? string.Empty).Trim().ToUpperInvariant())
+            {
+                case "SELF": return BuffTarget.Self;
+                case "ENEMY": return BuffTarget.Enemy;
+                case "ALLY": return BuffTarget.Ally;
+                default: return BuffTarget.Default; // NONE, 0, 빈칸
+            }
+        }
+
+        public static BuffTrigger ParseBuffTrigger(string s)
+        {
+            switch ((s ?? string.Empty).Trim().ToUpperInvariant())
+            {
+                case "": case "0": case "NONE": return BuffTrigger.Default;
+                case "ON_CAST": return BuffTrigger.OnCast;
+                case "ON_HIT": return BuffTrigger.OnHit;
+                case "ON_END": return BuffTrigger.OnEnd;
+                default: return BuffTrigger.Unsupported;
             }
         }
 

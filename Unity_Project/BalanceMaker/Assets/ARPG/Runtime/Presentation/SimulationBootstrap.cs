@@ -23,14 +23,23 @@ namespace ARPG.Runtime
 
     /// <summary>
     /// 타격/가드/회피/빗나감 이벤트 → 공격 연출(막대·착탄)과 화면 점멸. 화면 효과만 담당하며 판정에 관여하지 않는다.
-    /// 공격 연출이 켜져 있으면 막대가 닿는 순간 점멸하고, 꺼져 있으면 이벤트 즉시 점멸한다.
+    /// 공격 연출이 켜져 있으면 투사체가 닿는 순간 점멸하고, 꺼져 있으면 이벤트 즉시 점멸한다.
+    /// 투사체 모양은 이벤트의 SkillId 로 스킬을 찾아 첫 Damage_Type 으로 정한다(AttackLooks).
     /// </summary>
     public sealed class ViewEventSink : IBattleEventSink
     {
         public Dictionary<int, CombatantView> Views;
         public AttackFx Fx;
+        public DataCatalog Catalog;
 
         public void OnBattleStarted(BattleStartInfo info) { }
+
+        private AttackLook LookOf(in BattleEvent e)
+        {
+            SkillDefinition s = null;
+            if (Catalog != null && e.SkillId != null) Catalog.Skills.TryGetValue(e.SkillId, out s);
+            return AttackLooks.For(s);
+        }
 
         public void OnEvent(in BattleEvent e)
         {
@@ -43,21 +52,21 @@ namespace ARPG.Runtime
                     Views.TryGetValue(e.TargetId, out v);
                     if (e.Result == "MISS")
                     {
-                        if (Fx != null) Fx.Spawn(AttackFxKind.Miss, atk, v, e.Tick, e.DistanceM);
+                        if (Fx != null) Fx.Spawn(AttackFxKind.Miss, LookOf(in e), atk, v, e.Tick, e.DistanceM);
                         break;
                     }
                     if (v == null) break;
-                    if (Fx == null || !Fx.Spawn(AttackFxKind.Hit, atk, v, e.Tick, e.DistanceM)) v.FlashHit();
+                    if (Fx == null || !Fx.Spawn(AttackFxKind.Hit, LookOf(in e), atk, v, e.Tick, e.DistanceM)) v.FlashHit();
                     break;
                 case BattleEventType.Guarded:
                     Views.TryGetValue(e.ActorId, out atk);
                     if (!Views.TryGetValue(e.TargetId, out v) || v == null) break;
-                    if (Fx == null || !Fx.Spawn(AttackFxKind.Guard, atk, v, e.Tick, e.DistanceM)) v.FlashGuard();
+                    if (Fx == null || !Fx.Spawn(AttackFxKind.Guard, LookOf(in e), atk, v, e.Tick, e.DistanceM)) v.FlashGuard();
                     break;
                 case BattleEventType.HitAvoided:
                     Views.TryGetValue(e.ActorId, out atk);
                     Views.TryGetValue(e.TargetId, out v);
-                    if (Fx != null && v != null) Fx.Spawn(AttackFxKind.Avoided, atk, v, e.Tick, e.DistanceM);
+                    if (Fx != null && v != null) Fx.Spawn(AttackFxKind.Avoided, LookOf(in e), atk, v, e.Tick, e.DistanceM);
                     break;
                 case BattleEventType.StatusApplied:
                 case BattleEventType.StatusTick:
@@ -225,6 +234,7 @@ namespace ARPG.Runtime
         {
             StopObserve();
             _data = DataLoader.Load();
+            _viewSink.Catalog = _data.Catalog;
             _scenarioFiles = ScenarioStore.ListFiles();
             if (_data.Catalog == null)
             {

@@ -46,6 +46,34 @@ namespace ARPG.Core
         public int ProjectileId;
         public DamageType[] DamageTypes;
 
+        // ---- 버프 연결(SKILL Additional_Effect) ----
+        public int BuffId;                 // 0 = 없음
+        public BuffDefinition Buff;        // BUFF 표에서 찾은 정의(없거나 비활성이면 null)
+        public BuffTarget BuffTarget;      // 미설정이면 Default
+        public BuffTrigger BuffTrigger;    // 미설정이면 Default
+        public double BuffChance;          // 0~1 (Trigger_Chance 10만분율 → 배율). 0 = 미입력
+        public double BuffDurationMs;      // 0 이면 걸리지 않음
+
+        /// <summary>실제로 쓰는 대상: 미설정이면 BUFF 스킬은 자신, 그 외(ATTACK/DEBUFF)는 적.</summary>
+        public BuffTarget EffectiveBuffTarget
+        {
+            get
+            {
+                if (BuffTarget != BuffTarget.Default) return BuffTarget;
+                return Type == SkillType.BUFF ? BuffTarget.Self : BuffTarget.Enemy;
+            }
+        }
+
+        /// <summary>실제로 쓰는 발동 시점: 미설정이면 타격이 있는 ATTACK 스킬은 적중 시, 그 외는 시전 시.</summary>
+        public BuffTrigger EffectiveBuffTrigger
+        {
+            get
+            {
+                if (BuffTrigger != BuffTrigger.Default) return BuffTrigger;
+                return IsAttack && HasHits ? BuffTrigger.OnHit : BuffTrigger.OnCast;
+            }
+        }
+
         public bool HasHits { get { return HitTimesMs != null && HitTimesMs.Length > 0 && DamageTypes != null && DamageTypes.Length > 0; } }
         public bool IsChargeAttack { get { return Slot == "CHARGE_ATK"; } }
         public bool IsAttack { get { return Type == SkillType.ATTACK; } }
@@ -55,6 +83,29 @@ namespace ARPG.Core
 
         public double FirstHitMs { get { return HitTimesMs != null && HitTimesMs.Length > 0 ? HitTimesMs[0] : AniTimeMs; } }
         public double LastHitMs { get { return HitTimesMs != null && HitTimesMs.Length > 0 ? HitTimesMs[HitTimesMs.Length - 1] : 0; } }
+    }
+
+    /// <summary>BUFF 표 한 줄. 걸려 있는 동안 Stats[i] 에 Values[i] 를 더한다.</summary>
+    public sealed class BuffDefinition
+    {
+        public int Id;
+        public bool Enabled;
+        public string Name;
+        public StatId[] Stats = new StatId[0];
+        public double[] Values = new double[0];
+        public int[] AbilityIds = new int[0];
+
+        /// <summary>로그용 요약. 예: "광폭화 SLASH_ATTACK_PCT +20000".</summary>
+        public string Describe()
+        {
+            var sb = new System.Text.StringBuilder(Name ?? ("BUFF_" + Id));
+            for (int i = 0; i < Stats.Length; i++)
+            {
+                sb.Append(i == 0 ? " " : ", ").Append(Stats[i]).Append(' ')
+                  .Append(Values[i] >= 0 ? "+" : "").Append(Values[i].ToString("0.###", System.Globalization.CultureInfo.InvariantCulture));
+            }
+            return sb.ToString();
+        }
     }
 
     public sealed class MovesetNode
@@ -128,6 +179,7 @@ namespace ARPG.Core
         public readonly Dictionary<string, ActionDefinition> Actions = new Dictionary<string, ActionDefinition>(StringComparer.Ordinal);
         public readonly Dictionary<string, AiProfile> AiProfiles = new Dictionary<string, AiProfile>(StringComparer.Ordinal);
         public readonly Dictionary<string, MovesetNode> MovesetNodes = new Dictionary<string, MovesetNode>(StringComparer.Ordinal);
+        public readonly Dictionary<int, BuffDefinition> Buffs = new Dictionary<int, BuffDefinition>();
         private readonly Dictionary<string, MovesetNode> _movesetLookup = new Dictionary<string, MovesetNode>(StringComparer.Ordinal);
         private readonly HashSet<string> _movesetGroups = new HashSet<string>(StringComparer.Ordinal);
         public readonly List<DataIssue> Issues = new List<DataIssue>();
@@ -151,6 +203,13 @@ namespace ARPG.Core
 
         public static DataCatalog Build(CharacterFileDto chars, SkillFileDto skills, MovesetFileDto movesets, AiFileDto ai, DataManifestDto manifest)
         {
+            return Build(chars, skills, movesets, ai, manifest, null);
+        }
+
+        /// <param name="buffs">buffs.json. 없으면(null) 버프 없이 동작하고, 버프를 쓰는 스킬만 경고한다.</param>
+        public static DataCatalog Build(CharacterFileDto chars, SkillFileDto skills, MovesetFileDto movesets, AiFileDto ai, DataManifestDto manifest,
+                                        BuffFileDto buffs)
+        {
             var cat = new DataCatalog();
             if (manifest != null)
             {
@@ -158,10 +217,69 @@ namespace ARPG.Core
                 cat.DataGeneratedAt = manifest.generatedAt ?? "";
             }
             cat.BuildSkills(skills);
+            cat.BuildBuffs(buffs);
+            cat.LinkSkillBuffs();
             cat.BuildMovesets(movesets);
             cat.BuildAi(ai);
             cat.BuildCharacters(chars);
             return cat;
+        }
+
+        private void BuildBuffs(BuffFileDto file)
+        {
+            if (file == null || file.buffs == null) return;
+            foreach (var b in file.buffs)
+            {
+                if (b == null || b.id <= 0) continue;
+                var stats = new List<StatId>();
+                var values = new List<double>();
+                var ids = new List<int>();
+                if (b.effects != null)
+                {
+                    foreach (var e in b.effects)
+                    {
+                        if (e == null) continue;
+                        StatId sid;
+                        if (!Enum.TryParse(e.stat ?? string.Empty, false, out sid) || sid == StatId.COUNT)
+                        {
+                            Issue("buffs.json " + b.id, "코어가 모르는 스탯 " + e.stat + " (무시)", false);
+                            continue;
+                        }
+                        stats.Add(sid);
+                        values.Add(e.value);
+                        ids.Add(e.abilityId);
+                    }
+                }
+                if (Buffs.ContainsKey(b.id))
+                {
+                    Issue("buffs.json " + b.id, "중복 Buff_ID (뒤의 것 무시)", false);
+                    continue;
+                }
+                Buffs[b.id] = new BuffDefinition
+                {
+                    Id = b.id,
+                    Enabled = b.enabled,
+                    Name = string.IsNullOrEmpty(b.name) ? "BUFF_" + b.id : b.name,
+                    Stats = stats.ToArray(),
+                    Values = values.ToArray(),
+                    AbilityIds = ids.ToArray(),
+                };
+            }
+        }
+
+        /// <summary>스킬의 Buff_ID → 버프 정의. 없거나 비활성이면 경고하고 효과 없이 둔다.</summary>
+        private void LinkSkillBuffs()
+        {
+            foreach (var s in Skills.Values)
+            {
+                if (s.BuffId <= 0) continue;
+                BuffDefinition b;
+                if (!Buffs.TryGetValue(s.BuffId, out b)) { Issue("skills.json " + s.Id, "Buff_ID " + s.BuffId + " 가 buffs.json 에 없음 -> 효과 없음", false); continue; }
+                if (!b.Enabled) { Issue("skills.json " + s.Id, "Buff_ID " + s.BuffId + " 비활성 -> 효과 없음", false); continue; }
+                if (s.BuffDurationMs <= 0) { Issue("skills.json " + s.Id, "Buff_Duration 0 -> 버프 걸지 않음", false); continue; }
+                if (s.BuffTrigger == BuffTrigger.Unsupported) { Issue("skills.json " + s.Id, "미구현 Trigger_Condition -> 버프 걸지 않음", false); continue; }
+                s.Buff = b;
+            }
         }
 
         private void BuildSkills(SkillFileDto file)
@@ -210,6 +328,12 @@ namespace ARPG.Core
                     HitCount = s.hitCount,
                     ProjectileId = s.projectileId,
                     DamageTypes = types.ToArray(),
+                    BuffId = s.buffId,
+                    BuffTarget = EnumText.ParseBuffTarget(s.buffTarget),
+                    BuffTrigger = EnumText.ParseBuffTrigger(s.triggerCondition),
+                    // 10만분율 → 배율 변환은 변환기에서 끝남. 0(미입력)의 처리는 rules.buffZeroChanceAlways.
+                    BuffChance = Math.Max(0.0, Math.Min(1.0, s.triggerChance)),
+                    BuffDurationMs = s.buffDurationMs,
                 };
                 // 코어 측 이중 검증: 타격 목록 길이 일치(구현계획 3.3-6)
                 if (def.HitCount > 0 && (def.HitTimesMs.Length != def.HitCount || def.MotionValues.Length != def.HitCount))

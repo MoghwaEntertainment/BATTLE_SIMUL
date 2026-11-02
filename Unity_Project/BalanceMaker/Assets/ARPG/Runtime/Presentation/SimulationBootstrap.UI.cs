@@ -18,6 +18,12 @@ namespace ARPG.Runtime
         private const float RightWidth = 340f;
         private Rect _leftRect, _rightRect, _logRect, _pickerRect = new Rect(460, 80, 520, 560);
         private Vector2 _leftScroll, _rightScroll, _logScroll, _pickerScroll;
+        // 로그창: 오래된 줄이 위, 최신이 아래. 맨 아래를 보고 있으면 새 줄을 따라 내려가고, 위로 올려 읽는 중이면 멈춘다
+        private const int LogLines = 60;
+        private const float LogBottomFollowScroll = 1e7f;
+        private bool _logFollow = true;
+        private long _logSeenVersion = -1;
+        private float _logContentH;
         private bool _pickerOpen;
         private int _pickerTeam;
         private string _pickerSearch = "";
@@ -25,6 +31,7 @@ namespace ARPG.Runtime
         private string _seedText = "12345", _runsText = "100", _maxSecText = "300", _spawnText = "10", _firstNText = "3", _nameText = "";
         private bool _showLog = true;
         private GUIStyle _wrap, _small, _bold, _mono, _center;
+        private GUIStyle _pickRow, _nameTag;   // 캐릭터 선택 줄(한 줄 고정) · 머리 위 이름(줄바꿈 없음, 잘림 없음)
 
         // 화면 배율(글자·버튼·패널 크기). 글꼴 크기를 직접 키워 글자가 흐려지지 않게 한다.
         private static readonly float[] UiScaleSteps = { 0.8f, 0.9f, 1f, 1.15f, 1.3f, 1.5f, 1.75f, 2f };
@@ -40,6 +47,12 @@ namespace ARPG.Runtime
         private float _leftW = LeftWidth, _rightW = RightWidth;
         private readonly List<CharacterDefinition> _pickerList = new List<CharacterDefinition>();
         private string _pickerCacheKey;
+        // 캐릭터 선택 창 가상 스크롤: 전체 목록을 다 보여 주되, 화면에 보이는 줄만 버튼으로 그린다.
+        // 보이는 범위는 Layout 단계에서만 정한다(같은 프레임의 Layout·Repaint·입력 이벤트가 같은 개수의 줄을 그려야 GUILayout 오류가 없다)
+        private int _pickerFirst, _pickerLast;
+        private float _pickerRowH = 22f, _pickerViewH = 400f;
+        private static readonly GUIContent PickerProbe = new GUIContent("가Ag");
+        private readonly GUIContent _nameContent = new GUIContent();
 
         private void SyncScenarioTexts()
         {
@@ -72,6 +85,12 @@ namespace ARPG.Runtime
                 _bold = new GUIStyle(_skin.label) { fontStyle = FontStyle.Bold };
                 _mono = new GUIStyle(_skin.label) { wordWrap = false };
                 _center = new GUIStyle(_skin.label) { alignment = TextAnchor.MiddleCenter };
+                _pickRow = new GUIStyle(_skin.label) { wordWrap = false, clipping = TextClipping.Clip, margin = new RectOffset(4, 4, 0, 0) };
+                _nameTag = new GUIStyle(_skin.label)
+                {
+                    alignment = TextAnchor.MiddleCenter, wordWrap = false, clipping = TextClipping.Overflow,
+                    padding = new RectOffset(2, 2, 1, 1), margin = new RectOffset(0, 0, 0, 0)
+                };
                 _baseFixedHeight.Clear();
                 foreach (var st in TextStyles()) if (st != null && !_baseFixedHeight.ContainsKey(st)) _baseFixedHeight[st] = st.fixedHeight;
                 _appliedUiScale = -1f;
@@ -112,6 +131,8 @@ namespace ARPG.Runtime
             _small.fontSize = small;
             _mono.fontSize = small;
             _center.fontSize = small;
+            _pickRow.fontSize = normal;
+            _nameTag.fontSize = small;
         }
 
         private IEnumerable<GUIStyle> TextStyles()
@@ -299,7 +320,7 @@ namespace ARPG.Runtime
             {
                 _mode = (SimMode)mode;
                 if (_mode == SimMode.Observe) PrepareObserve(_observeBattleIndex);
-                else StopObserve();
+                else { _autoNext = false; StopObserve(); }
             }
 
             if (_mode == SimMode.Observe) DrawObserveControls();
@@ -504,6 +525,13 @@ namespace ARPG.Runtime
             if (c.PoisonActive) sb.Append(" 중독(").Append(c.PoisonTicksLeft).Append("회)");
             if (c.FrostActive(t)) sb.Append(" 빙결(").Append(c.FrostEndTick - t).Append("t)");
             sb.Append('\n');
+            if (c.Buffs.Count > 0)
+            {
+                sb.Append("버프:");
+                foreach (var ab in c.Buffs)
+                    sb.Append(' ').Append(ab.Def.Name).Append("(#").Append(ab.Def.Id).Append(", ").Append(Math.Max(0, ab.EndTick - t)).Append("t)");
+                sb.Append('\n');
+            }
             sb.Append("누적 상처 ").Append(c.Buildup[(int)StatusKind.Wound].ToString("0.0", Inv)).Append("/").Append(c.Stat(StatId.WOUND_RESIST).ToString("0", Inv))
               .Append("  중독 ").Append(c.Buildup[(int)StatusKind.Poison].ToString("0.0", Inv)).Append("/").Append(c.Stat(StatId.POISON_RESIST).ToString("0", Inv))
               .Append("  빙결 ").Append(c.Buildup[(int)StatusKind.Frost].ToString("0.0", Inv)).Append("/").Append(c.Stat(StatId.FROST_RESIST).ToString("0", Inv)).Append('\n');
@@ -548,18 +576,41 @@ namespace ARPG.Runtime
         private void DrawLogPanel()
         {
             GUI.Box(_logRect, GUIContent.none);
-            GUILayout.BeginArea(new Rect(_logRect.x + 4, _logRect.y + 4, _logRect.width - 8, _logRect.height - 8));
-            _logScroll = GUILayout.BeginScrollView(_logScroll);
-            var node = _console.Recent.Last;
-            int n = 0;
-            while (node != null && n < 60)
+            var area = new Rect(_logRect.x + 4, _logRect.y + 4, _logRect.width - 8, _logRect.height - 8);
+            var lines = _console.Recent;
+            if (lines.Count == 0) _logFollow = true;                       // 새 회차(로그 비움) → 다시 맨 아래 따라가기
+
+            // 새 줄이 들어왔고 맨 아래를 보고 있었다면 맨 아래로(스크롤 위치는 Layout 단계에서만 바꾼다)
+            if (Event.current.type == EventType.Layout && _console.Version != _logSeenVersion)
             {
-                GUILayout.Label(node.Value, _mono);
-                node = node.Previous;
-                n++;
+                _logSeenVersion = _console.Version;
+                if (_logFollow) _logScroll.y = LogBottomFollowScroll;      // 큰 값 = 맨 아래(스크롤 뷰가 끝으로 맞춤)
             }
+
+            GUILayout.BeginArea(area);
+            _logScroll = GUILayout.BeginScrollView(_logScroll);
+            // 최근 LogLines 줄을 오래된 것부터(위) 최신(아래) 순서로
+            var node = lines.Last;
+            for (int n = 1; node != null && node.Previous != null && n < LogLines; n++) node = node.Previous;
+            for (; node != null; node = node.Next) GUILayout.Label(node.Value, _mono);
+            if (Event.current.type == EventType.Repaint && lines.Count > 0) _logContentH = GUILayoutUtility.GetLastRect().yMax;
             GUILayout.EndScrollView();
             GUILayout.EndArea();
+
+            // 사용자가 위로 올려 읽는 중인지 판단(맨 아래에서 4px 이내면 따라가기 유지)
+            if (Event.current.type == EventType.Repaint)
+                _logFollow = _logScroll.y >= Mathf.Max(0f, _logContentH - area.height) - 4f;
+
+            // 위로 올려 둔 동안에는 '최신으로' 버튼
+            if (!_logFollow && lines.Count > 0)
+            {
+                var b = new Rect(_logRect.xMax - S(96) - 22, _logRect.yMax - S(24) - 22, S(96), S(24)); // 오른쪽·아래 스크롤바를 피한 위치
+                if (GUI.Button(b, "▼ 최신으로"))
+                {
+                    _logFollow = true;
+                    _logScroll.y = LogBottomFollowScroll;
+                }
+            }
         }
 
         // ------------------------------------------------------------------ 머리 위 이름
@@ -572,9 +623,14 @@ namespace ARPG.Runtime
                 if (!_views.TryGetValue(c.EntityId, out v) || v == null) continue;
                 Vector3 sp = _cam.WorldToScreenPoint(v.transform.position + Vector3.up * 2.7f);
                 if (sp.z < 0) continue;
-                var r = new Rect(sp.x - S(70), Screen.height - sp.y - S(18), S(140), S(18));
+                // 칸 크기를 글자에 맞춘다(이전: 폭 140·높이 18 고정 → 긴 이름이 두 줄로 접히고 위아래가 잘림)
+                _nameContent.text = c.Label + " " + c.Def.DisplayName;
+                Vector2 size = _nameTag.CalcSize(_nameContent);
+                var r = new Rect(Mathf.Round(sp.x - size.x * 0.5f), Mathf.Round(Screen.height - sp.y - size.y), Mathf.Ceil(size.x), Mathf.Ceil(size.y));
+                GUI.color = new Color(0f, 0f, 0f, 0.8f);                       // 1px 그림자: 밝은 바닥 위에서도 읽히게
+                GUI.Label(new Rect(r.x + 1, r.y + 1, r.width, r.height), _nameContent, _nameTag);
                 GUI.color = c.Dead ? Color.gray : Color.white;
-                GUI.Label(r, c.Label + " " + c.Def.DisplayName, _center);
+                GUI.Label(r, _nameContent, _nameTag);
             }
             GUI.color = Color.white;
         }
@@ -592,8 +648,10 @@ namespace ARPG.Runtime
             if (GUILayout.Button("닫기", W(48))) _pickerOpen = false;
             GUILayout.EndHorizontal();
             string key = _pickerSearch + "|" + _pickerPcs + "|" + _pickerMonsters;
-            if (key != _pickerCacheKey)
+            bool layout = Event.current.type == EventType.Layout;
+            if (key != _pickerCacheKey && layout)
             {
+                // 목록은 Layout 단계에서만 다시 만든다(개수 제한 없음 — 보이는 줄만 그리므로 수천 개도 부담 없음)
                 _pickerCacheKey = key;
                 _pickerList.Clear();
                 string q = (_pickerSearch ?? "").Trim();
@@ -603,14 +661,25 @@ namespace ARPG.Runtime
                     if (c.IsMonster ? !_pickerMonsters : !_pickerPcs) continue;
                     if (q.Length > 0 && c.DisplayName.IndexOf(q, StringComparison.OrdinalIgnoreCase) < 0 && c.Id.IndexOf(q, StringComparison.OrdinalIgnoreCase) < 0) continue;
                     _pickerList.Add(c);
-                    if (_pickerList.Count >= 300) break;
                 }
+                _pickerScroll.y = 0f;                                          // 검색이 바뀌면 맨 위부터
             }
-            GUILayout.Label(_pickerList.Count >= 300 ? "300개까지 표시(검색어로 좁히세요)" : _pickerList.Count + "개", _small);
-            _pickerScroll = GUILayout.BeginScrollView(_pickerScroll);
-            foreach (var c in _pickerList)
+            GUILayout.Label("전체 " + _pickerList.Count + "개", _small);
+            if (layout)
             {
-                if (GUILayout.Button(c.DisplayName + "  [" + c.Id + "]  Lv" + c.Level + "  HP " + c.Stat(StatId.HP).ToString("0", Inv) + "  " + c.AiProfileId, GUI.skin.label))
+                _pickerRowH = Mathf.Max(8f, Mathf.Ceil(_pickRow.CalcHeight(PickerProbe, 10000f)));
+                int total = _pickerList.Count;
+                _pickerFirst = Mathf.Clamp(Mathf.FloorToInt(_pickerScroll.y / _pickerRowH), 0, total);
+                _pickerLast = Mathf.Min(total, _pickerFirst + Mathf.CeilToInt(_pickerViewH / _pickerRowH) + 2);
+            }
+            _pickerScroll = GUILayout.BeginScrollView(_pickerScroll);
+            int count = _pickerList.Count;
+            int from = Mathf.Min(_pickerFirst, count), to = Mathf.Min(_pickerLast, count);
+            if (from > 0) GUILayout.Space(from * _pickerRowH);                // 위쪽 안 보이는 줄 자리
+            for (int i = from; i < to; i++)
+            {
+                var c = _pickerList[i];
+                if (GUILayout.Button(c.DisplayName + "  [" + c.Id + "]  Lv" + c.Level + "  HP " + c.Stat(StatId.HP).ToString("0", Inv) + "  " + c.AiProfileId, _pickRow, GUILayout.Height(_pickerRowH)))
                 {
                     var team = _scenario.GetOrAddTeam(_pickerTeam);
                     ScenarioMember existing = null;
@@ -622,7 +691,9 @@ namespace ARPG.Runtime
                     if (_mode == SimMode.Observe) PrepareObserve(0);
                 }
             }
+            if (to < count) GUILayout.Space((count - to) * _pickerRowH);      // 아래쪽 안 보이는 줄 자리(스크롤 길이 유지)
             GUILayout.EndScrollView();
+            if (Event.current.type == EventType.Repaint) _pickerViewH = Mathf.Max(_pickerRowH, GUILayoutUtility.GetLastRect().height);
             GUI.DragWindow(new Rect(0, 0, 10000, dragH));
         }
     }

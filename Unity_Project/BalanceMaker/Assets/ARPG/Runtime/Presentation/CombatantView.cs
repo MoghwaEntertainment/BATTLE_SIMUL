@@ -21,6 +21,16 @@ namespace ARPG.Runtime
         private Vector3 _weaponPivotBase;
         private Vector3 _bodyBaseScale;
 
+        // 들고 있는 무기 모양: 공격 스킬 실행 중에는 스킬의 첫 Damage_Type 모양(AttackLooks), 그 외에는 회색 막대
+        private Transform _weapon, _weaponHead, _weaponOrb;
+        private Renderer _weaponHeadR, _weaponOrbR;
+        private MeshFilter _weaponHeadMf;
+        private bool _weaponLookSet;
+        private AttackShape _weaponShape;
+        private Color _weaponColor;
+        private static readonly Color WeaponBaseColor = new Color(0.85f, 0.85f, 0.9f);
+        private const float WeaponLength = 1.1f;
+
         // 화면 보간용 행동 진행 시간(직전 tick 값 → 현재 tick 값 사이를 alpha 로 보간)
         private int _animInstance = -1;
         private long _animTick = long.MinValue;
@@ -71,8 +81,15 @@ namespace ARPG.Runtime
             pivot.localPosition = new Vector3(r + 0.1f, 1.2f, 0);
             v._weaponPivot = pivot;
             v._weaponPivotBase = pivot.localPosition;
-            var weapon = Prim(PrimitiveType.Cube, pivot, "Weapon", new Vector3(0, 0, 0.55f), new Vector3(0.07f, 0.07f, 1.1f), false);
+            var weapon = Prim(PrimitiveType.Cube, pivot, "Weapon", new Vector3(0, 0, WeaponLength * 0.5f), new Vector3(0.07f, 0.07f, WeaponLength), false);
+            v._weapon = weapon;
             v._weaponR = weapon.GetComponent<Renderer>();
+            var head = AttackLooks.MakeMeshObject(AttackLooks.ArrowHeadMesh, pivot, "WeaponHead");
+            v._weaponHead = head.transform;
+            v._weaponHeadR = head.GetComponent<Renderer>();
+            v._weaponHeadMf = head.GetComponent<MeshFilter>();
+            v._weaponOrb = Prim(PrimitiveType.Sphere, pivot, "WeaponOrb", new Vector3(0, 0, 0.75f), new Vector3(0.34f, 0.34f, 0.34f), false);
+            v._weaponOrbR = v._weaponOrb.GetComponent<Renderer>();
 
             v._shield = Prim(PrimitiveType.Cube, root.transform, "Shield", new Vector3(-r * 0.6f, 1.1f, r + 0.15f), new Vector3(0.7f, 0.8f, 0.07f), false);
             v._shieldR = v._shield.GetComponent<Renderer>();
@@ -83,7 +100,7 @@ namespace ARPG.Runtime
             v._stunRing = Prim(PrimitiveType.Cylinder, root.transform, "StunRing", new Vector3(0, 2.1f, 0), new Vector3(0.6f, 0.02f, 0.6f), false);
             v._stunR = v._stunRing.GetComponent<Renderer>();
 
-            SetColor(v._weaponR, new Color(0.85f, 0.85f, 0.9f));
+            v.SetWeaponLook(AttackLook.Default);
             SetColor(v._shieldR, new Color(0.3f, 0.9f, 0.9f));
             SetColor(v._stunR, new Color(1f, 0.9f, 0.1f));
             SetColor(v._noseR, Color.Lerp(v._teamColor, Color.white, 0.5f));
@@ -113,6 +130,47 @@ namespace ARPG.Runtime
             var m = r.material;
             if (m.HasProperty("_BaseColor")) m.SetColor("_BaseColor", c);
             if (m.HasProperty("_Color")) m.SetColor("_Color", c);
+        }
+
+        /// <summary>
+        /// 들고 있는 무기 모양 바꾸기(바뀔 때만 적용). 막대(기본·PHYSICAL·SLASH), 막대+삼각뿔 촉(RANGED·THRUST),
+        /// 막대+끝 사면체(STRIKE), 색 구체(MAGIC·FIRE·WATER·HOLY), 노란 막대(LIGHTNING).
+        /// </summary>
+        private void SetWeaponLook(AttackLook look)
+        {
+            Color col = look.HasColor ? look.Color : WeaponBaseColor;
+            if (_weaponLookSet && look.Shape == _weaponShape && col == _weaponColor) return;
+            _weaponLookSet = true;
+            _weaponShape = look.Shape;
+            _weaponColor = col;
+
+            bool orb = look.Shape == AttackShape.Orb;
+            bool arrow = look.Shape == AttackShape.Arrow;
+            bool hammer = look.Shape == AttackShape.Hammer;
+            _weapon.gameObject.SetActive(!orb);
+            _weaponOrb.gameObject.SetActive(orb);
+            _weaponHead.gameObject.SetActive(arrow || hammer);
+            float th = look.Shape == AttackShape.Bolt ? 0.1f : 0.07f;
+            _weapon.localScale = new Vector3(th, th, WeaponLength);
+            if (arrow)
+            {
+                // 삼각뿔 촉: 밑면이 막대 끝에 살짝 겹치고 꼭짓점이 앞
+                _weaponHeadMf.sharedMesh = AttackLooks.ArrowHeadMesh;
+                _weaponHead.localRotation = Quaternion.identity;
+                _weaponHead.localScale = new Vector3(0.17f, 0.17f, 0.26f);
+                _weaponHead.localPosition = new Vector3(0, 0, WeaponLength + 0.13f - 0.04f);
+            }
+            else if (hammer)
+            {
+                // 사면체 머리: 막대 끝에 가로(휘두르는 방향)로 붙인다
+                _weaponHeadMf.sharedMesh = AttackLooks.TetraMesh;
+                _weaponHead.localRotation = Quaternion.identity;
+                _weaponHead.localScale = new Vector3(0.42f, 0.28f, 0.28f);
+                _weaponHead.localPosition = new Vector3(0, 0, WeaponLength - 0.04f);
+            }
+            SetColor(_weaponR, col);
+            SetColor(_weaponHeadR, col);
+            SetColor(_weaponOrbR, col);
         }
 
         public void FlashHit() { _hitFlashUntil = Time.unscaledTime + 0.12f; }
@@ -166,10 +224,12 @@ namespace ARPG.Runtime
             }
             else _weaponPivot.localPosition = _weaponPivotBase;
 
-            // 무기: 선딜(뒤로) → 타격(휘두름) → 후딜(복귀)
+            // 무기: 선딜(뒤로) → 타격(휘두름) → 후딜(복귀). 공격 스킬 중에는 Damage_Type 모양으로 바뀐다
             float yaw = 0, pitch = 10;
+            AttackLook weaponLook = AttackLook.Default;
             if (!dead && a != null && a.Kind == ActionKind.Skill && a.Skill != null && a.Skill.IsAttack && a.Skill.HitTimesMs.Length > 0)
             {
+                weaponLook = AttackLooks.For(a.Skill);
                 var hits = a.Skill.HitTimesMs;
                 double first = hits[0], last = hits[hits.Length - 1];
                 if (e < first)
@@ -196,6 +256,7 @@ namespace ARPG.Runtime
                 }
             }
             _weaponPivot.localRotation = Quaternion.Euler(pitch, yaw, 0);
+            SetWeaponLook(weaponLook);
             _weaponPivot.gameObject.SetActive(!dead && !rolling);
 
             bool guarding = !dead && a != null && a.Kind == ActionKind.Block;

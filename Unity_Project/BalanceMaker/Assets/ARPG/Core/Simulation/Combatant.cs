@@ -45,6 +45,16 @@ namespace ARPG.Core.Simulation
         }
     }
 
+    /// <summary>개체에 걸려 있는 버프 1개. 같은 Buff_ID 가 다시 걸리면 EndTick 만 갱신한다.</summary>
+    public sealed class ActiveBuff
+    {
+        public BuffDefinition Def;
+        public int SourceId;      // 건 개체 EntityId
+        public string SkillId;    // 건 스킬
+        public long StartTick;
+        public long EndTick;      // 이 tick 의 시간 처리에서 해제
+    }
+
     public sealed class SkillStat
     {
         public int TeamId;
@@ -64,7 +74,10 @@ namespace ARPG.Core.Simulation
         public int TeamId;
         public CharacterDefinition Def;
         public bool IsMonster;
-        public double[] Stats;           // Def.Stats 참조(읽기 전용)
+        public double[] BaseStats;       // Def.Stats 참조(읽기 전용, 버프 없는 원래 값)
+        public double[] Stats;           // 이 개체 전용 복사본 = BaseStats + 걸려 있는 버프 수치
+        public readonly List<ActiveBuff> Buffs = new List<ActiveBuff>();
+        public long BuffsApplied;        // 받은 버프·디버프 횟수(갱신 포함)
         public double Radius;
 
         public Vec2 Pos, PrevPos;

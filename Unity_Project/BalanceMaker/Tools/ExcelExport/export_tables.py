@@ -15,6 +15,8 @@ ARPG 전투 시뮬레이터 - Excel -> 정규화 JSON 변환기
   * Hit_Time / Motion_Value 는 쉼표 구분 목록. Hit_Count 와 길이가 다르면 오류로 보고하고
     해당 스킬을 valid=false 로 내보낸다(임의 분할/복제 금지).
   * 필수 구조 오류(시트 누락, 중복 ID)가 있으면 출력 파일을 교체하지 않는다.
+  * (1.2.0) BUFF.xlsx 가 있으면 BUFF 시트(Buff_ID + Buff_AbilityN/Buff_AbilityN_Stat 쌍)를 ABILITY.xlsm 의
+    ENUM_Name 으로 스탯 이름에 연결해 buffs.json 으로 내보낸다. 없으면 빈 buffs.json.
 """
 import argparse
 import datetime
@@ -31,7 +33,7 @@ except ImportError:  # pragma: no cover
     print("openpyxl 이 필요합니다: pip install openpyxl")
     sys.exit(2)
 
-TOOL_VERSION = "1.1.0"
+TOOL_VERSION = "1.2.0"
 SCHEMA_VERSION = 1
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -41,6 +43,12 @@ DEFAULT_OUT = os.path.join(PROJECT_DIR, "Assets", "StreamingAssets", "ARPG", "Da
 DEFAULT_SCENARIO_OUT = os.path.join(PROJECT_DIR, "Assets", "StreamingAssets", "ARPG", "Scenarios")
 
 SKILL_TYPE_ENUM = ["ATTACK", "BUFF", "DEBUFF", "DEFENCE"]
+# SKILL Additional_Effect 열의 enum 순서(Template_SKILL ValueRange). 숫자로 저장된 경우 이 순서로 이름을 찾는다.
+TRIGGER_CONDITION_ENUM = ["NONE", "ON_CAST", "ON_HIT", "ON_KILL", "ON_GUARD", "ON_DAMAGED", "ON_END"]
+TRIGGER_TYPE_ENUM = ["NONE", "INSTANT", "DURATION", "STACK", "DOT"]
+BUFF_TARGET_ENUM = ["SELF", "ENEMY", "ALLY"]
+BUFF_TRIGGERS_SUPPORTED = ("NONE", "ON_CAST", "ON_HIT", "ON_END")
+BUFF_TYPES_SUPPORTED = ("NONE", "DURATION")
 DAMAGE_TYPES = ["PHYSICAL", "SLASH", "THRUST", "STRIKE", "RANGED", "MAGIC", "FIRE", "WATER", "LIGHTNING", "HOLY"]
 KIND_FALLBACK = {  # AI.xlsx README!B8
     "HUMAN": "AI_MELEE_STD",
@@ -113,6 +121,19 @@ def parse_list(v):
 
 def clean_int(x):
     return int(x) if float(x).is_integer() else x
+
+
+def enum_text(v, enum, zero_is_unset=False):
+    """SKILL 의 enum 열 값 -> 이름. 숫자면 템플릿 enum 순서로 찾는다. 빈칸·0(미설정)은 'NONE'."""
+    if v is None or (isinstance(v, str) and v.strip() == ""):
+        return "NONE"
+    if isinstance(v, (int, float)) and not isinstance(v, bool):
+        i = int(v)
+        if zero_is_unset and i == 0:
+            return "NONE"
+        return enum[i] if 0 <= i < len(enum) else f"UNKNOWN_{i}"
+    s = str(v).strip().upper()
+    return "NONE" if s in ("0", "") else s
 
 
 class Sheet:
@@ -310,8 +331,28 @@ def export(tables_dir, out_dir, scenario_dir, write_scenarios=True, rules_path=N
                 report.info(where, f"{sid}: 플레이어 방어 동작 Cancel_Time=0 (사용자 임시값) -> 공통 규칙(끝까지 수행) 적용")
             if st == "DEFENCE" and ani_time == 0:
                 pass  # 아래에서 일괄 보고
-            if st in ("BUFF", "DEBUFF") and int(num(r[c("Buff_ID")], 0) or 0) == 0:
+            buff_id = int(num(r[c("Buff_ID")], 0) or 0)
+            if st in ("BUFF", "DEBUFF") and buff_id == 0:
                 report.warn(where, f"{sid}: {st} 스킬이나 Buff_ID=0 -> 효과 없이 동작만 실행")
+            # 버프 연결 열(Additional_Effect). 숫자로 저장된 enum 은 템플릿 순서로 이름을 찾는다.
+            # Buff_Target 의 0 은 'SELF' 가 아니라 '미설정'으로 보고 실행 시 Skill_Type 기본값을 쓴다.
+            trig_cond = enum_text(r[c("Trigger_Condition")], TRIGGER_CONDITION_ENUM)
+            trig_type = enum_text(r[c("Trigger_Type")], TRIGGER_TYPE_ENUM)
+            buff_target = enum_text(r[c("Buff_Target")], BUFF_TARGET_ENUM, zero_is_unset=True)
+            buff_dur = num(r[c("Buff_Duration")], 0) or 0
+            if buff_id > 0:
+                if trig_cond not in BUFF_TRIGGERS_SUPPORTED:
+                    report.warn(where, f"{sid}: Trigger_Condition {trig_cond} 는 시뮬레이터 미구현 -> 버프가 걸리지 않음 "
+                                       f"(지원: ON_CAST, ON_HIT, ON_END, NONE)")
+                if trig_type not in BUFF_TYPES_SUPPORTED:
+                    report.warn(where, f"{sid}: Trigger_Type {trig_type} 는 미구현 -> DURATION(지속 시간 동안 능력치 변경)으로 처리")
+                if buff_target not in ("NONE",) + tuple(BUFF_TARGET_ENUM):
+                    report.warn(where, f"{sid}: 알 수 없는 Buff_Target {buff_target} -> Skill_Type 기본값 사용")
+                if buff_dur <= 0:
+                    report.warn(where, f"{sid}: Buff_ID={buff_id} 이지만 Buff_Duration=0 -> 버프가 걸리지 않음")
+                if trig_cond == "ON_HIT" and (st != "ATTACK" or hit_count == 0):
+                    report.warn(where, f"{sid}: Trigger_Condition ON_HIT 이지만 타격이 있는 ATTACK 스킬이 아님 -> 버프가 걸리지 않음 "
+                                       f"(ON_CAST 또는 ON_END 사용)")
 
             ani_speed_raw = num(r[c("Ani_Speed")], 100000)
             skills.append({
@@ -343,12 +384,12 @@ def export(tables_dir, out_dir, scenario_dir, write_scenarios=True, rules_path=N
                 "damageTypes": dtypes,
                 "motionValues": [m / 100000.0 for m in mvs_raw],
                 "motionValuesRaw": mvs_raw,
-                "triggerCondition": str(r[c("Trigger_Condition")] or 0),
-                "triggerType": str(r[c("Trigger_Type")] or 0),
-                "buffTarget": str(r[c("Buff_Target")] or 0),
-                "buffId": int(num(r[c("Buff_ID")], 0) or 0),
+                "triggerCondition": trig_cond,
+                "triggerType": trig_type,
+                "buffTarget": buff_target,
+                "buffId": buff_id,
                 "triggerChance": (num(r[c("Trigger_Chance")], 0) or 0) / 100000.0,
-                "buffDurationMs": num(r[c("Buff_Duration")], 0),
+                "buffDurationMs": buff_dur,
                 "accuracy": (num(r[c("Accuracy")], 100000) or 0) / 100000.0,
                 "nameKey": int(num(r[c("Name_Key")], 0) or 0),
             })
@@ -592,6 +633,9 @@ def export(tables_dir, out_dir, scenario_dir, write_scenarios=True, rules_path=N
     for nm, ai in sorted(ai_fallback.items()):
         report.warn("AI.xlsx!AI_MAP", f"몬스터 '{nm}' 매핑 없음 -> Kind 폴백 {ai}")
 
+    # ------------------------------------------------------------------ BUFF (선택: BUFF.xlsx 가 없으면 버프 없음)
+    buffs = read_buffs(tables_dir, sources, report, stat_names or [], skills)
+
     # AI 거리 조건과 스킬 사거리가 맞지 않는 조합(예: 원거리형 AI + 사거리 2m 스킬) 경고
     rules, rules_src = load_rules(rules_path or os.path.join(out_dir, "..", "rules.json"))
     check_ai_skill_reach(report, characters, skills, nodes, actions, behaviors, rules, rules_src)
@@ -607,6 +651,7 @@ def export(tables_dir, out_dir, scenario_dir, write_scenarios=True, rules_path=N
         "movesets.json": {"schemaVersion": SCHEMA_VERSION, "nodes": nodes},
         "ai.json": {"schemaVersion": SCHEMA_VERSION, "actions": actions, "behaviors": behaviors,
                     "phases": phases, "maps": maps},
+        "buffs.json": {"schemaVersion": SCHEMA_VERSION, "buffs": buffs},
     }
     tmpdir = tempfile.mkdtemp(prefix="arpg_export_", dir=out_dir)
     outputs = []
@@ -632,6 +677,9 @@ def export(tables_dir, out_dir, scenario_dir, write_scenarios=True, rules_path=N
                 "skillsInvalid": sum(1 for s in skills if not s["valid"]),
                 "movesetNodes": len(nodes),
                 "aiBehaviors": len(behaviors),
+                "buffs": len(buffs),
+                "buffsEnabled": sum(1 for b in buffs if b["enabled"]),
+                "skillsWithBuff": sum(1 for s in skills if s["buffId"] > 0),
             },
             "errorCount": len(report.errors),
             "disabledCount": len(report.disabled),
@@ -650,6 +698,174 @@ def export(tables_dir, out_dir, scenario_dir, write_scenarios=True, rules_path=N
     if write_scenarios:
         write_default_scenarios(scenario_dir, characters)
     return report, manifest
+
+
+BUFF_ABILITY_RE = re.compile(r"^Buff_Ability(\d+)$")
+
+
+def read_buffs(tables_dir, sources, report, stat_names, skills):
+    """
+    BUFF.xlsx 의 BUFF 시트 -> buffs.json 의 buffs 목록.
+    한 행 = 버프 하나. Buff_AbilityN(ABILITY Index) + Buff_AbilityN_Stat(더할 수치) 쌍을 N 개수와 관계없이 모두 읽는다.
+    ABILITY.xlsm 의 ENUM_Name 으로 시뮬레이터 스탯 이름을 찾는다(EX_PC 의 Ability.* 열 이름과 같음).
+    """
+    referenced = sorted({s["buffId"] for s in skills if s["buffId"] > 0})
+    p_buff = os.path.join(tables_dir, "BUFF.xlsx")
+    if not os.path.exists(p_buff):
+        if referenced:
+            report.warn("BUFF.xlsx", f"파일이 없는데 SKILL 에서 Buff_ID {len(referenced)}종을 사용 -> 버프 없이 실행")
+        else:
+            report.info("BUFF.xlsx", "파일 없음 -> 버프 없음")
+        return []
+
+    def register(fname, path):
+        sources[fname] = {
+            "file": fname,
+            "sha256": sha256_file(path),
+            "modified": datetime.datetime.fromtimestamp(os.path.getmtime(path)).isoformat(timespec="seconds"),
+        }
+
+    register("BUFF.xlsx", p_buff)
+    p_ab = os.path.join(tables_dir, "ABILITY.xlsm")
+    if not os.path.exists(p_ab):
+        report.error("ABILITY.xlsm", "파일이 없습니다 (BUFF 의 Buff_Ability 번호를 스탯 이름으로 바꾸려면 필요)")
+        return []
+    register("ABILITY.xlsm", p_ab)
+
+    # ABILITY: Index -> (ENUM_Name, 이름, Data_Type)
+    abilities = {}
+    wba, wbaf = open_wb(p_ab)
+    ab = Sheet(wba, wbaf, "Ability", 1, report, "ABILITY.xlsm")
+    if not ab.ok:
+        return []
+    ca = ab.col
+    for rn, r in ab.rows():
+        idx = num(r[ca("Index")], None)
+        if idx is None:
+            continue
+        name = r[ca("~name")] if "~name" in ab.leaf else None
+        abilities[int(idx)] = (str(r[ca("ENUM_Name")] or "").strip(),
+                               "" if name is None or is_error_value(name) else str(name),
+                               int(num(r[ca("Data_Type")], 0) or 0))
+
+    wb, wbf = open_wb(p_buff)
+    # '~' 참고 열(~AbilityN_Name 등)은 읽지 않으므로 수식 캐시 검사에서 뺀다.
+    sh = Sheet(wb, None, "BUFF", 1, report, "BUFF.xlsx")
+    if not sh.ok:
+        return []
+    no_cache = 0
+    for r_i, row in enumerate(wbf["BUFF"].iter_rows(min_row=sh.first_row, values_only=True)):
+        for c_i, val in enumerate(row):
+            col = sh.columns[c_i] if c_i < len(sh.columns) else None
+            if col and not col.startswith("~") and isinstance(val, str) and val.startswith("="):
+                cached = sh.data[r_i][c_i] if r_i < len(sh.data) and c_i < len(sh.data[r_i]) else None
+                if cached is None:
+                    no_cache += 1
+    if no_cache:
+        report.warn("BUFF.xlsx!BUFF", f"수식 캐시값이 비어 있는 셀 {no_cache}개 (Excel에서 재계산 후 저장 필요)")
+    for need in ("Buff_ID", "is_use"):
+        if need not in sh.leaf:
+            report.error("BUFF.xlsx!BUFF", f"필수 열 '{need}' 없음")
+            return []
+    slots = []
+    for i, col in enumerate(sh.columns):
+        m = BUFF_ABILITY_RE.match(col or "")
+        if not m:
+            continue
+        k = int(m.group(1))
+        stat_col = f"Buff_Ability{k}_Stat"
+        if stat_col not in sh.leaf:
+            report.error("BUFF.xlsx!BUFF", f"'{col}' 에 짝이 되는 '{stat_col}' 열이 없습니다")
+            return []
+        slots.append((k, i, sh.leaf[stat_col]))
+    slots.sort()
+    if not slots:
+        report.error("BUFF.xlsx!BUFF", "Buff_Ability1 / Buff_Ability1_Stat 열이 없습니다")
+        return []
+
+    stat_set = set(stat_names)
+    c = sh.col
+    buffs = []
+    seen = {}
+    for rn, r in sh.rows():
+        where = f"BUFF.xlsx!BUFF!A{rn}"
+        raw = r[c("Buff_ID")]
+        if raw is None:
+            continue
+        bid_f = num(raw, None)
+        if bid_f is None or not float(bid_f).is_integer() or bid_f <= 0:
+            report.disable(where, f"Buff_ID '{raw}' 는 1 이상의 정수여야 함 -> 행 무시")
+            continue
+        bid = int(bid_f)
+        if bid in seen:
+            report.error(where, f"중복 Buff_ID {bid} (A{seen[bid]} 와 같음)")
+            continue
+        seen[bid] = rn
+        enabled = r[c("is_use")] == "All"
+        name = ""
+        if "~Name" in sh.leaf:
+            v = r[c("~Name")]
+            name = "" if v is None or is_error_value(v) else str(v).strip()
+        effects = []
+        for k, a_i, s_i in slots:
+            a_raw = r[a_i] if a_i < len(r) else None
+            s_raw = r[s_i] if s_i < len(r) else None
+            a = num(a_raw, 0)
+            if a is None or not float(a).is_integer():
+                report.warn(where, f"버프 {bid}: Buff_Ability{k} '{a_raw}' 는 정수가 아님 -> 무시")
+                continue
+            a = int(a)
+            if a == 0:
+                if num(s_raw, 0):
+                    report.warn(where, f"버프 {bid}: Buff_Ability{k}=0 인데 수치 {s_raw} 가 있음 -> 무시")
+                continue
+            v = num(s_raw, None) if s_raw is not None else None
+            if v is None:
+                report.warn(where, f"버프 {bid}: Buff_Ability{k}_Stat 이 비었거나 숫자가 아님 -> 무시")
+                continue
+            if a not in abilities:
+                report.warn(where, f"버프 {bid}: ABILITY 에 없는 Index {a} -> 무시")
+                continue
+            enum_name, aname, dtype = abilities[a]
+            if enum_name not in stat_set:
+                report.warn(where, f"버프 {bid}: {a} {aname}({enum_name}) 는 캐릭터 스탯 열이 아님(면역·행동 제한 등은 시뮬레이터 미구현) -> 무시")
+                continue
+            if v == 0:
+                continue
+            effects.append({"abilityId": a, "stat": enum_name, "name": aname, "value": v, "dataType": dtype})
+        if enabled and not effects:
+            report.warn(where, f"버프 {bid}: 적용할 능력치가 없음")
+        buffs.append({"id": bid, "enabled": enabled, "name": name or f"BUFF_{bid}", "effects": effects})
+
+    # SKILL 연결 확인
+    bmap = {b["id"]: b for b in buffs}
+    for s in skills:
+        if s["buffId"] <= 0:
+            continue
+        b = bmap.get(s["buffId"])
+        if b is None:
+            report.warn(f"SKILL.xlsm!SKILL {s['id']}", f"Buff_ID {s['buffId']} 가 BUFF 표에 없음 -> 효과 없음")
+        elif not b["enabled"]:
+            report.warn(f"SKILL.xlsm!SKILL {s['id']}", f"Buff_ID {s['buffId']} 는 비활성(is_use) 버프 -> 효과 없음")
+
+    # 쓰이지 않는 피해 타입의 공격력 버프 안내(예: 물리 공격력 버프인데 Damage_Type PHYSICAL 스킬이 없음)
+    used_types = {d for s in skills if s["enabled"] for d in s["damageTypes"]}
+    for b in buffs:
+        for e in b["effects"]:
+            st = e["stat"]
+            t = None
+            if st.endswith("_ATTACK_PCT"):
+                t = st[:-len("_ATTACK_PCT")]
+            elif st.endswith("_ATTACK"):
+                t = st[:-len("_ATTACK")]
+            if t in DAMAGE_TYPES and t not in used_types:
+                report.warn(f"BUFF.xlsx!BUFF 버프 {b['id']}",
+                            f"{e['abilityId']} {e['name']}({st}) 를 바꾸지만 Damage_Type {t} 인 스킬이 없음 -> 지금은 피해에 영향 없음 "
+                            f"(피해는 스킬의 Damage_Type 별 공격력으로 계산)")
+
+    report.info("BUFF.xlsx", f"버프 {len(buffs)}개(활성 {sum(1 for b in buffs if b['enabled'])}), "
+                             f"SKILL 에서 Buff_ID 를 쓰는 스킬 {sum(1 for s in skills if s['buffId'] > 0)}개")
+    return buffs
 
 
 def find_char(characters, display):

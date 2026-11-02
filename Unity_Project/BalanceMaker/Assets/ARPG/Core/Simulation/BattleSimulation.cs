@@ -44,6 +44,8 @@ namespace ARPG.Core.Simulation
         private readonly List<string> _interruptReason = new List<string>();
         private readonly List<Combatant> _targetsBuffer = new List<Combatant>();
         private readonly HashSet<int> _aliveTeamsBuffer = new HashSet<int>();
+        private readonly List<PendingBuff> _pendingBuffs = new List<PendingBuff>();
+        private readonly List<ActiveBuff> _expiredBuffer = new List<ActiveBuff>();
 
         private long _tick;
         private long _seq;
@@ -69,6 +71,14 @@ namespace ARPG.Core.Simulation
             public Combatant Attacker;
             public ActionInstance Action;
             public int HitIndex;
+        }
+
+        /// <summary>적중 시(ON_HIT) 버프. 같은 tick 의 타격을 모두 해결한 뒤에 건다(동시 교환 유지).</summary>
+        private struct PendingBuff
+        {
+            public Combatant Caster;
+            public SkillDefinition Skill;
+            public Combatant HitTarget;
         }
 
         private sealed class Plan
@@ -180,7 +190,8 @@ namespace ARPG.Core.Simulation
                         TeamId = team.teamId,
                         Def = def,
                         IsMonster = def.IsMonster,
-                        Stats = def.Stats,
+                        BaseStats = def.Stats,
+                        Stats = (double[])def.Stats.Clone(), // 버프가 바꾸는 개체 전용 복사본(정의는 수정하지 않음)
                         Radius = _r.bodyRadius,
                         Pos = new Vec2(side * (half + rowOffset), z),
                         Facing = new Vec2(-side, 0),
@@ -259,6 +270,9 @@ namespace ARPG.Core.Simulation
             {
                 var c = _all[i];
                 if (c.Dead) continue;
+
+                // 버프 지속 시간 만료(이번 tick 의 판단·타격은 해제된 능력치로 계산)
+                ExpireBuffs(c, t);
 
                 // [확정] 누적 게이지: 쌓인 직후부터 초당 5 감소, 0 미만 없음. 같은 tick 신규 누적분은 다음 tick 부터 감소.
                 for (int k = 1; k < 4; k++)
@@ -686,6 +700,10 @@ namespace ARPG.Core.Simulation
             e.Result = p.IsChain ? "COMBO" : "START";
             e.Reason = (p.RuleIndex > 0 ? "AI#" + p.RuleIndex + " " : "") + (p.Note ?? string.Empty);
             Emit(ref e);
+
+            // 시전 시(ON_CAST) 버프: 비용 차감·행동 시작 직후
+            if (p.Skill != null && p.Skill.Buff != null && p.Skill.EffectiveBuffTrigger == BuffTrigger.OnCast)
+                TriggerBuff(c, p.Skill, null, t);
         }
 
         private void EndAction(Combatant c, ActionInstance a, long t, BattleEventType type, string reason)
@@ -905,6 +923,7 @@ namespace ARPG.Core.Simulation
                 for (int k = 0; k < _targetsBuffer.Count; k++) ApplyHit(A, ph.Action, s, ph.HitIndex, _targetsBuffer[k], t);
             }
             _pendingHits.Clear();
+            FlushPendingBuffs(t);
         }
 
         private void GatherTargets(Combatant A, ActionInstance a, SkillDefinition s, List<Combatant> outList)
@@ -1059,7 +1078,16 @@ namespace ARPG.Core.Simulation
             // 강인도
             double poiseAtk = A.Stat(StatId.STAGGER_BUILDUP) * (_r.poiseDamageUsesMotionValue ? mv : 1.0);
             bool staggered = false;
-            if (poiseAtk > 0 && T.MaxPoise > 0)
+            // [기획 확정] 경직 중 강인도 무적: 경직이 시작될 때 강인도를 최대치로 채우고,
+            // 경직이 끝날 때까지는 맞아도 HP 피해만 받으며 강인도는 깎이지 않는다(재경직 없음).
+            bool poiseImmune = _r.poiseImmuneWhileStaggered && T.IsStaggered(t);
+            if (poiseImmune && poiseAtk > 0 && T.MaxPoise > 0)
+            {
+                e.PoiseBefore = T.Poise;
+                e.PoiseAfter = T.Poise;
+                e.Reason += " | 경직 중 강인도 무적";
+            }
+            else if (poiseAtk > 0 && T.MaxPoise > 0)
             {
                 double bonus = T.ActivePoiseBonus;
                 double pb = T.Poise;
@@ -1094,6 +1122,175 @@ namespace ARPG.Core.Simulation
             ApplyBuildup(A, T, s, mv, t, StatusKind.Wound, StatId.WOUND_BUILDUP, StatId.WOUND_BUILDUP_PCT, StatId.WOUND_RESIST);
             ApplyBuildup(A, T, s, mv, t, StatusKind.Poison, StatId.POISON_BUILDUP, StatId.POISON_BUILDUP_PCT, StatId.POISON_RESIST);
             ApplyBuildup(A, T, s, mv, t, StatusKind.Frost, StatId.FROST_BUILDUP, StatId.FROST_BUILDUP_PCT, StatId.FROST_RESIST);
+
+            // 적중 시(ON_HIT) 버프·디버프: 가드·무적 회피는 적중이 아니므로 제외. 같은 tick 타격을 다 해결한 뒤 건다.
+            if (s.Buff != null && s.EffectiveBuffTrigger == BuffTrigger.OnHit)
+                _pendingBuffs.Add(new PendingBuff { Caster = A, Skill = s, HitTarget = T });
+        }
+
+        // ------------------------------------------------------------------ 버프(BUFF 표 + SKILL Buff_ID)
+        /// <summary>ON_HIT 버프를 수집 순서대로 건다. 자신·아군 대상은 같은 스킬당 한 번만(여러 명을 맞혀도 1회).</summary>
+        private void FlushPendingBuffs(long t)
+        {
+            for (int i = 0; i < _pendingBuffs.Count; i++)
+            {
+                var pb = _pendingBuffs[i];
+                bool toEnemy = pb.Skill.EffectiveBuffTarget == BuffTarget.Enemy;
+                if (!toEnemy)
+                {
+                    bool dup = false;
+                    for (int j = 0; j < i; j++)
+                        if (_pendingBuffs[j].Caster == pb.Caster && _pendingBuffs[j].Skill == pb.Skill) { dup = true; break; }
+                    if (dup) continue;
+                }
+                TriggerBuff(pb.Caster, pb.Skill, toEnemy ? pb.HitTarget : null, t);
+            }
+            _pendingBuffs.Clear();
+        }
+
+        /// <summary>
+        /// 스킬의 버프를 대상에게 건다.
+        /// 대상: SELF = 시전자 / ENEMY = 적중 대상(ON_HIT) 또는 현재 타겟(사거리 안) / ALLY = 같은 팀 전원(자신 포함, Hit_Range 가 있으면 그 반경 안).
+        /// 확률: Trigger_Chance(1 미만일 때만 난수 사용). 지속: Buff_Duration(ms) → tick.
+        /// </summary>
+        private void TriggerBuff(Combatant caster, SkillDefinition s, Combatant hitTarget, long t)
+        {
+            var b = s.Buff;
+            if (b == null || caster.Dead) return;
+            double chance = s.BuffChance > 0 ? s.BuffChance : (_r.buffZeroChanceAlways ? 1.0 : 0.0);
+            if (chance <= 0) return;
+            if (chance < 1.0 && _rng.NextUnit() >= chance) return; // 100% 면 난수를 쓰지 않음(기존 결과·해시 유지)
+            long end = t + Math.Max(1, CombatRules.MsToTicks(s.BuffDurationMs, _r.tickRate));
+            switch (s.EffectiveBuffTarget)
+            {
+                case BuffTarget.Self:
+                    ApplyBuff(caster, b, caster, s, t, end);
+                    break;
+                case BuffTarget.Enemy:
+                {
+                    var tg = hitTarget ?? BuffEnemyTarget(caster, s);
+                    if (tg != null && !tg.Dead) ApplyBuff(tg, b, caster, s, t, end);
+                    break;
+                }
+                case BuffTarget.Ally:
+                    for (int i = 0; i < _all.Count; i++)
+                    {
+                        var al = _all[i];
+                        if (al.Dead || al.TeamId != caster.TeamId) continue;
+                        if (al != caster && s.HitRange > 0 && Vec2.Distance(caster.Pos, al.Pos) > s.HitRange + al.Radius + 1e-9) continue;
+                        ApplyBuff(al, b, caster, s, t, end);
+                    }
+                    break;
+            }
+        }
+
+        /// <summary>시전·종료 시 적 대상: 현재 타겟. 스킬에 사거리가 있으면 그 안에 있을 때만.</summary>
+        private Combatant BuffEnemyTarget(Combatant caster, SkillDefinition s)
+        {
+            var tg = caster.Target;
+            if (tg == null || tg.Dead) return null;
+            if (s.EffectiveRange <= 0 && s.HitRange <= 0) return tg;
+            double reach = caster.Radius + (IsInstantRanged(s) ? s.EffectiveRange : s.Reach) + tg.Radius;
+            return Vec2.Distance(caster.Pos, tg.Pos) <= reach + 1e-9 ? tg : null;
+        }
+
+        /// <summary>같은 Buff_ID 가 이미 있으면 지속 시간만 새로 시작(중첩 없음), 없으면 추가하고 능력치를 다시 계산.</summary>
+        private void ApplyBuff(Combatant T, BuffDefinition b, Combatant src, SkillDefinition s, long t, long end)
+        {
+            ActiveBuff ab = null;
+            for (int i = 0; i < T.Buffs.Count; i++)
+            {
+                if (T.Buffs[i].Def.Id == b.Id) { ab = T.Buffs[i]; break; }
+            }
+            bool refresh = ab != null;
+            if (!refresh)
+            {
+                ab = new ActiveBuff { Def = b };
+                T.Buffs.Add(ab);
+            }
+            ab.SourceId = src.EntityId;
+            ab.SkillId = s.Id;
+            ab.StartTick = t;
+            ab.EndTick = end;
+            T.BuffsApplied++;
+            double hpB = T.Hp;
+            if (!refresh) RecalcStats(T);
+            var e = NewEvent(BattleEventType.BuffApplied, T.EntityId);
+            e.TargetId = src.EntityId;
+            e.SkillId = s.Id;
+            e.StatusId = "BUFF_" + b.Id;
+            e.Result = refresh ? "REFRESH" : "APPLY";
+            e.ActorHpBefore = hpB;
+            e.ActorHpAfter = T.Hp;
+            e.Reason = b.Describe() + " | " + (s.BuffDurationMs / 1000.0).ToString("0.###") + "초";
+            Emit(ref e);
+        }
+
+        private void ExpireBuffs(Combatant c, long t)
+        {
+            if (c.Buffs.Count == 0) return;
+            _expiredBuffer.Clear();
+            for (int i = 0; i < c.Buffs.Count; )
+            {
+                if (t >= c.Buffs[i].EndTick)
+                {
+                    _expiredBuffer.Add(c.Buffs[i]);
+                    c.Buffs.RemoveAt(i);
+                }
+                else i++;
+            }
+            if (_expiredBuffer.Count == 0) return;
+            double hpB = c.Hp;
+            RecalcStats(c);
+            for (int i = 0; i < _expiredBuffer.Count; i++)
+            {
+                var ab = _expiredBuffer[i];
+                var e = NewEvent(BattleEventType.BuffExpired, c.EntityId);
+                e.TargetId = ab.SourceId;
+                e.SkillId = ab.SkillId;
+                e.StatusId = "BUFF_" + ab.Def.Id;
+                e.Result = "EXPIRE";
+                e.ActorHpBefore = hpB;
+                e.ActorHpAfter = c.Hp;
+                e.Reason = (ab.Def.Name ?? e.StatusId) + " 지속 종료";
+                Emit(ref e);
+            }
+            _expiredBuffer.Clear();
+        }
+
+        /// <summary>
+        /// 능력치 = 원래 값 + 걸려 있는 버프 수치(걸린 순서대로 합산). 피해·강인도·상태이상 계산은 모두 이 값을 쓴다.
+        /// 최대 HP/FP/스태미나/강인도가 줄면 현재값을 새 최대치로 자르고, 늘면 rules.buffMaxIncreaseRaisesCurrent 가 true 일 때
+        /// 현재값도 같은 만큼 늘린다(HP 0 인 개체는 늘리지 않음).
+        /// </summary>
+        private void RecalcStats(Combatant c)
+        {
+            Array.Copy(c.BaseStats, c.Stats, c.Stats.Length);
+            for (int i = 0; i < c.Buffs.Count; i++)
+            {
+                var d = c.Buffs[i].Def;
+                for (int k = 0; k < d.Stats.Length; k++) c.Stats[(int)d.Stats[k]] += d.Values[k];
+            }
+            bool raise = _r.buffMaxIncreaseRaisesCurrent;
+            double old = c.MaxHp;
+            c.MaxHp = Math.Max(1, c.Stat(StatId.HP));
+            c.Hp = AdjustCurrent(c.Hp, old, c.MaxHp, raise && c.Hp > 0);
+            old = c.MaxFp;
+            c.MaxFp = Math.Max(0, c.Stat(StatId.FP));
+            c.Fp = AdjustCurrent(c.Fp, old, c.MaxFp, raise);
+            old = c.MaxStamina;
+            c.MaxStamina = Math.Max(0, c.Stat(StatId.STAMINA));
+            c.Stamina = AdjustCurrent(c.Stamina, old, c.MaxStamina, raise);
+            old = c.MaxPoise;
+            c.MaxPoise = Math.Max(0, c.Stat(StatId.STAGGER_ENDURANCE));
+            c.Poise = AdjustCurrent(c.Poise, old, c.MaxPoise, raise);
+            c.StaminaRegenPerSec = Math.Max(0, c.Stat(StatId.STAMINA_RECOVERY));
+        }
+
+        private static double AdjustCurrent(double cur, double oldMax, double newMax, bool raiseOnIncrease)
+        {
+            if (newMax > oldMax) return raiseOnIncrease ? cur + (newMax - oldMax) : cur;
+            return Math.Min(cur, newMax);
         }
 
         private bool IsImmune(Combatant T, StatusKind k, long t)
@@ -1196,6 +1393,10 @@ namespace ARPG.Core.Simulation
                     c.ComboExpireTick = -1;
                 }
                 EndAction(c, a, t, BattleEventType.ActionEnded, "완료");
+                // 동작 완료 시(ON_END) 버프: 끝까지 수행한 경우만(강제 중단·캔슬 연결은 제외)
+                var sk = a.Skill;
+                if (sk != null && sk.Buff != null && sk.EffectiveBuffTrigger == BuffTrigger.OnEnd)
+                    TriggerBuff(c, sk, null, t);
             }
         }
 

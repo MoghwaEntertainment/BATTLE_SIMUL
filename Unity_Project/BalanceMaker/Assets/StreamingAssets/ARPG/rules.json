@@ -1,5 +1,5 @@
 {
-  "rulesVersion": "2026.11.01-r1",
+  "rulesVersion": "2026.11.02-r3",
   "tickRate": 30,
   "aiTickInterval": 3,
   "maxBattleSec": 300.0,
@@ -52,6 +52,7 @@
   "guardFrontAngleDeg": 180.0,
   "blockHoldSecWhenAniTimeZero": 1.0,
   "staggerTicks": 30,
+  "poiseImmuneWhileStaggered": true,
   "poiseRecoveryDelaySec": 5.0,
   "poiseRecoveryPerSec": -1.0,
   "statusBuildupUsesMotionValue": true,
@@ -65,5 +66,7 @@
   "frostDurationSec": 5.0,
   "frostSpeedMult": 0.5,
   "comboContinueWindowSec": 0.3,
-  "idleDoesNotCancel": true
+  "idleDoesNotCancel": true,
+  "buffZeroChanceAlways": true,
+  "buffMaxIncreaseRaisesCurrent": true
 }

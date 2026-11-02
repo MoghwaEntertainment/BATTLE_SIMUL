@@ -1,63 +1,80 @@
 {
   "schemaVersion": 1,
-  "toolVersion": "1.0.0",
-  "generatedAt": "2026-11-01T16:05:28",
-  "dataHash": "e3b32153437ff369",
+  "toolVersion": "1.2.0",
+  "generatedAt": "2026-11-02T23:25:45",
+  "dataHash": "77e7b4b0c284ca44",
   "formulaPolicy": "openpyxl 캐시값 사용(재계산 아님)",
   "sources": [
     {
       "file": "SKILL.xlsm",
-      "sha256": "1a1dc7983eb64842b67157f6653ccc768db2773eafae893af4ea95c7544eea9e",
-      "modified": "2026-11-01T16:04:55"
+      "sha256": "b0e6818412c58247c001e50655addda957e4afe36fe3e95232a4d353577c924e",
+      "modified": "2026-11-02T23:12:11"
     },
     {
       "file": "EX_PC_STAT.xlsm",
-      "sha256": "8e3ad71b0af0b698214c99c33b538c3e9b3097ba8d06bea9b6e979330ce5f748",
-      "modified": "2026-08-13T13:53:23"
+      "sha256": "ef3f9833e8757c526d5d4cdac230b2f658791f74982db3cb890ecf9a51ba9a03",
+      "modified": "2026-11-02T23:12:11"
     },
     {
       "file": "MONSTER.xlsm",
       "sha256": "859dc4c823e485ad35d206e3edb215d9a6a78856364eb58dc8313f4e5a0bd4a0",
-      "modified": "2026-11-01T16:04:59"
+      "modified": "2026-11-01T23:23:46"
     },
     {
       "file": "ITEM.xlsm",
-      "sha256": "536dd31fc53f223c50c35b2eb339642918e92fc1344c42e671183d210554b978",
-      "modified": "2026-08-13T03:29:41"
+      "sha256": "f8775e9f074fea3e2646793ebfa7b5125c34d5e25d60d77c96fa5bd1bb44335e",
+      "modified": "2026-11-02T23:12:12"
     },
     {
       "file": "AI.xlsx",
-      "sha256": "99d9dd67b812dd94ef54df5b47bda6d9212a17c39ee3a792c25be8d2955ac7a5",
-      "modified": "2026-11-01T15:16:44"
+      "sha256": "765f824feed1575b772d8a4a0db891ce605562b2544f7a0cdfbff1ae589a3161",
+      "modified": "2026-11-02T23:12:13"
+    },
+    {
+      "file": "BUFF.xlsx",
+      "sha256": "e78f515acff2492335cde31c4c73bdeff5c8d65d98b9567dd3b2c365297b395c",
+      "modified": "2026-11-02T20:41:37"
+    },
+    {
+      "file": "ABILITY.xlsm",
+      "sha256": "0fd02d9b38cee8779964bdf87757564f0861fe7f1af60d543a6dde2db6d366de",
+      "modified": "2026-11-01T23:23:46"
     }
   ],
   "outputs": [
     {
       "file": "characters.json",
-      "sha256": "cbdda485a0b251b317880fa206d4f9c8e89574d3673b1b9f32780b93c43e077b"
+      "sha256": "951020c736402104f2e3261b9dff22ffcbd6fb8a6658df62c6fdea4c9540cd40"
     },
     {
       "file": "skills.json",
-      "sha256": "ed69b3e397fb61633fabe1b945fa47948dd36ef5c90233462c5bf4577a6ecd0f"
+      "sha256": "a13195f0916ce6fe472f54d69391d2ffe3f125fb8daec859cd5dcd8ea81979fa"
     },
     {
       "file": "movesets.json",
-      "sha256": "cf5a3952ef53e9f9e236e6d8a7126e8a7100a475750f83a3adea83e0ded22bc0"
+      "sha256": "8a0eff5ed232e9645ce6f2d9dcce116e9f015681964f4852e496879ddf027097"
     },
     {
       "file": "ai.json",
-      "sha256": "01fc20b3673d98bf7101d5413934b6402e91f68ae298813d7f4c47765a89ddab"
+      "sha256": "8f86106f1b6d3a81b668150dbaabb41a8c70eaf3c51b815337af7fed4f4fcba1"
+    },
+    {
+      "file": "buffs.json",
+      "sha256": "77a787192a7ef0b8383ba50f1fad3586fdaf3414c2e7c71051c8f141636b50b5"
     }
   ],
   "counts": {
-    "characters": 1398,
-    "charactersEnabled": 1398,
-    "skills": 1808,
+    "characters": 1404,
+    "charactersEnabled": 1404,
+    "skills": 1826,
     "skillsInvalid": 11,
-    "movesetNodes": 1751,
-    "aiBehaviors": 200
+    "movesetNodes": 1769,
+    "aiBehaviors": 266,
+    "buffs": 6,
+    "buffsEnabled": 6,
+    "skillsWithBuff": 4
   },
   "errorCount": 0,
   "disabledCount": 11,
-  "warningCount": 8
+  "warningCount": 39
 }

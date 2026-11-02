@@ -164,7 +164,7 @@
     <header class="hero">
       <h1>ARPG 전투 밸런스 시뮬레이터<br>사용 설명서</h1>
       <p>엑셀 기획 테이블의 캐릭터·스킬·AI 로 전투를 돌려 보고, 화면으로 확인하거나 수백 판을 빠르게 돌려 승률을 내는 Unity 도구입니다.</p>
-      <p class="stamp">기준: 2026-11-01 · Unity 6000.6 · 규칙 rules 2026.11.01-r1 · 화면 오른쪽 위 <b>가− / 가+</b> 로 이 문서의 글자 크기를 바꿀 수 있습니다.</p>
+      <p class="stamp">기준: 2026-11-01 · Unity 6000.6 · 규칙 rules 2026.11.01-r2 · 화면 오른쪽 위 <b>가− / 가+</b> 로 이 문서의 글자 크기를 바꿀 수 있습니다.</p>
     </header>
 
     <!-- 1 -->
@@ -303,7 +303,7 @@
           <tr><td><span class="badge">2</span></td><td>상단 바</td><td>지금 회차, tick(1/30초 단위 시간), 경과 시간, 배속, 일시정지 여부, 결과를 보여 줍니다.</td></tr>
           <tr><td><span class="badge">3</span></td><td>전장</td><td>캐릭터(캡슐)들이 싸우는 곳. 마우스로 카메라를 움직이고, 캐릭터를 <b>왼쪽 클릭</b>하면 선택됩니다.</td></tr>
           <tr><td><span class="badge">4</span></td><td>정보창</td><td>선택한 캐릭터의 HP·FP·스태미나 실제 값, 강인도, 상태이상 게이지, 현재 행동과 진행, AI 가 고른 행 번호, 대상과 거리, 쿨다운, 누적 통계.</td></tr>
-          <tr><td><span class="badge">5</span></td><td>로그창</td><td>최근 전투 사건(행동 시작, 명중, 가드, 상태이상 등)이 위에서부터 최신 순으로 나옵니다.</td></tr>
+          <tr><td><span class="badge">5</span></td><td>로그창</td><td>최근 전투 사건(행동 시작, 명중, 가드, 상태이상 등)이 아래로 쌓이며 <b>최신 줄이 맨 아래</b>에 나옵니다. 맨 아래를 보고 있으면 새 줄을 따라 내려가고, 위로 올려 읽는 동안에는 멈춥니다. 그때 나타나는 <span class="ui">▼ 최신으로</span> 를 누르면 다시 맨 아래로 갑니다.</td></tr>
         </tbody>
       </table>
     </section>
@@ -379,7 +379,7 @@
           <tr><td>배속</td><td>0.5x · 1x · 2x · 4x · 8x. 너무 빨라 처리가 못 따라가면 상단 바에 <b>처리 지연</b>이 뜹니다.</td></tr>
           <tr><td>Console / 화면 로그</td><td>Unity Console 과 로그창에 얼마나 자세히 남길지. <b>끔 · 핵심 · 상세</b>.</td></tr>
           <tr><td>이벤트 CSV 기록</td><td>켜 두면 판마다 사건 기록 파일을 남깁니다(<a href="#results">8장</a>).</td></tr>
-          <tr><td>로그창</td><td>화면 아래 로그창 보이기/숨기기.</td></tr>
+          <tr><td>로그창</td><td>화면 아래 로그창 보이기/숨기기. 최신 줄이 맨 아래에 쌓입니다.</td></tr>
           <tr><td>판정 범위 표시</td><td>공격 판정 원, 선택 캐릭터의 거리 원과 대상 선(<a href="#legend">7장</a>).</td></tr>
           <tr><td>공격 이펙트(막대·착탄)</td><td>공격이 맞을 때 날아가는 막대와 착탄 표시 켜기/끄기.</td></tr>
           <tr><td><span class="ui">저장 폴더 열기</span></td><td>이번 관찰 기록이 저장되는 폴더를 엽니다.</td></tr>
@@ -472,14 +472,29 @@
       <table>
         <thead><tr><th style="width:9rem">동작</th><th>보이는 모습</th></tr></thead>
         <tbody>
-          <tr><td>공격</td><td>준비 동작에서 몸을 살짝 뒤로 젖혔다가, 타격 직전 <b>앞으로 숙이며 한 발 내딛고</b>, 타격마다 조금 더 숙입니다. 무기(막대)는 옆으로 휘두릅니다.</td></tr>
+          <tr><td>공격</td><td>준비 동작에서 몸을 살짝 뒤로 젖혔다가, 타격 직전 <b>앞으로 숙이며 한 발 내딛고</b>, 타격마다 조금 더 숙입니다. 무기는 옆으로 휘두르며, 공격 중에는 스킬 피해 타입에 따라 모양이 바뀝니다(아래 공격 이펙트 표).</td></tr>
           <tr><td>구르기(회피)</td><td>몸이 <b>앞뒤로 한 바퀴(360°)</b> 굴러갑니다. 상대 쪽으로 피하면 앞구르기, 뒤로 피하면 뒷구르기. 구르는 동안 무기는 숨기고, 무적 시간에는 청록색입니다.</td></tr>
           <tr><td>가드</td><td>몸 앞에 청록 방패가 나타납니다. 막으면 방패가 흰색으로 깜빡입니다.</td></tr>
-          <tr><td>경직 · 기절</td><td>몸이 뒤로 기울고 색이 바뀝니다(위 색 설명).</td></tr>
+          <tr><td>경직 · 기절</td><td>몸이 뒤로 기울고 색이 바뀝니다(위 색 설명). 경직(1초) 중에는 맞아도 HP 만 줄고 강인도는 깎이지 않아 다시 경직되지 않습니다.</td></tr>
         </tbody>
       </table>
       <h3>공격 이펙트 (막대·착탄)</h3>
-      <p>공격 판정이 나면 공격자의 무기 높이에서 대상 몸통으로 막대가 날아가고, 닿는 순간 착탄 구체가 생기며 대상이 깜빡입니다. 판정에는 영향을 주지 않는 <b>화면 표시</b>입니다.</p>
+      <p>공격 판정이 나면 공격자의 무기 높이에서 대상 몸통으로 투사체가 날아가고, 닿는 순간 착탄 구체가 생기며 대상이 깜빡입니다. 판정에는 영향을 주지 않는 <b>화면 표시</b>입니다.</p>
+      <p>투사체와 공격 중 손에 든 무기의 모양은 스킬의 <code>Damage_Type</code> 으로 정해집니다. 타입이 여러 개면 <b>앞에 적힌 타입</b>을 따릅니다(예: SLASH, MAGIC → 막대).</p>
+      <table>
+        <thead><tr><th style="width:12rem">Damage_Type</th><th>모양</th></tr></thead>
+        <tbody>
+          <tr><td>PHYSICAL · SLASH</td><td>막대(기존 그대로)</td></tr>
+          <tr><td>RANGED · THRUST</td><td>막대 앞에 삼각뿔 촉 — 화살</td></tr>
+          <tr><td>STRIKE</td><td>막대 끝에 사면체 머리 — 망치</td></tr>
+          <tr><td>MAGIC</td><td><span class="sw" style="background:#73d9ff"></span>하늘색 구체</td></tr>
+          <tr><td>FIRE</td><td><span class="sw" style="background:#ff2e1f"></span>빨간 구체</td></tr>
+          <tr><td>WATER</td><td><span class="sw" style="background:#1f52ff"></span>파란 구체</td></tr>
+          <tr><td>HOLY</td><td><span class="sw" style="background:#ffe633"></span>노란 구체</td></tr>
+          <tr><td>LIGHTNING</td><td><span class="sw" style="background:#ffe000"></span>진한 노란 막대(조금 굵음)</td></tr>
+        </tbody>
+      </table>
+      <p>막대·화살·망치의 색은 아래처럼 <b>결과</b>를 나타냅니다. 구체와 번개 막대는 속성 색을 유지하고, 빗나가면 회색이 섞입니다. 결과는 착탄 구체 색으로도 구별됩니다.</p>
       <ul>
         <li><span class="sw" style="background:#fff28c"></span>노랑: 명중</li>
         <li><span class="sw" style="background:#80ffff"></span>청록: 가드에 막힘</li>
@@ -498,7 +513,8 @@
     <section id="results">
       <h2><span class="num">8</span>결과 파일</h2>
       <p>모든 결과는 아래 폴더에 쌓입니다. 왼쪽 패널 <span class="ui">Export 폴더</span>, <span class="ui">저장 폴더 열기</span>, <span class="ui">결과 폴더 열기</span> 버튼으로 바로 열 수 있습니다.</p>
-      <p><span class="path">C:\<wbr>Users\<wbr>m0428\<wbr>AppData\<wbr>LocalLow\<wbr>DefaultCompany\<wbr>BalanceMaker\<wbr>Exports\<wbr></span></p>
+      <p><span class="path">%USERPROFILE%\<wbr>AppData\<wbr>LocalLow\<wbr>DefaultCompany\<wbr>BalanceMaker\<wbr>Exports\<wbr></span></p>
+      <p class="muted">결과 폴더는 PC 마다 따로 생깁니다(<code>%USERPROFILE%</code> = 그 PC 의 사용자 폴더). 탐색기 주소창에 그대로 붙여 넣으면 열립니다. git 저장소에는 들어가지 않습니다.</p>
       <p>실행할 때마다 <code>날짜_시각_모드_시나리오이름</code> 폴더가 새로 생깁니다. 모드는 <code>observe</code>(관찰) · <code>batch</code>(고속 반복) · <code>headless</code>(명령줄).</p>
       <table>
         <thead><tr><th style="width:15rem">파일</th><th>내용</th></tr></thead>
@@ -567,13 +583,14 @@
           <tr><td><code>dodgeIFrameStartSec</code> ~ <code>EndSec</code></td><td>0.1 ~ 0.45</td><td>구르기 무적 시간 구간(초)</td></tr>
           <tr><td><code>dodgeStaminaCost</code></td><td>50</td><td>구르기 스태미나 비용</td></tr>
           <tr><td><code>staggerTicks</code> / <code>stunTicks</code></td><td>30 / 90</td><td>경직 / 기절 길이(tick, 30 = 1초)</td></tr>
+          <tr><td><code>poiseImmuneWhileStaggered</code></td><td>true</td><td>경직 중 강인도 무적(HP 만 감소). false 면 경직 중에도 강인도가 깎여 다시 경직될 수 있음</td></tr>
           <tr><td><code>guardFrontAngleDeg</code></td><td>180</td><td>가드가 막는 정면 각도</td></tr>
           <tr><td><code>statusDecayPerSec</code></td><td>5</td><td>상태이상 게이지가 초당 줄어드는 양</td></tr>
           <tr><td><code>comboContinueWindowSec</code></td><td>0.3</td><td>공격이 끝난 뒤 이 시간 안에 다음 공격이면 콤보 이어짐</td></tr>
         </tbody>
       </table>
       <div class="callout tip"><b class="label">버전 표시를 바꿔 두세요</b>
-        값을 고칠 때 맨 위 <code>"rulesVersion"</code> 도 바꿔 두면(예: <code>2026.11.01-r2</code>) 결과 파일에 어떤 규칙으로 돌렸는지 남습니다.
+        값을 고칠 때 맨 위 <code>"rulesVersion"</code> 도 바꿔 두면(예: <code>2026.11.01-r3</code>) 결과 파일에 어떤 규칙으로 돌렸는지 남습니다.
         원래 값으로 되돌릴 수 있게 고치기 전에 파일을 복사해 두는 것을 권장합니다.
       </div>
     </section>
@@ -668,7 +685,7 @@
     <!-- 15 -->
     <section id="paths">
       <h2><span class="num">15</span>파일 위치 한눈에</h2>
-      <p class="muted">기준 폴더: <span class="path">C:\<wbr>Users\<wbr>m0428\<wbr>Desktop\<wbr>ARPG_BATTLESIMUL\<wbr></span></p>
+      <p class="muted">기준 폴더: <span class="path">E:\<wbr>6.GIT\<wbr>BS\<wbr>BATTLE_SIMUL\<wbr></span></p>
       <table>
         <thead><tr><th style="width:12rem">무엇</th><th>어디</th></tr></thead>
         <tbody>
@@ -679,7 +696,7 @@
           <tr><td>시나리오</td><td><span class="path">…\<wbr>StreamingAssets\<wbr>ARPG\<wbr>Scenarios\<wbr>*.json</span></td></tr>
           <tr><td>전투 규칙 값</td><td><span class="path">…\<wbr>StreamingAssets\<wbr>ARPG\<wbr>rules.json</span></td></tr>
           <tr><td>엑셀 변환기</td><td><span class="path">Unity_Project\<wbr>BalanceMaker\<wbr>Tools\<wbr>ExcelExport\<wbr>export_tables.py</span></td></tr>
-          <tr><td>결과(CSV)</td><td><span class="path">C:\<wbr>Users\<wbr>m0428\<wbr>AppData\<wbr>LocalLow\<wbr>DefaultCompany\<wbr>BalanceMaker\<wbr>Exports\<wbr></span></td></tr>
+          <tr><td>결과(CSV)</td><td><span class="path">%USERPROFILE%\<wbr>AppData\<wbr>LocalLow\<wbr>DefaultCompany\<wbr>BalanceMaker\<wbr>Exports\<wbr></span></td></tr>
           <tr><td>규칙 해석·구조 문서</td><td><span class="path">Unity_Project\<wbr>BalanceMaker\<wbr>Assets\<wbr>ARPG\<wbr>RULES.md</span>, <span class="path">Unity_Plan\<wbr>06_구조_도식.md</span></td></tr>
           <tr><td>이 설명서</td><td><span class="path">Manual\<wbr>ARPG_전투시뮬레이터_사용설명서.html</span></td></tr>
         </tbody>

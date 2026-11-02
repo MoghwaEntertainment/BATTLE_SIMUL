@@ -43,16 +43,17 @@
     <UnityVersion>6000.6.7f1</UnityVersion>
   </PropertyGroup>
   <ItemGroup>
+    <Analyzer Include="C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\Extensions\Microsoft\Visual Studio Tools for Unity\Analyzers\Microsoft.Unity.Analyzers.dll" />
     <Analyzer Include="C:\Program Files\Unity\Hub\Editor\6000.6.7f1\Editor\Data\Tools\BuildPipeline\Unity.SourceGenerators\Unity.SourceGenerators.dll" />
     <Analyzer Include="C:\Program Files\Unity\Hub\Editor\6000.6.7f1\Editor\Data\Tools\BuildPipeline\Unity.SourceGenerators\Unity.Properties.SourceGenerator.dll" />
     <Analyzer Include="C:\Program Files\Unity\Hub\Editor\6000.6.7f1\Editor\Data\Tools\BuildPipeline\Unity.SourceGenerators\Unity.UIToolkit.SourceGenerator.dll" />
     <Analyzer Include="C:\Program Files\Unity\Hub\Editor\6000.6.7f1\Editor\Data\Tools\BuildPipeline\Unity.Analyzers\Unity.Analyzers.Common.dll" />
     <Analyzer Include="C:\Program Files\Unity\Hub\Editor\6000.6.7f1\Editor\Data\Tools\BuildPipeline\Unity.Analyzers\Unity.Analyzers.LongLiving.dll" />
-    <Analyzer Include="C:\Users\m0428\Desktop\ARPG_BATTLESIMUL\Unity_Project\BalanceMaker\Library\PackageCache\com.unity.ai.inference@9a123aee5df7\Runtime\Core\SourceGenerator\SourceGenerators.dll" />
-    <Analyzer Include="C:\Users\m0428\Desktop\ARPG_BATTLESIMUL\Unity_Project\BalanceMaker\Library\PackageCache\com.unity.dt.app-ui@8606a9847e5b\Runtime\SourceGenerators\netstandard2.0\EnumToLowerCase.dll" />
-    <Analyzer Include="C:\Users\m0428\Desktop\ARPG_BATTLESIMUL\Unity_Project\BalanceMaker\Library\PackageCache\com.unity.dt.app-ui@8606a9847e5b\Runtime\SourceGenerators\netstandard2.0\UxmlCloneTreeGenerator.dll" />
-    <Analyzer Include="C:\Users\m0428\Desktop\ARPG_BATTLESIMUL\Unity_Project\BalanceMaker\Library\PackageCache\com.unity.pipeline@363b8bb9e91d\Runtime\Analyzers\IlInterpreterAnalyzer.dll" />
-    <Analyzer Include="C:\Users\m0428\Desktop\ARPG_BATTLESIMUL\Unity_Project\BalanceMaker\Library\PackageCache\com.unity.dt.app-ui@8606a9847e5b\Runtime\MVVM\SourceGenerators\netstandard2.0\MVVMSourceGenerators.dll" />
+    <Analyzer Include="E:\6.GIT\BS\BATTLE_SIMUL\Unity_Project\BalanceMaker\Library\PackageCache\com.unity.ai.inference@9a123aee5df7\Runtime\Core\SourceGenerator\SourceGenerators.dll" />
+    <Analyzer Include="E:\6.GIT\BS\BATTLE_SIMUL\Unity_Project\BalanceMaker\Library\PackageCache\com.unity.dt.app-ui@8606a9847e5b\Runtime\SourceGenerators\netstandard2.0\EnumToLowerCase.dll" />
+    <Analyzer Include="E:\6.GIT\BS\BATTLE_SIMUL\Unity_Project\BalanceMaker\Library\PackageCache\com.unity.dt.app-ui@8606a9847e5b\Runtime\SourceGenerators\netstandard2.0\UxmlCloneTreeGenerator.dll" />
+    <Analyzer Include="E:\6.GIT\BS\BATTLE_SIMUL\Unity_Project\BalanceMaker\Library\PackageCache\com.unity.pipeline@363b8bb9e91d\Runtime\Analyzers\IlInterpreterAnalyzer.dll" />
+    <Analyzer Include="E:\6.GIT\BS\BATTLE_SIMUL\Unity_Project\BalanceMaker\Library\PackageCache\com.unity.dt.app-ui@8606a9847e5b\Runtime\MVVM\SourceGenerators\netstandard2.0\MVVMSourceGenerators.dll" />
     <Analyzer Include="C:\Program Files\Unity\Hub\Editor\6000.6.7f1\Editor\Data\BCLExtensions\TargetingPacks\netstandard2.1\analyzers\dotnet\roslyn4.0\cs\Microsoft.Extensions.Logging.Generators.dll" />
     <Analyzer Include="C:\Program Files\Unity\Hub\Editor\6000.6.7f1\Editor\Data\BCLExtensions\TargetingPacks\netstandard2.1\analyzers\dotnet\roslyn4.0\cs\System.Text.Json.SourceGeneration.dll" />
   </ItemGroup>
@@ -692,12 +693,12 @@
       <HintPath>C:\Program Files\Unity\Hub\Editor\6000.6.7f1\Editor\Data\Managed\UnityEditor.Graphs.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="UnityEditor.WebGL.Extensions">
-      <HintPath>C:\Program Files\Unity\Hub\Editor\6000.6.7f1\Editor\Data\PlaybackEngines\WebGLSupport\UnityEditor.WebGL.Extensions.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
     <Reference Include="UnityEditor.WindowsStandalone.Extensions">
       <HintPath>C:\Program Files\Unity\Hub\Editor\6000.6.7f1\Editor\Data\PlaybackEngines\WindowsStandaloneSupport\UnityEditor.WindowsStandalone.Extensions.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEditor.Android.Extensions">
+      <HintPath>C:\Program Files\Unity\Hub\Editor\6000.6.7f1\Editor\Data\PlaybackEngines\AndroidPlayer\UnityEditor.Android.Extensions.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="TextMateSharpPlastic">
@@ -766,6 +767,14 @@
     </Reference>
     <Reference Include="UnityPipeline.Microsoft.CodeAnalysis">
       <HintPath>Library\PackageCache\com.unity.pipeline@363b8bb9e91d\Runtime\Plugins\CodeAnalysis\UnityPipeline.Microsoft.CodeAnalysis.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Unity.Android.Types">
+      <HintPath>C:\Program Files\Unity\Hub\Editor\6000.6.7f1\Editor\Data\PlaybackEngines\AndroidPlayer\Unity.Android.Types.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Unity.Android.Gradle">
+      <HintPath>C:\Program Files\Unity\Hub\Editor\6000.6.7f1\Editor\Data\PlaybackEngines\AndroidPlayer\Unity.Android.Gradle.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="mscorlib">

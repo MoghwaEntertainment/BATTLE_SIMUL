@@ -43,6 +43,8 @@ namespace ARPG.Core.Tests
             Run(list, "스태미나 20 에서 비용 50 → -30 보존, 1 미만 동안 재사용 불가", TestStaminaNegative);
             Run(list, "동시 교환 + 강제 중단 시 이후 타격 취소·콤보 초기화", TestSimultaneousAndInterrupt);
             Run(list, "AI 폭포: 확률 0 / 쿨다운 / 자원 부족 행은 건너뜀", TestWaterfallSkips);
+            Run(list, "경직 중 강인도 무적: 경직 1회, 2·3타는 HP만 감소(끄면 재경직)", TestStaggerPoiseImmunity);
+            Run(list, "버프: 시전 시 자신 참격 +100(1초) → 피해 200, tick 30 해제 / 적중 시 적 감소율 -50% → 50·100·100, 재적용은 갱신", TestBuffs);
             if (realCatalog != null && realScenario != null)
             {
                 Run(list, "결정성: 같은 시드 2회 이벤트 해시 일치", () => TestDeterminism(realCatalog, realRules, realScenario));
@@ -236,7 +238,7 @@ namespace ARPG.Core.Tests
 
         private static DataCatalog BuildSynthetic(Action<double[]> atkStats, Action<double[]> dummyStats, string dummyAi,
                                                   double[] hits, double[] mv, double cancel, double stamina, double lightCooldown,
-                                                  string dummyGroup = "TG")
+                                                  string dummyGroup = "TG", Action<SkillDto> skillMod = null, BuffFileDto buffs = null)
         {
             var names = Enum.GetNames(typeof(StatId));
             var statNames = new List<string>();
@@ -256,7 +258,9 @@ namespace ARPG.Core.Tests
                     new CharacterDto { id = "DUMMY", enabled = true, displayName = "허수아비", movesetId = dummyGroup, aiProfileId = dummyAi, stats = sd },
                 },
             };
-            var skills = new SkillFileDto { skills = new[] { MakeSkill("T_ATK", hits, mv, 800, cancel, stamina) } };
+            var atkSkill = MakeSkill("T_ATK", hits, mv, 800, cancel, stamina);
+            if (skillMod != null) skillMod(atkSkill);
+            var skills = new SkillFileDto { skills = new[] { atkSkill } };
             var moves = new MovesetFileDto
             {
                 nodes = new[]
@@ -281,7 +285,7 @@ namespace ARPG.Core.Tests
                 phases = new PhaseDto[0],
                 maps = new AiMapDto[0],
             };
-            var cat = DataCatalog.Build(chars, skills, moves, ai, new DataManifestDto { dataHash = "synthetic" });
+            var cat = DataCatalog.Build(chars, skills, moves, ai, new DataManifestDto { dataHash = "synthetic" }, buffs);
             cat.SortRules(true);
             return cat;
         }
@@ -424,6 +428,84 @@ namespace ARPG.Core.Tests
             if (dummyHits != 1) return "상대 타격 수 " + dummyHits + " (1 기대: 동시 1타 유지, 이후 취소)";
             if (!interrupted) return "강제 중단 이벤트 없음";
             if (sim.Combatants[1].ComboNodeId != "NONE") return "콤보 초기화 안 됨";
+            return null;
+        }
+
+        private static string TestStaggerPoiseImmunity()
+        {
+            // 3연타(0.3초 간격, 강인도 공격 100) vs 강인도 50 허수아비. 1타에 경직(30f = 1초)이 걸리고 2·3타는 경직 중에 맞는다.
+            Func<bool, BattleSimulation> run = immune =>
+            {
+                var cat = BuildSynthetic(
+                    a => { a[(int)StatId.STAGGER_BUILDUP] = 100; },
+                    d => { d[(int)StatId.STAGGER_ENDURANCE] = 50; },
+                    "T_IDLE", new[] { 300.0, 600.0, 900.0 }, new[] { 1.0, 1.0, 1.0 }, 0, 0, 1000);
+                cat.Skills["T_ATK"].AniTimeMs = 1000;
+                var rules = FixedRandomRules();
+                rules.poiseImmuneWhileStaggered = immune;
+                var sim = new BattleSimulation(cat, rules, Duel(2.0), "t", 0, 1, null);
+                for (int i = 0; i < 40; i++) sim.Step();
+                return sim;
+            };
+            var on = run(true);
+            var d1 = on.Combatants[1];
+            if (d1.StaggerCount != 1) return "무적 켬: 경직 " + d1.StaggerCount + "회 (1 기대)";
+            if (!Near(d1.Poise, d1.MaxPoise)) return "무적 켬: 강인도 " + d1.Poise + " / " + d1.MaxPoise + " (최대 유지 기대)";
+            if (!Near(d1.MaxHp - d1.Hp, 300)) return "무적 켬: HP 감소 " + (d1.MaxHp - d1.Hp) + " (300 기대: 3타 모두 피해)";
+            var off = run(false);
+            if (off.Combatants[1].StaggerCount < 2) return "무적 끔: 경직 " + off.Combatants[1].StaggerCount + "회 (재경직 2회 이상 기대)";
+            return null;
+        }
+
+        private static string TestBuffs()
+        {
+            var buffs = new BuffFileDto
+            {
+                buffs = new[]
+                {
+                    new BuffDto { id = 1, enabled = true, name = "참격+100", effects = new[] { new BuffEffectDto { abilityId = 18, stat = "SLASH_ATTACK", value = 100 } } },
+                    new BuffDto { id = 2, enabled = true, name = "참격감소율-50%", effects = new[] { new BuffEffectDto { abilityId = 57, stat = "SLASH_NEGATION", value = -50000 } } },
+                },
+            };
+
+            // (1) 시전 시(ON_CAST) 자신에게 참격 공격력 +100, 1초. 300ms 타격(tick 8) 피해 200, tick 30 에 해제되고 원래 값으로.
+            var cat = BuildSynthetic(a => { }, d => { }, "T_IDLE", new[] { 300.0 }, new[] { 1.0 }, 0, 0, 1000, "TG",
+                sk => { sk.buffId = 1; sk.buffTarget = "SELF"; sk.triggerCondition = "ON_CAST"; sk.buffDurationMs = 1000; }, buffs);
+            var rec = new EventRecorder();
+            var sim = new BattleSimulation(cat, FixedRandomRules(), Duel(2.0), "t", 0, 1, rec);
+            for (int i = 0; i < 40; i++) sim.Step();
+            long applied = -1, expired = -1;
+            double hit = double.NaN;
+            foreach (var e in rec.Events)
+            {
+                if (e.Type == BattleEventType.BuffApplied && e.StatusId == "BUFF_1" && applied < 0) applied = e.Tick;
+                if (e.Type == BattleEventType.BuffExpired && e.StatusId == "BUFF_1") expired = e.Tick;
+                if (e.Type == BattleEventType.HitResolved && e.ActorId == 0 && e.TargetId >= 0 && double.IsNaN(hit)) hit = e.Damage;
+            }
+            if (applied != 0) return "자기 버프 적용 tick " + applied + " (0 기대)";
+            if (!Near(hit, 200)) return "버프 중 피해 " + hit + " (200 기대)";
+            if (expired != 30) return "해제 tick " + expired + " (30 기대)";
+            if (!Near(sim.Combatants[0].Stat(StatId.SLASH_ATTACK), 100)) return "해제 후 참격 공격력 " + sim.Combatants[0].Stat(StatId.SLASH_ATTACK);
+            if (!Near(cat.Characters["ATK"].Stat(StatId.SLASH_ATTACK), 100)) return "캐릭터 정의 값이 바뀜(복사본이 아님)";
+
+            // (2) 적중 시(ON_HIT) 적에게 참격 피해 감소율 -50%, 2초. 감소율 50% 허수아비: 1타 50, 2·3타 100. 재적용은 중첩 없이 갱신.
+            var cat2 = BuildSynthetic(a => { }, d => { d[(int)StatId.SLASH_NEGATION] = 50000; }, "T_IDLE",
+                new[] { 300.0, 600.0, 900.0 }, new[] { 1.0, 1.0, 1.0 }, 0, 0, 1000, "TG",
+                sk => { sk.buffId = 2; sk.buffTarget = "ENEMY"; sk.triggerCondition = "ON_HIT"; sk.buffDurationMs = 2000; }, buffs);
+            cat2.Skills["T_ATK"].AniTimeMs = 1000;
+            var rec2 = new EventRecorder();
+            var sim2 = new BattleSimulation(cat2, FixedRandomRules(), Duel(2.0), "t", 0, 1, rec2);
+            for (int i = 0; i < 40; i++) sim2.Step();
+            var dmg = new List<double>();
+            int refresh = 0;
+            foreach (var e in rec2.Events)
+            {
+                if (e.Type == BattleEventType.HitResolved && e.ActorId == 0 && e.TargetId >= 0) dmg.Add(e.Damage);
+                if (e.Type == BattleEventType.BuffApplied && e.Result == "REFRESH") refresh++;
+            }
+            if (dmg.Count != 3 || !Near(dmg[0], 50) || !Near(dmg[1], 100) || !Near(dmg[2], 100)) return "디버프 피해 " + string.Join(",", dmg) + " (50,100,100 기대)";
+            if (refresh != 2) return "재적용 갱신 " + refresh + "회 (2 기대)";
+            if (sim2.Combatants[1].Buffs.Count != 1) return "같은 버프가 중첩됨 " + sim2.Combatants[1].Buffs.Count;
             return null;
         }
 

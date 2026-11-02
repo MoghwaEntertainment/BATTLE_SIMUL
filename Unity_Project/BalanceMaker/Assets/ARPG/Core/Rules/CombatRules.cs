@@ -11,7 +11,7 @@ namespace ARPG.Core
     [Serializable]
     public sealed class CombatRules
     {
-        public string rulesVersion = "2026.11.01-r1";
+        public string rulesVersion = "2026.11.02-r3";
 
         // ---- 시간 ----
         public int tickRate = 30;                 // [확정] 30Hz
@@ -78,6 +78,7 @@ namespace ARPG.Core
         public double guardFrontAngleDeg = 180;   // [임시] 전방 180도만 가드
         public double blockHoldSecWhenAniTimeZero = 1.0; // [임시] BLOCK Ani_Time=0 일 때 가드 유지
         public int staggerTicks = 30;             // [로그] 기존 로그 '강인도 붕괴 30f'
+        public bool poiseImmuneWhileStaggered = true; // [기획 확정] 경직 중 강인도 무적(HP 피해만 받음, 재경직 없음). false = 경직 중에도 강인도 감소·재경직
         public double poiseRecoveryDelaySec = 5;  // [기획] 피격 후 5초 뒤 회복
         public double poiseRecoveryPerSec = -1;   // [임시] -1 = 회복 시작 시 즉시 최대치
         public bool statusBuildupUsesMotionValue = true; // [해석] 유발 = 무기 유발 × 모션 밸류
@@ -96,6 +97,10 @@ namespace ARPG.Core
         // ---- 콤보/캔슬 ----
         public double comboContinueWindowSec = 0.3;   // [임시] 공격 종료 후 다음 입력까지 콤보 유지
         public bool idleDoesNotCancel = true;         // [해석] 캔슬 구간에서 IDLE 선택은 현재 동작 유지
+
+        // ---- 버프(BUFF 표 + SKILL Buff_ID) ----
+        public bool buffZeroChanceAlways = true;          // [임시] SKILL Trigger_Chance 0(미입력) = 항상 발동. false 면 0% (안 걸림)
+        public bool buffMaxIncreaseRaisesCurrent = true;  // [임시] 버프로 최대 HP/FP/스태미나/강인도가 늘면 현재값도 같은 만큼 증가(줄면 항상 새 최대치로 자름)
 
         public double TickSec { get { return 1.0 / tickRate; } }
         public double TickMs { get { return 1000.0 / tickRate; } }

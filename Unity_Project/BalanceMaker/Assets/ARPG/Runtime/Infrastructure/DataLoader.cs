@@ -61,13 +61,16 @@ namespace ARPG.Runtime
             var moves = ReadJson<MovesetFileDto>(Path.Combine(dir, "movesets.json"), ld.Errors);
             var ai = ReadJson<AiFileDto>(Path.Combine(dir, "ai.json"), ld.Errors);
             var manifest = ReadJson<DataManifestDto>(Path.Combine(dir, "manifest.json"), ld.Errors);
+            // buffs.json 은 선택(변환기 1.2.0 부터 생성). 없으면 버프 없이 실행한다.
+            string buffPath = Path.Combine(dir, "buffs.json");
+            var buffs = File.Exists(buffPath) ? ReadJson<BuffFileDto>(buffPath, ld.Errors) : null;
             ld.Rules = LoadRules(out ld.RulesSource, ld.Errors);
             if (chars == null || skills == null || moves == null || ai == null)
             {
                 ld.Errors.Add("Tools/ExcelExport/export_tables.py 로 데이터를 먼저 생성하세요 (메뉴 ARPG > 엑셀 → JSON 변환)");
                 return ld;
             }
-            ld.Catalog = DataCatalog.Build(chars, skills, moves, ai, manifest);
+            ld.Catalog = DataCatalog.Build(chars, skills, moves, ai, manifest, buffs);
             ld.Catalog.SortRules(ld.Rules.commonRowsFirst);
             return ld;
         }
