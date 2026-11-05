@@ -65,6 +65,7 @@ namespace ARPG.Runtime
             string buffPath = Path.Combine(dir, "buffs.json");
             var buffs = File.Exists(buffPath) ? ReadJson<BuffFileDto>(buffPath, ld.Errors) : null;
             ld.Rules = LoadRules(out ld.RulesSource, ld.Errors);
+            if (ld.Errors.Exists(e => e.StartsWith("gameconfig.json", StringComparison.Ordinal))) return ld;
             if (chars == null || skills == null || moves == null || ai == null)
             {
                 ld.Errors.Add("Tools/ExcelExport/export_tables.py 로 데이터를 먼저 생성하세요 (메뉴 ARPG > 엑셀 → JSON 변환)");
@@ -94,6 +95,17 @@ namespace ARPG.Runtime
             }
             if (r.tickRate <= 0) { errors.Add("tickRate 는 1 이상"); r.tickRate = 30; }
             if (r.aiTickInterval <= 0) r.aiTickInterval = 1;
+            string configPath = Path.Combine(ArpgPaths.DataDir, "gameconfig.json");
+            if (File.Exists(configPath))
+            {
+                try
+                {
+                    r = GameConfigRules.Apply(r, JsonUtility.FromJson<GameConfigFileDto>(File.ReadAllText(configPath, Encoding.UTF8)));
+                    source += " + GameConfig.xlsm";
+                }
+                catch (Exception ex) { errors.Add("gameconfig.json 적용 실패: " + ex.Message); }
+            }
+
             return r;
         }
     }

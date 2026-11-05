@@ -1,5 +1,5 @@
 {
-  "rulesVersion": "2026.11.02-r3",
+  "rulesVersion": "2026.11.04-r7",
   "tickRate": 30,
   "aiTickInterval": 3,
   "maxBattleSec": 300.0,
@@ -52,6 +52,7 @@
   "guardFrontAngleDeg": 180.0,
   "blockHoldSecWhenAniTimeZero": 1.0,
   "staggerTicks": 30,
+  "deferStateChangesToTickEnd": true,
   "poiseImmuneWhileStaggered": true,
   "poiseRecoveryDelaySec": 5.0,
   "poiseRecoveryPerSec": -1.0,

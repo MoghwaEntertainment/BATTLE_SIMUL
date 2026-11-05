@@ -47,6 +47,16 @@ namespace ARPG.Runtime
         /// <summary>공격 연출 막대의 도착점(몸통 중심).</summary>
         public Vector3 CenterPoint { get { return transform.position + new Vector3(0, 1.0f, 0); } }
 
+        // 상태 색(몸 색과 머리 위 상태 글자에 같이 쓴다). 아군 팀색이 파랑이라 빙결은 밝은 얼음색 파랑으로 구분한다.
+        public static readonly Color StunTint = new Color(1f, 0.85f, 0.15f);    // 기절: 노랑
+        public static readonly Color StaggerTint = new Color(1f, 0.6f, 0.1f);   // 경직: 주황
+        public static readonly Color FrostTint = new Color(0.6f, 0.88f, 1f);    // 빙결: 얼음 파랑
+        public static readonly Color PoisonTint = new Color(0.72f, 0.35f, 0.95f); // 중독: 보라
+        public static readonly Color WoundTint = new Color(1f, 0.32f, 0.32f);   // 상처: 빨강(즉시 피해라 1초만 글자 표시)
+
+        /// <summary>상처 발동 글자를 이 tick 전까지 표시(ViewEventSink 가 설정).</summary>
+        public long WoundTagUntilTick = -1;
+
         public static readonly Color AllyColor = new Color(0.25f, 0.55f, 1f);
         public static readonly Color EnemyColor = new Color(1f, 0.35f, 0.3f);
         public static readonly Color[] ExtraTeamColors = { new Color(0.3f, 0.85f, 0.4f), new Color(0.9f, 0.75f, 0.2f) };
@@ -266,14 +276,16 @@ namespace ARPG.Runtime
             _stunRing.gameObject.SetActive(!dead && stunned);
             if (stunned) _stunRing.Rotate(0, 360f * Time.unscaledDeltaTime, 0, Space.Self);
 
-            // 색: 사망 회색, 피격 점멸 흰색, 회피 무적 청록, 경직 주황, 빙결 하늘색, 중독 보라
+            // 색: 사망 회색, 피격 점멸 흰색, 회피 무적 청록, 기절 노랑, 경직 주황(팀색 섞음), 빙결 얼음 파랑, 중독 보라
+            // 상태이상(기절·빙결·중독)은 몸 전체를 상태 색으로 칠한다. 팀은 바닥 고리 색으로 구별.
             Color col = _teamColor;
             if (dead) col = new Color(0.35f, 0.35f, 0.35f);
             else if (Time.unscaledTime < _hitFlashUntil) col = Color.white;
             else if (c.InIFrame) col = new Color(0.4f, 1f, 1f);
-            else if (staggered) col = Color.Lerp(_teamColor, new Color(1f, 0.6f, 0.1f), 0.6f);
-            else if (c.FrostActive(tick)) col = Color.Lerp(_teamColor, new Color(0.7f, 0.9f, 1f), 0.6f);
-            else if (c.PoisonActive) col = Color.Lerp(_teamColor, new Color(0.6f, 0.2f, 0.8f), 0.5f);
+            else if (stunned) col = StunTint;
+            else if (staggered) col = Color.Lerp(_teamColor, StaggerTint, 0.6f);
+            else if (c.FrostActive(tick)) col = FrostTint;
+            else if (c.PoisonActive) col = PoisonTint;
             SetColor(_bodyR, col);
             SetColor(_ringR, selected ? new Color(1f, 0.95f, 0.3f) : Color.Lerp(_teamColor, Color.black, dead ? 0.7f : 0.3f));
             _ring.localScale = selected ? new Vector3((float)c.Radius * 3.6f, 0.01f, (float)c.Radius * 3.6f)

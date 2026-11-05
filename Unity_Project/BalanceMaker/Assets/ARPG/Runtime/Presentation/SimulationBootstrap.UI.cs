@@ -53,6 +53,10 @@ namespace ARPG.Runtime
         private float _pickerRowH = 22f, _pickerViewH = 400f;
         private static readonly GUIContent PickerProbe = new GUIContent("가Ag");
         private readonly GUIContent _nameContent = new GUIContent();
+        // 머리 위 상태 글자(이름 위): 글자·색·폭 임시 목록
+        private readonly List<string> _tagText = new List<string>();
+        private readonly List<Color> _tagColor = new List<Color>();
+        private readonly List<float> _tagWidth = new List<float>();
 
         private void SyncScenarioTexts()
         {
@@ -519,9 +523,13 @@ namespace ARPG.Runtime
                   .Append(c.Stamina < 1 ? "  (1 미만: 소모 행동 불가)" : "").Append('\n');
             else sb.Append("스태미나 미관리(몬스터)\n");
             sb.Append("강인도 ").Append(c.Poise.ToString("0.0", Inv)).Append(" / ").Append(c.MaxPoise.ToString("0.0", Inv)).Append('\n');
-            sb.Append("상태: ").Append(c.Dead ? "사망" : c.StateFor(t).ToString());
-            if (c.IsStunned(t)) sb.Append(" 기절(").Append(c.StunUntilTick - t).Append("t)");
-            if (c.IsStaggered(t)) sb.Append(" 경직(").Append(c.StaggerUntilTick - t).Append("t)");
+            // 기절을 우선 표시: 기절 > 경직 > AI 판정 상태(누적 기절의 AI 판정값은 staggered 라 이름으로 적지 않는다)
+            sb.Append("상태: ");
+            if (c.Dead) sb.Append("사망");
+            else if (c.IsStunned(t)) sb.Append(c.StunFromGuardBreak ? "기절·가드 브레이크(" : "기절(").Append(c.StunUntilTick - t).Append("t)");
+            else if (c.IsStaggered(t)) sb.Append("경직(").Append(c.StaggerUntilTick - t).Append("t)");
+            else sb.Append(c.StateFor(t).ToString());
+            if (!c.Dead && c.IsStunned(t) && c.IsStaggered(t)) sb.Append(" 경직(").Append(c.StaggerUntilTick - t).Append("t)");
             if (c.PoisonActive) sb.Append(" 중독(").Append(c.PoisonTicksLeft).Append("회)");
             if (c.FrostActive(t)) sb.Append(" 빙결(").Append(c.FrostEndTick - t).Append("t)");
             sb.Append('\n');
@@ -532,7 +540,8 @@ namespace ARPG.Runtime
                     sb.Append(' ').Append(ab.Def.Name).Append("(#").Append(ab.Def.Id).Append(", ").Append(Math.Max(0, ab.EndTick - t)).Append("t)");
                 sb.Append('\n');
             }
-            sb.Append("누적 상처 ").Append(c.Buildup[(int)StatusKind.Wound].ToString("0.0", Inv)).Append("/").Append(c.Stat(StatId.WOUND_RESIST).ToString("0", Inv))
+            sb.Append("누적 기절 ").Append(c.Buildup[(int)StatusKind.Stun].ToString("0.0", Inv)).Append("/").Append(c.Stat(StatId.STUN_RESIST).ToString("0", Inv))
+              .Append("  상처 ").Append(c.Buildup[(int)StatusKind.Wound].ToString("0.0", Inv)).Append("/").Append(c.Stat(StatId.WOUND_RESIST).ToString("0", Inv))
               .Append("  중독 ").Append(c.Buildup[(int)StatusKind.Poison].ToString("0.0", Inv)).Append("/").Append(c.Stat(StatId.POISON_RESIST).ToString("0", Inv))
               .Append("  빙결 ").Append(c.Buildup[(int)StatusKind.Frost].ToString("0.0", Inv)).Append("/").Append(c.Stat(StatId.FROST_RESIST).ToString("0", Inv)).Append('\n');
             var a = c.Action;
@@ -631,6 +640,50 @@ namespace ARPG.Runtime
                 GUI.Label(new Rect(r.x + 1, r.y + 1, r.width, r.height), _nameContent, _nameTag);
                 GUI.color = c.Dead ? Color.gray : Color.white;
                 GUI.Label(r, _nameContent, _nameTag);
+                if (!c.Dead) DrawStatusTags(c, v, r);
+            }
+            GUI.color = Color.white;
+        }
+
+        /// <summary>
+        /// 이름 위에 상태 글자를 색으로 표시: 기절(노랑)·경직(주황)·빙결(파랑)·중독(보라)·상처(빨강, 발동 후 1초). 기절을 맨 앞에 둔다.
+        /// 몸 색(CombatantView)과 같은 색을 쓴다. 화면 표시만 하며 전투에는 관여하지 않는다.
+        /// </summary>
+        private void DrawStatusTags(Combatant c, CombatantView v, Rect nameRect)
+        {
+            long t = _sim.Tick;
+            _tagText.Clear();
+            _tagColor.Clear();
+            _tagWidth.Clear();
+            if (c.IsStunned(t)) { _tagText.Add(c.StunFromGuardBreak ? "기절(가드 브레이크)" : "기절"); _tagColor.Add(CombatantView.StunTint); }
+            if (c.IsStaggered(t)) { _tagText.Add("경직"); _tagColor.Add(CombatantView.StaggerTint); }
+            if (c.FrostActive(t)) { _tagText.Add("빙결"); _tagColor.Add(CombatantView.FrostTint); }
+            if (c.PoisonActive) { _tagText.Add("중독"); _tagColor.Add(CombatantView.PoisonTint); }
+            if (t < v.WoundTagUntilTick) { _tagText.Add("상처"); _tagColor.Add(CombatantView.WoundTint); }
+            if (_tagText.Count == 0) return;
+
+            const float gap = 6f;
+            float total = 0f, h = 0f;
+            for (int i = 0; i < _tagText.Count; i++)
+            {
+                _nameContent.text = _tagText[i];
+                Vector2 sz = _nameTag.CalcSize(_nameContent);
+                _tagWidth.Add(Mathf.Ceil(sz.x));
+                total += Mathf.Ceil(sz.x);
+                h = Mathf.Max(h, Mathf.Ceil(sz.y));
+            }
+            total += gap * (_tagText.Count - 1);
+            float x = Mathf.Round(nameRect.center.x - total * 0.5f);
+            float y = nameRect.y - h;
+            for (int i = 0; i < _tagText.Count; i++)
+            {
+                _nameContent.text = _tagText[i];
+                var r = new Rect(x, y, _tagWidth[i], h);
+                GUI.color = new Color(0f, 0f, 0f, 0.85f);
+                GUI.Label(new Rect(r.x + 1, r.y + 1, r.width, r.height), _nameContent, _nameTag);
+                GUI.color = _tagColor[i];
+                GUI.Label(r, _nameContent, _nameTag);
+                x += _tagWidth[i] + gap;
             }
             GUI.color = Color.white;
         }

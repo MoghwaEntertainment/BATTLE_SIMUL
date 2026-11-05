@@ -44,7 +44,11 @@ namespace ARPG.Core.Tests
             Run(list, "동시 교환 + 강제 중단 시 이후 타격 취소·콤보 초기화", TestSimultaneousAndInterrupt);
             Run(list, "AI 폭포: 확률 0 / 쿨다운 / 자원 부족 행은 건너뜀", TestWaterfallSkips);
             Run(list, "경직 중 강인도 무적: 경직 1회, 2·3타는 HP만 감소(끄면 재경직)", TestStaggerPoiseImmunity);
+            Run(list, "기절 누적: 증가율·모션밸류·저항·감소·면역·만료·동시 교환·행동 중단", TestStunBuildup);
+            Run(list, "같은 tick 상태 전환은 tick 끝에 일괄 적용(2번째 타격은 그로기 아님·기절 1회 / 끄면 이전 동작)", TestTickEndStateChange);
             Run(list, "버프: 시전 시 자신 참격 +100(1초) → 피해 200, tick 30 해제 / 적중 시 적 감소율 -50% → 50·100·100, 재적용은 갱신", TestBuffs);
+            Run(list, "구르기 무적은 논리 경과 시간: 정상·빙결·중도 발동/해제의 무적 tick 일치", TestDodgeRealTimeIFrames);
+            Run(list, "GameConfig: 단위·초→tick·기절/가드 분리·원자적 검증·실제 피해/기절 기간", TestGameConfig);
             if (realCatalog != null && realScenario != null)
             {
                 Run(list, "결정성: 같은 시드 2회 이벤트 해시 일치", () => TestDeterminism(realCatalog, realRules, realScenario));
@@ -438,7 +442,7 @@ namespace ARPG.Core.Tests
             {
                 var cat = BuildSynthetic(
                     a => { a[(int)StatId.STAGGER_BUILDUP] = 100; },
-                    d => { d[(int)StatId.STAGGER_ENDURANCE] = 50; },
+                    d => { d[(int)StatId.STAGGER_ENDURANCE] = 50; d[(int)StatId.STUN_RESIST] = 1e9; },
                     "T_IDLE", new[] { 300.0, 600.0, 900.0 }, new[] { 1.0, 1.0, 1.0 }, 0, 0, 1000);
                 cat.Skills["T_ATK"].AniTimeMs = 1000;
                 var rules = FixedRandomRules();
@@ -454,6 +458,184 @@ namespace ARPG.Core.Tests
             if (!Near(d1.MaxHp - d1.Hp, 300)) return "무적 켬: HP 감소 " + (d1.MaxHp - d1.Hp) + " (300 기대: 3타 모두 피해)";
             var off = run(false);
             if (off.Combatants[1].StaggerCount < 2) return "무적 끔: 경직 " + off.Combatants[1].StaggerCount + "회 (재경직 2회 이상 기대)";
+            return null;
+        }
+
+        private static string TestStunBuildup()
+        {
+            var cat = BuildSynthetic(
+                a => { a[(int)StatId.STAGGER_BUILDUP] = 40; a[(int)StatId.STUN_BUILDUP_PCT] = 50000; a[(int)StatId.STAGGER_ENDURANCE] = 1e9; a[(int)StatId.STUN_RESIST] = 1e9; },
+                d => { d[(int)StatId.STUN_RESIST] = 100; d[(int)StatId.STAGGER_ENDURANCE] = 1e9; d[(int)StatId.SLASH_ATTACK] = 100; },
+                "T_AI", new[] { 300.0, 600.0, 900.0 }, new[] { 0.5, 1.5, 1.0 }, 0, 0, 10000);
+            cat.Skills["T_ATK"].AniTimeMs = 1000;
+            var rec = new EventRecorder();
+            var sim = new BattleSimulation(cat, FixedRandomRules(), Duel(2), "t", 0, 1, rec);
+            for (int i = 0; i <= 8; i++) sim.Step();
+            var target = sim.Combatants[1];
+            if (!Near(target.Buildup[(int)StatusKind.Stun], 30)) return "첫 타격 누적: 40 × 1.5 × 0.5 = 30 기대";
+            for (int i = 9; i <= 16; i++) sim.Step();
+            if (!Near(target.Buildup[(int)StatusKind.Stun], 30 - 8 * 5.0 / 30)) return "누적 감소 오류";
+            if (target.IsStunned(16)) return "저항 미달에서 기절";
+            sim.Step(); // tick 17: 28.5 + 90 >= 100, 동시에 성립한 상대 2타 유지
+            if (!target.IsStunned(17) || target.StunUntilTick != 107 || target.StunFromGuardBreak) return "누적 기절 발동/기간 오류";
+            if (!Near(target.Buildup[(int)StatusKind.Stun], 0) || target.Action != null || target.ComboNodeId != "NONE") return "게이지/행동/콤보 초기화 오류";
+            for (int i = 18; i <= 106; i++) sim.Step();
+            if (!target.IsStunned(106) || !Near(target.Buildup[(int)StatusKind.Stun], 0)) return "기절 중 면역/지속 오류";
+            sim.Step(); // tick 107 만료
+            if (target.StunUntilTick != -1) return "기절 만료 오류";
+            int applied = 0, opposingHits = 0;
+            bool interrupted = false, expired = false;
+            foreach (var e in rec.Events)
+            {
+                if (e.StatusId == "STUN" && e.Type == BattleEventType.StatusApplied && e.ActorId == 1) applied++;
+                if (e.Type == BattleEventType.HitResolved && e.ActorId == 1 && e.TargetId == 0) opposingHits++;
+                if (e.Type == BattleEventType.ActionInterrupted && e.ActorId == 1 && e.Tick == 17) interrupted = true;
+                if (e.StatusId == "STUN" && e.Type == BattleEventType.StatusExpired && e.ActorId == 1 && e.Tick == 107) expired = true;
+            }
+            if (applied != 1 || opposingHits != 2 || !interrupted || !expired) return "발동/동시 교환/중단/만료 이벤트 오류";
+            return null;
+        }
+
+        private static string TestTickEndStateChange()
+        {
+            // 공격자 2명(EntityId 0·1)이 같은 tick(8)에 허수아비(2)를 때린다. 0번 타격이 기절 저항 50 을 넘겨 기절을 일으킨다.
+            // tick 끝 일괄 적용(기본): 1번 타격은 기절 전 상태로 계산 → 그로기 아님(피해 100), 기절 발동은 두 타격 뒤 1회.
+            // 즉시 적용(false = 이전 동작): 1번 타격이 그로기 피해(×1.05 = 105).
+            Func<bool, EventRecorder> run = defer =>
+            {
+                var cat = BuildSynthetic(
+                    a => { a[(int)StatId.STAGGER_BUILDUP] = 100; a[(int)StatId.STAGGER_ENDURANCE] = 1e9; a[(int)StatId.STUN_RESIST] = 1e9; },
+                    d => { d[(int)StatId.STUN_RESIST] = 50; d[(int)StatId.STAGGER_ENDURANCE] = 1e9; },
+                    "T_IDLE", new[] { 300.0 }, new[] { 1.0 }, 0, 0, 1000);
+                var rules = FixedRandomRules();
+                rules.deferStateChangesToTickEnd = defer;
+                var sc = new BattleScenario { name = "selftest", masterSeed = 7, maxBattleSec = 20, spawnDistance = 2.0, spawnSpacing = 1 };
+                sc.GetOrAddTeam(0).members.Add(new ScenarioMember { definitionId = "ATK", count = 2 });
+                sc.GetOrAddTeam(1).members.Add(new ScenarioMember { definitionId = "DUMMY", count = 1 });
+                var rec = new EventRecorder();
+                var sim = new BattleSimulation(cat, rules, sc, "t", 0, 1, rec);
+                for (int i = 0; i <= 8; i++) sim.Step();
+                return rec;
+            };
+
+            var on = run(true);
+            var hits = new List<BattleEvent>();
+            long stunSeq = -1;
+            int stunCount = 0;
+            foreach (var e in on.Events)
+            {
+                if (e.Type == BattleEventType.HitResolved && e.TargetId == 2 && e.Tick == 8) hits.Add(e);
+                if (e.Type == BattleEventType.StatusApplied && e.StatusId == "STUN" && e.ActorId == 2) { stunCount++; stunSeq = e.Sequence; }
+            }
+            if (hits.Count != 2) return "tick 8 타격 수 " + hits.Count + " (2 기대)";
+            if (hits[1].Result != "HIT" || !Near(hits[1].Damage, 100)) return "일괄 적용: 두 번째 타격 " + hits[1].Result + " " + hits[1].Damage + " (그로기 아닌 HIT 100 기대)";
+            if (stunCount != 1) return "일괄 적용: 기절 발동 " + stunCount + "회 (1 기대)";
+            if (stunSeq < hits[1].Sequence) return "일괄 적용: 기절이 두 번째 타격보다 먼저 적용됨";
+
+            var off = run(false);
+            var offHits = new List<BattleEvent>();
+            foreach (var e in off.Events)
+                if (e.Type == BattleEventType.HitResolved && e.TargetId == 2 && e.Tick == 8) offHits.Add(e);
+            if (offHits.Count != 2) return "즉시 적용: tick 8 타격 수 " + offHits.Count;
+            if (offHits[1].Result != "HIT_GROGGY" || !Near(offHits[1].Damage, 105)) return "즉시 적용(이전 동작): 두 번째 타격 " + offHits[1].Result + " " + offHits[1].Damage + " (HIT_GROGGY 105 기대)";
+            return null;
+        }
+
+        private static string TestDodgeRealTimeIFrames()
+        {
+            var expected = new List<int>();
+            for (int variant = 0; variant < 4; variant++)
+            {
+                var cat = BuildSynthetic(a => { }, d => { }, "T_IDLE", new[] { 300.0 }, new[] { 1.0 }, 0, 0, 10000);
+                var rules = FixedRandomRules();
+                var sim = new BattleSimulation(cat, rules, Duel(2), "dodge-clock", 0, 1, null);
+                // 대기 AI로 자연 종료 전 행동 교체·공격 간섭을 차단한다.
+                sim.Combatants[0].Ai = sim.Combatants[1].Ai;
+                var c = sim.Combatants[1];
+                var dodge = new ActionInstance { Kind = ActionKind.Dodge, ActionId = "DODGE",
+                    DurationMs = rules.dodgeSec * 1000, IFrameStartMs = rules.dodgeIFrameStartSec * 1000,
+                    IFrameEndMs = rules.dodgeIFrameEndSec * 1000, TotalDistance = rules.dodgeDistance, FixedDir = new Vec2(1, 0) };
+                c.Action = dodge;
+                if (variant == 1) c.FrostEndTick = 1000; // 전 구간 빙결
+                if (variant == 3) c.FrostEndTick = 10;   // 구르기 중 해제
+                var frames = new List<int>();
+                int endTick = -1;
+                for (int tick = 0; tick < 50; tick++)
+                {
+                    if (variant == 2 && tick == 5) c.FrostEndTick = 1000; // 구르기 중 발동
+                    sim.Step();
+                    if (c.InIFrame) frames.Add(tick);
+                    if (c.Action != dodge && endTick < 0) endTick = tick;
+                }
+                if (variant == 0)
+                {
+                    expected = frames;
+                    if (frames.Count == 0 || frames[0] != 2 || frames[frames.Count - 1] != 12 || endTick != 20)
+                        return "정상 구르기 무적/종료 경계 오류";
+                }
+                else
+                {
+                    if (string.Join(",", frames) != string.Join(",", expected)) return "빙결 조건 " + variant + " 무적 tick 변경";
+                    if (variant == 1 && endTick != 41) return "빙결 구르기 1.4초 동작은 유지되어야 함";
+                }
+            }
+            return null;
+        }
+
+        private static string TestGameConfig()
+        {
+            var original = FixedRandomRules();
+            var config = new GameConfigFileDto { schemaVersion = 1, entries = new[] {
+                new GameConfigEntryDto { id = "STUN_TIME", valueType = "FLAT", value = 0.5 },
+                new GameConfigEntryDto { id = "STUN_ADD_DAMAGE_PCT", valueType = "RATE", value = 0 },
+                new GameConfigEntryDto { id = "WOUND_DAMAGE_PCT", valueType = "RATE", value = 0.1 },
+                new GameConfigEntryDto { id = "POISON_TIME", valueType = "FLAT", value = 4 },
+                new GameConfigEntryDto { id = "POISON_DAMAGE_PCT", valueType = "RATE", value = 0.02 },
+                new GameConfigEntryDto { id = "FROST_TIME", valueType = "FLAT", value = 7 },
+                new GameConfigEntryDto { id = "FROST_SLOWDOWN_PCT", valueType = "RATE", value = 0.75 },
+                new GameConfigEntryDto { id = "STAGGER_TIME", valueType = "FLAT", value = 0.5 },
+                new GameConfigEntryDto { id = "GUARD_BREAK_TIME", valueType = "FLAT", value = 2 },
+                new GameConfigEntryDto { id = "GUARD_BREAK_ADD_DAMAGE_PCT", valueType = "RATE", value = 0.5 }
+            }};
+            var r = GameConfigRules.Apply(original, config);
+            if (r.stunTicks != 15 || r.staggerTicks != 15 || r.guardBreakTicks != 60 || !Near(r.groggyDamageMult, 1) || !Near(r.guardBreakDamageMult, 1.5)
+                || !Near(r.woundMaxHpRatio, 0.1) || !Near(r.poisonDurationSec, 4) || !Near(r.poisonMaxHpRatioPerSec, 0.02)
+                || !Near(r.frostDurationSec, 7) || !Near(r.frostSpeedMult, 0.25)) return "GameConfig 매핑 오류";
+            if (original.stunTicks != 90) return "원본 rules 변경됨";
+            config.entries[0].value = -1;
+            bool rejected = false;
+            try { GameConfigRules.Apply(original, config); } catch (ArgumentException) { rejected = true; }
+            if (!rejected || original.stunTicks != 90) return "잘못된 값 거부/원자성 오류";
+            for (int guard = 0; guard < 2; guard++)
+            {
+                var cat = BuildSynthetic(a => { }, d => { }, "T_IDLE", new[] { 300.0 }, new[] { 1.0 }, 0, 0, 10000);
+                var rec = new EventRecorder();
+                var sim = new BattleSimulation(cat, r, Duel(2), "config", 0, 1, rec);
+                var target = sim.Combatants[1];
+                target.StunUntilTick = guard == 0 ? r.stunTicks : r.guardBreakTicks;
+                target.StunFromGuardBreak = guard != 0;
+                for (int i = 0; i < 10; i++) sim.Step();
+                double expected = guard == 0 ? 100 : 150;
+                if (!Near(target.MaxHp - target.Hp, expected)) return "기절/가드 추가 피해 분리 오류";
+                for (int i = 10; i <= (guard == 0 ? 15 : 60); i++) sim.Step();
+                if (target.StunUntilTick != -1) return "설정 시간 만료 오류";
+            }
+            // Fractional poison duration: damage at +1/+2 sec, expire at +2.5 sec.
+            var poisonCat = BuildSynthetic(a => { a[(int)StatId.POISON_BUILDUP] = 1000; },
+                d => { d[(int)StatId.POISON_RESIST] = 100; }, "T_IDLE", new[] { 300.0 }, new[] { 1.0 }, 0, 0, 10000);
+            r.poisonDurationSec = 2.5;
+            var poisonEvents = new EventRecorder();
+            var poisonSim = new BattleSimulation(poisonCat, r, Duel(2), "fractional-poison", 0, 1, poisonEvents);
+            for (int i = 0; i < 90; i++) poisonSim.Step();
+            int poisonHits = 0;
+            long poisonExpiry = -1;
+            foreach (var e in poisonEvents.Events)
+            {
+                if (e.StatusId != "POISON") continue;
+                if (e.Type == BattleEventType.StatusTick) poisonHits++;
+                if (e.Type == BattleEventType.StatusExpired) poisonExpiry = e.Tick;
+            }
+            if (poisonHits != 2 || poisonExpiry != 83) return "소수 초 중독 지속 시간 오류";
             return null;
         }
 

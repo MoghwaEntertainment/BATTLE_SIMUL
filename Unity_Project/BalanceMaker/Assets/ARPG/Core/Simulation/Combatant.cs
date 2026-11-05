@@ -15,6 +15,7 @@ namespace ARPG.Core.Simulation
         public string Reason;
 
         public long StartTick;
+        public double RealElapsedMs;     // 논리 tick 경과 ms. 행동 속도·빙결과 무관한 무적 판정 시계.
         public double ElapsedMs;         // 행동 진행 시간(차지 중에는 음수)
         public bool HasAdvanced;
         public double DurationMs;
@@ -101,6 +102,7 @@ namespace ARPG.Core.Simulation
         // 상태이상
         public readonly double[] Buildup = new double[4];
         public long PoisonNextTick = -1;
+        public long PoisonEndTick = -1;
         public int PoisonTicksLeft;
         public long FrostEndTick = -1;
 
@@ -128,7 +130,7 @@ namespace ARPG.Core.Simulation
         public bool IsStunned(long tick) { return tick < StunUntilTick; }
         public bool IsStaggered(long tick) { return tick < StaggerUntilTick; }
         public bool IsLocked(long tick) { return IsStunned(tick) || IsStaggered(tick); }
-        public bool PoisonActive { get { return PoisonTicksLeft > 0; } }
+        public bool PoisonActive { get { return PoisonEndTick >= 0 || PoisonTicksLeft > 0; } }
         public bool FrostActive(long tick) { return tick < FrostEndTick; }
         public double HpPct { get { return MaxHp > 0 ? Hp / MaxHp * 100.0 : 0; } }
 
@@ -157,7 +159,7 @@ namespace ARPG.Core.Simulation
             get
             {
                 return Action != null && Action.Kind == ActionKind.Dodge
-                    && Action.ElapsedMs >= Action.IFrameStartMs - 1e-6 && Action.ElapsedMs <= Action.IFrameEndMs + 1e-6;
+                    && Action.RealElapsedMs >= Action.IFrameStartMs - 1e-6 && Action.RealElapsedMs <= Action.IFrameEndMs + 1e-6;
             }
         }
 

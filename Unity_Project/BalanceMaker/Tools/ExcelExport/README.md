@@ -43,3 +43,28 @@ python Tools/ExcelExport/export_tables.py --tables <Table_ARPG 경로> --out <�
   - **슬롯 없음 / 스킬 비활성**: 무브셋에 그 입력 슬롯이 없거나 슬롯 스킬이 모두 비활성이라 실행되지 않음.
 - 같은 AI 행·같은 판정·같은 수치는 무브셋이 달라도 한 줄로 묶고, 해당 무브셋·캐릭터 이름·수를 함께 적는다.
 - 거리 조건이 없거나 붙어 있을 때도 참인 행(`dist==melee`, `dist!=far`, `dist_m<=3` 등)은 검사하지 않는다.
+
+## GameConfig (1.3.0)
+
+
+GameConfig.xlsm의 GameConfig 시트(1행 헤더, is_use=All)를 기존 변환기 1.3.0이 gameconfig.json으로 변환한다.
+RATE는 100000으로 나눠 JSON value에 저장하고 rawValue도 보존한다. FLAT는 그대로 저장하며 *_TIME은 초다.
+우선순위: C# 기본값 → rules.json → gameconfig.json의 활성 항목. 항목이 없거나 비활성이면 해당 기존 규칙을 유지한다.
+추가 피해 RATE 0은 1배, 5000은 1.05배다. FROST_SLOWDOWN_PCT는 감속 비율이므로 속도 배율은 1-RATE다.
+기절과 가드 브레이크는 시간·추가 피해를 독립 관리하며, GameConfig가 없을 때만 가드 설정 -1이 기존 stun/groggy 설정으로 폴백한다.
+중독은 1초 뒤부터 매초 피해. 소수 초도 지원(2.5초이면 +1/+2초 2회 피해, +2.5초 종료). 기간 끝의 남은 소수 구간에 비례 피해를 추가하지 않는다.
+시간은 ceil(초×tickRate)로 tick 변환한다. 잘못된 단위·중복·음수·미계산 수식·비유한 수는 변환 차단, 이전 JSON 유지. 알 수 없는 키는 변환·경고하고 현재 전투 연결은 하지 않는다.
+원본 Excel은 읽기만 하며 저장하지 않는다. 변환 후 Unity의 데이터 다시 읽기 또는 전투 재시작으로 반영한다.
+
+| Index | Value_Type | 입력값 | 효과 | 연결 필드 |
+|---|---|---:|---|---|
+| STUN_TIME | FLAT | 3 | 기절 3초 | stunTicks=90 |
+| STUN_ADD_DAMAGE_PCT | RATE | 0 | 기절 추가 피해 0% | groggyDamageMult=1 |
+| WOUND_DAMAGE_PCT | RATE | 10000 | 최대 HP 10% 즉시 피해 | woundMaxHpRatio=0.1 |
+| POISON_TIME | FLAT | 10 | 중독 10초 | poisonDurationSec=10 |
+| POISON_DAMAGE_PCT | RATE | 2000 | 초당 최대 HP 2% | poisonMaxHpRatioPerSec=0.02 |
+| FROST_TIME | FLAT | 5 | 빙결 5초 | frostDurationSec=5 |
+| FROST_SLOWDOWN_PCT | RATE | 50000 | 동작 속도 50% 감소 | frostSpeedMult=0.5 |
+| STAGGER_TIME | FLAT | 0.5 | 경직 0.5초 | staggerTicks=15 |
+| GUARD_BREAK_TIME | FLAT | 3 | 가드 브레이크 3초 | guardBreakTicks=90 |
+| GUARD_BREAK_ADD_DAMAGE_PCT | RATE | 0 | 가드 브레이크 추가 피해 0% | guardBreakDamageMult=1 |

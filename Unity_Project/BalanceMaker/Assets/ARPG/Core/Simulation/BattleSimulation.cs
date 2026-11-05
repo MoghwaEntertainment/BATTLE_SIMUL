@@ -42,6 +42,8 @@ namespace ARPG.Core.Simulation
         private readonly List<Decision> _decisions = new List<Decision>();
         private readonly List<Combatant> _interruptList = new List<Combatant>();
         private readonly List<string> _interruptReason = new List<string>();
+        private readonly List<int> _interruptPriority = new List<int>();
+        private readonly List<PendingState> _pendingStates = new List<PendingState>();
         private readonly List<Combatant> _targetsBuffer = new List<Combatant>();
         private readonly HashSet<int> _aliveTeamsBuffer = new HashSet<int>();
         private readonly List<PendingBuff> _pendingBuffs = new List<PendingBuff>();
@@ -79,6 +81,23 @@ namespace ARPG.Core.Simulation
             public Combatant Caster;
             public SkillDefinition Skill;
             public Combatant HitTarget;
+        }
+
+        /// <summary>같은 tick 에 일어난 상태 전환. 그 tick 의 타격을 모두 해결한 뒤 FlushPendingStates 에서 적용한다.</summary>
+        private enum PendingStateKind
+        {
+            Stagger,     // 강인도 붕괴 → 경직
+            GuardBreak,  // 가드 스태미나 0 → 기절(그로기)
+            Status,      // 상태이상 발동(기절·중독·빙결). 상처는 즉시 피해라 여기 오지 않음
+        }
+
+        private struct PendingState
+        {
+            public PendingStateKind Kind;
+            public StatusKind Status;
+            public Combatant Target;
+            public Combatant Source;
+            public string SkillId;
         }
 
         private sealed class Plan
@@ -275,7 +294,7 @@ namespace ARPG.Core.Simulation
                 ExpireBuffs(c, t);
 
                 // [확정] 누적 게이지: 쌓인 직후부터 초당 5 감소, 0 미만 없음. 같은 tick 신규 누적분은 다음 tick 부터 감소.
-                for (int k = 1; k < 4; k++)
+                for (int k = 0; k < c.Buildup.Length; k++)
                 {
                     if (c.Buildup[k] > 0) c.Buildup[k] = Math.Max(0, c.Buildup[k] - decay);
                 }
@@ -296,11 +315,13 @@ namespace ARPG.Core.Simulation
                     Emit(ref e);
                     c.PoisonTicksLeft--;
                     c.PoisonNextTick += secTicks;
-                    if (c.PoisonTicksLeft <= 0)
-                    {
-                        c.PoisonNextTick = -1;
-                        EmitStatus(BattleEventType.StatusExpired, c, "POISON", "지속 종료");
-                    }
+                }
+                if (c.PoisonEndTick >= 0 && t >= c.PoisonEndTick)
+                {
+                    c.PoisonTicksLeft = 0;
+                    c.PoisonNextTick = -1;
+                    c.PoisonEndTick = -1;
+                    EmitStatus(BattleEventType.StatusExpired, c, "POISON", "지속 종료");
                 }
 
                 if (c.FrostEndTick >= 0 && t >= c.FrostEndTick)
@@ -750,6 +771,7 @@ namespace ARPG.Core.Simulation
                 if (a == null || c.IsLocked(t)) continue;
                 bool frost = c.FrostActive(t);
                 double prev = a.ElapsedMs;
+                a.RealElapsedMs += _r.TickMs; // 구르기 무적은 빙결과 무관한 논리 경과 시간 기준
                 double now = prev + _r.TickMs * ActionSpeed(c, a, t);
                 a.ElapsedMs = now;
                 a.HasAdvanced = true;
@@ -923,6 +945,8 @@ namespace ARPG.Core.Simulation
                 for (int k = 0; k < _targetsBuffer.Count; k++) ApplyHit(A, ph.Action, s, ph.HitIndex, _targetsBuffer[k], t);
             }
             _pendingHits.Clear();
+            // [확정 2026-11-03] 상태 전환은 이 tick 의 타격을 모두 해결한 뒤 일괄 적용(같은 tick 의 다른 타격은 tick 시작 상태로 계산)
+            FlushPendingStates(t);
             FlushPendingBuffs(t);
         }
 
@@ -1010,7 +1034,7 @@ namespace ARPG.Core.Simulation
 
             bool groggy = T.IsStunned(t);
             double rnd = _rng.Range(_r.randomMin, DamageFormula.RandomUpper(A.Stats, _r));
-            var dmg = DamageFormula.Compute(A.Stats, T.Stats, s, mv, rnd, a.ChargeMs, dist, groggy, A.PhaseDmgMult, _r);
+            var dmg = DamageFormula.Compute(A.Stats, T.Stats, s, mv, rnd, a.ChargeMs, dist, groggy, A.PhaseDmgMult, _r, T.StunFromGuardBreak ? _r.guardBreakDamageMult : _r.groggyDamageMult);
             e.DamageType = dmg.PrimaryType;
             e.Damage = dmg.Total;
             double hpBefore = T.Hp;
@@ -1048,18 +1072,8 @@ namespace ARPG.Core.Simulation
                     r.ActorStaminaAfter = T.Stamina;
                     r.Reason = "가드 스태미나 피해 = 피해량×" + _r.guardStaminaFactor + "/가드강도";
                     Emit(ref r);
-                    if (broke)
-                    {
-                        T.StunUntilTick = t + _r.stunTicks;
-                        T.StunFromGuardBreak = true;
-                        QueueInterrupt(T, "가드 브레이크");
-                        var g = NewEvent(BattleEventType.GuardBroken, T.EntityId);
-                        g.TargetId = A.EntityId;
-                        g.StatusId = "STUN";
-                        g.Result = "GUARD_BREAK";
-                        g.Reason = _r.stunTicks + "f 그로기";
-                        Emit(ref g);
-                    }
+                    // 가드 브레이크(기절)는 tick 끝에 적용: 같은 tick 의 다른 타격은 가드가 유지된 상태로 계산
+                    if (broke) QueueState(PendingStateKind.GuardBreak, StatusKind.Stun, T, A, s.Id, t);
                 }
                 return;
             }
@@ -1095,30 +1109,17 @@ namespace ARPG.Core.Simulation
                 T.PoiseRecoverTick = t + _r.SecToTicks(_r.poiseRecoveryDelaySec);
                 e.PoiseBefore = pb;
                 e.PoiseAfter = T.Poise;
-                if (T.Poise <= 1e-9)
-                {
-                    staggered = true;
-                    T.Poise = T.MaxPoise;
-                }
+                if (T.Poise <= 1e-9) staggered = true;
             }
             Emit(ref e);
 
-            if (staggered)
-            {
-                T.StaggerUntilTick = t + _r.staggerTicks;
-                T.StaggerCount++;
-                QueueInterrupt(T, "강인도 붕괴");
-                var st = NewEvent(BattleEventType.Staggered, T.EntityId);
-                st.TargetId = A.EntityId;
-                st.SkillId = s.Id;
-                st.PoiseBefore = e.PoiseAfter;
-                st.PoiseAfter = T.Poise;
-                st.Result = "STAGGER";
-                st.Reason = _r.staggerTicks + "f";
-                Emit(ref st);
-            }
+            // 경직 발동(강인도 최대치 회복 포함)은 tick 끝에 적용: 같은 tick 의 다른 타격은 경직 전 상태로 계산
+            if (staggered) QueueState(PendingStateKind.Stagger, StatusKind.Stun, T, A, s.Id, t);
 
-            // 상태이상 누적(상처/중독/빙결). 기절은 누적 스탯이 없어 패리/가드 브레이크로만 발생.
+            // 기절 유발(%)은 균형 공격력에 곱한다(2.ARPG_어빌리티 어빌리티목록 F51).
+            // 상태이상 누적은 경직 중 강인도 무적과 별개이며, 가드·회피한 타격은 이 지점에 오지 않는다.
+            // 발동(기절·중독·빙결)은 QueueState 로 tick 끝에 적용되므로 같은 tick 의 다음 타격은 발동 전 상태(그로기 아님)로 계산된다.
+            ApplyBuildup(A, T, s, mv, t, StatusKind.Stun, StatId.STAGGER_BUILDUP, StatId.STUN_BUILDUP_PCT, StatId.STUN_RESIST);
             ApplyBuildup(A, T, s, mv, t, StatusKind.Wound, StatId.WOUND_BUILDUP, StatId.WOUND_BUILDUP_PCT, StatId.WOUND_RESIST);
             ApplyBuildup(A, T, s, mv, t, StatusKind.Poison, StatId.POISON_BUILDUP, StatId.POISON_BUILDUP_PCT, StatId.POISON_RESIST);
             ApplyBuildup(A, T, s, mv, t, StatusKind.Frost, StatId.FROST_BUILDUP, StatId.FROST_BUILDUP_PCT, StatId.FROST_RESIST);
@@ -1297,9 +1298,10 @@ namespace ARPG.Core.Simulation
         {
             switch (k)
             {
-                case StatusKind.Poison: return T.PoisonActive;
-                case StatusKind.Frost: return T.FrostActive(t);
-                case StatusKind.Stun: return T.IsStunned(t);
+                // 같은 tick 에 이미 발동이 예약된 상태이상은 그 tick 의 추가 누적을 받지 않는다(효과 중 면역과 같은 취급)
+                case StatusKind.Poison: return T.PoisonActive || HasPendingState(T, PendingStateKind.Status, k);
+                case StatusKind.Frost: return T.FrostActive(t) || HasPendingState(T, PendingStateKind.Status, k);
+                case StatusKind.Stun: return T.IsStunned(t) || HasPendingState(T, PendingStateKind.Status, k);
                 default: return false; // [확정] 상처: 즉시 재누적 가능
             }
         }
@@ -1322,45 +1324,160 @@ namespace ARPG.Core.Simulation
             Emit(ref e);
             if (resist - T.Buildup[k] > 1e-9) return;
 
-            // 발동: 게이지 0, 효과 적용, 지속형은 효과 중 면역
+            // 발동: 게이지 0. 상처는 즉시 피해(상태 전환이 아님), 기절·중독·빙결은 tick 끝에 걸린다(QueueState).
             T.Buildup[k] = 0;
+            if (kind != StatusKind.Wound)
+            {
+                QueueState(PendingStateKind.Status, kind, T, A, s.Id, t);
+                return;
+            }
             var ap = NewEvent(BattleEventType.StatusApplied, T.EntityId);
             ap.TargetId = A.EntityId;
             ap.StatusId = sid;
             ap.SkillId = s.Id;
-            switch (kind)
-            {
-                case StatusKind.Wound:
-                {
-                    double hb = T.Hp;
-                    double dmg = T.MaxHp * _r.woundMaxHpRatio;
-                    T.Hp = Math.Max(0, T.Hp - dmg);
-                    A.DamageDealt += hb - T.Hp;
-                    T.DamageTaken += hb - T.Hp;
-                    ap.Damage = dmg;
-                    ap.ActorHpBefore = hb;
-                    ap.ActorHpAfter = T.Hp;
-                    ap.Reason = "최대 HP " + (_r.woundMaxHpRatio * 100) + "% 즉시 피해";
-                    break;
-                }
-                case StatusKind.Poison:
-                    T.PoisonTicksLeft = (int)Math.Round(_r.poisonDurationSec);
-                    T.PoisonNextTick = t + _r.SecToTicks(_r.poisonFirstDelaySec);
-                    ap.Reason = _r.poisonDurationSec + "초, 초당 최대 HP " + (_r.poisonMaxHpRatioPerSec * 100) + "%, 첫 피해 +" + _r.poisonFirstDelaySec + "초";
-                    break;
-                case StatusKind.Frost:
-                    T.FrostEndTick = t + _r.SecToTicks(_r.frostDurationSec);
-                    ap.Reason = _r.frostDurationSec + "초, 이동·공격·구르기 ×" + _r.frostSpeedMult;
-                    break;
-            }
+            double hb = T.Hp;
+            double dmg = T.MaxHp * _r.woundMaxHpRatio;
+            T.Hp = Math.Max(0, T.Hp - dmg);
+            A.DamageDealt += hb - T.Hp;
+            T.DamageTaken += hb - T.Hp;
+            ap.Damage = dmg;
+            ap.ActorHpBefore = hb;
+            ap.ActorHpAfter = T.Hp;
+            ap.Reason = "최대 HP " + (_r.woundMaxHpRatio * 100) + "% 즉시 피해";
             Emit(ref ap);
         }
 
-        private void QueueInterrupt(Combatant c, string reason)
+        // ------------------------------------------------------------------ 같은 tick 상태 전환(tick 끝 일괄 적용)
+        /// <summary>
+        /// [확정 2026-11-03] 경직·가드 브레이크·기절·중독·빙결의 발동은 그 tick 의 타격을 모두 해결한 뒤 한꺼번에 적용한다.
+        /// 그래서 같은 tick 에 맞는 다른 타격은 tick 시작 때 상태(가드 유지, 그로기 아님, 경직 전)로 계산된다.
+        /// 같은 대상의 같은 전환은 한 번만 예약하며, 가드 브레이크와 기절 누적은 같은 '기절'로 보아 먼저 예약된 쪽만 쓴다.
+        /// rules.deferStateChangesToTickEnd=false 면 이전처럼 즉시 적용한다.
+        /// </summary>
+        private void QueueState(PendingStateKind kind, StatusKind status, Combatant target, Combatant source, string skillId, long t)
         {
-            for (int i = 0; i < _interruptList.Count; i++) if (_interruptList[i] == c) return;
+            var ps = new PendingState { Kind = kind, Status = status, Target = target, Source = source, SkillId = skillId };
+            if (!_r.deferStateChangesToTickEnd)
+            {
+                ApplyState(ps, t);
+                return;
+            }
+            if (HasPendingState(target, kind, status)) return;
+            _pendingStates.Add(ps);
+        }
+
+        private static bool IsStunState(PendingStateKind kind, StatusKind status)
+        {
+            return kind == PendingStateKind.GuardBreak || (kind == PendingStateKind.Status && status == StatusKind.Stun);
+        }
+
+        private bool HasPendingState(Combatant target, PendingStateKind kind, StatusKind status)
+        {
+            bool stun = IsStunState(kind, status);
+            for (int i = 0; i < _pendingStates.Count; i++)
+            {
+                var p = _pendingStates[i];
+                if (p.Target != target) continue;
+                if (stun && IsStunState(p.Kind, p.Status)) return true;
+                if (p.Kind == kind && (kind != PendingStateKind.Status || p.Status == status)) return true;
+            }
+            return false;
+        }
+
+        private void FlushPendingStates(long t)
+        {
+            for (int i = 0; i < _pendingStates.Count; i++) ApplyState(_pendingStates[i], t);
+            _pendingStates.Clear();
+        }
+
+        private void ApplyState(PendingState ps, long t)
+        {
+            var T = ps.Target;
+            if (T.Dead || T.Hp <= 0) return; // 이 tick 에 사망 확정될 대상에는 상태를 걸지 않는다
+            int sourceId = ps.Source != null ? ps.Source.EntityId : -1;
+            switch (ps.Kind)
+            {
+                case PendingStateKind.Stagger:
+                {
+                    double pb = T.Poise;
+                    T.Poise = T.MaxPoise; // [기획 확정] 경직이 시작될 때 강인도를 최대치로 채운다
+                    T.StaggerUntilTick = t + _r.staggerTicks;
+                    T.StaggerCount++;
+                    QueueInterrupt(T, "강인도 붕괴", 1);
+                    var st = NewEvent(BattleEventType.Staggered, T.EntityId);
+                    st.TargetId = sourceId;
+                    st.SkillId = ps.SkillId;
+                    st.PoiseBefore = pb;
+                    st.PoiseAfter = T.Poise;
+                    st.Result = "STAGGER";
+                    st.Reason = _r.staggerTicks + "tick 경직";
+                    Emit(ref st);
+                    break;
+                }
+                case PendingStateKind.GuardBreak:
+                {
+                    if (T.IsStunned(t)) return;
+                    T.StunUntilTick = t + (_r.guardBreakTicks >= 0 ? _r.guardBreakTicks : _r.stunTicks);
+                    T.StunFromGuardBreak = true;
+                    QueueInterrupt(T, "가드 브레이크", 2);
+                    var g = NewEvent(BattleEventType.GuardBroken, T.EntityId);
+                    g.TargetId = sourceId;
+                    g.StatusId = "STUN";
+                    g.Result = "GUARD_BREAK";
+                    g.Reason = (_r.guardBreakTicks >= 0 ? _r.guardBreakTicks : _r.stunTicks) + "tick 기절(가드 브레이크 그로기)";
+                    Emit(ref g);
+                    break;
+                }
+                case PendingStateKind.Status:
+                {
+                    var ap = NewEvent(BattleEventType.StatusApplied, T.EntityId);
+                    ap.TargetId = sourceId;
+                    ap.StatusId = EnumText.StatusName(ps.Status);
+                    ap.SkillId = ps.SkillId;
+                    switch (ps.Status)
+                    {
+                        case StatusKind.Stun:
+                            if (T.IsStunned(t)) return;
+                            T.StunUntilTick = t + _r.stunTicks;
+                            T.StunFromGuardBreak = false;
+                            QueueInterrupt(T, "기절 누적 발동", 2);
+                            ap.Reason = _r.stunTicks + "tick 기절";
+                            break;
+                        case StatusKind.Poison:
+                            T.PoisonEndTick = t + _r.SecToTicks(_r.poisonDurationSec);
+                            T.PoisonTicksLeft = Math.Max(0, (int)Math.Floor(_r.poisonDurationSec - _r.poisonFirstDelaySec + 1e-9) + 1);
+                            T.PoisonNextTick = t + _r.SecToTicks(_r.poisonFirstDelaySec);
+                            ap.Reason = _r.poisonDurationSec + "초, 초당 최대 HP " + (_r.poisonMaxHpRatioPerSec * 100) + "%, 첫 피해 +" + _r.poisonFirstDelaySec + "초";
+                            break;
+                        case StatusKind.Frost:
+                            T.FrostEndTick = t + _r.SecToTicks(_r.frostDurationSec);
+                            ap.Reason = _r.frostDurationSec + "초, 이동·공격·구르기 ×" + _r.frostSpeedMult;
+                            break;
+                        default:
+                            return;
+                    }
+                    Emit(ref ap);
+                    break;
+                }
+            }
+        }
+
+        /// <summary>강제 중단 예약. 같은 tick 에 여러 사유가 겹치면 우선순위가 높은 사유를 남긴다(기절 2 > 경직 1).</summary>
+        private void QueueInterrupt(Combatant c, string reason, int priority = 0)
+        {
+            for (int i = 0; i < _interruptList.Count; i++)
+            {
+                if (_interruptList[i] != c) continue;
+                if (priority > _interruptPriority[i])
+                {
+                    _interruptReason[i] = reason;
+                    _interruptPriority[i] = priority;
+                }
+                return;
+            }
             _interruptList.Add(c);
             _interruptReason.Add(reason);
+            _interruptPriority.Add(priority);
         }
 
         // ------------------------------------------------------------------ 7) 중단·종료·사망
@@ -1376,6 +1493,7 @@ namespace ARPG.Core.Simulation
             }
             _interruptList.Clear();
             _interruptReason.Clear();
+            _interruptPriority.Clear();
         }
 
         private void FinishActions(long t)

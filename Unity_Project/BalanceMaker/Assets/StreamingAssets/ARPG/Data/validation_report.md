@@ -1,8 +1,9 @@
 # 데이터 변환 검증 보고서
 
-- 생성: 2026-11-02T23:25:45
-- 변환 도구: 1.2.0
-- dataHash: 77e7b4b0c284ca44
+- 생성: 2026-11-04T17:17:32
+- 변환 도구: 1.3.0
+- dataHash: 088f7bc2b906cbbd
+- gameConfigEntries: 10
 - characters: 1404
 - charactersEnabled: 1404
 - skills: 1826

@@ -1,4 +1,4 @@
-<svg width="100%" viewBox="0 0 680 730" role="img">
+<svg width="100%" viewBox="0 0 680 854" role="img">
 <title>ARPG 전투 시뮬레이터 전체 구조</title>
 <desc>엑셀 테이블이 변환기로 JSON이 되고, DataLoader와 DataCatalog를 거쳐 세 가지 실행기가 BattleSimulation.Step을 호출하며, 발생한 이벤트는 네 종류의 구독자로 전달되는 흐름. BUFF.xlsx 는 buffs.json 으로 변환되어 DataCatalog 에서 스킬의 Buff_ID 와 연결되고, Step 안에서 버프가 걸리고 풀린다. ViewEventSink 는 이벤트의 스킬 Damage_Type 으로 AttackLooks 모양(막대·화살·망치·구체)을 골라 AttackFx 로 공격 연출을 만들고 착탄 시 CombatantView 를 점멸시킨다. CombatantView 는 공격 스킬 중 들고 있는 무기도 같은 모양으로 바꾼다</desc>
 <defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
@@ -102,4 +102,4 @@
 <text class="ts" x="218" y="700" dominant-baseline="central">Unity 연결 (ARPG.Runtime)</text>
 <rect class="c-purple" x="430" y="694" width="12" height="12" rx="2" stroke-width="0.5"/>
 <text class="ts" x="448" y="700" dominant-baseline="central">순수 C# 코어 (ARPG.Core)</text>
-</svg>
+<rect class="box" x="40" y="730" width="600" height="48" rx="6"/><text class="th" x="340" y="746" text-anchor="middle">AIHarness CLI / MCP → harness.py → CoreRunner / Unity Verify</text><text class="ts" x="340" y="765" text-anchor="middle">Excel staging · actual Core · JSON execution reports</text><text class="th" x="340" y="820" text-anchor="middle">GameConfig.xlsm → gameconfig.json → GameConfigRules.Apply</text><text class="ts" x="340" y="840" text-anchor="middle">Unity / CoreRunner: defaults → rules.json → GameConfig</text></svg>

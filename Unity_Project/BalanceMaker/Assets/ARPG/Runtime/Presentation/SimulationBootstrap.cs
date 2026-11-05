@@ -70,7 +70,12 @@ namespace ARPG.Runtime
                     break;
                 case BattleEventType.StatusApplied:
                 case BattleEventType.StatusTick:
-                    if (Views.TryGetValue(e.ActorId, out v)) v.FlashHit();
+                    if (Views.TryGetValue(e.ActorId, out v) && v != null)
+                    {
+                        v.FlashHit();
+                        // 상처는 즉시 피해라 지속 상태가 없으므로 머리 위 '상처' 글자를 전투 시간 1초(30 tick) 동안만 보여 준다
+                        if (e.Type == BattleEventType.StatusApplied && e.StatusId == "WOUND") v.WoundTagUntilTick = e.Tick + 30;
+                    }
                     break;
             }
         }

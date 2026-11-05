@@ -137,7 +137,7 @@ namespace ARPG.Core.Combat
         public static DamageBreakdown Compute(
             double[] attacker, double[] defender, SkillDefinition skill, double motionValue,
             double randomRatio, double chargeMs, double distanceM, bool defenderGroggy,
-            double phaseDamageMult, CombatRules r)
+            double phaseDamageMult, CombatRules r, double groggyMultOverride = -1)
         {
             var b = new DamageBreakdown { RandomRatio = randomRatio, ChargeMult = 1, RangedMult = 1, Groggy = defenderGroggy }; // 결과 기본값
             double total = 0;                                                   // 타입별 피해 합계
@@ -160,7 +160,7 @@ namespace ARPG.Core.Combat
                     d *= b.ChargeMult;
                 }
                 d *= randomRatio;                                               // (5)(6) 랜덤 비율(치명 포함 상한)
-                if (defenderGroggy) d *= r.groggyDamageMult;                    // (7) 그로기 대상 추가 피해(rules 1.05)
+                if (defenderGroggy) d *= groggyMultOverride >= 0 ? groggyMultOverride : r.groggyDamageMult;                    // (7) 그로기 대상 추가 피해(rules 1.05)
                 double neg = defender[(int)NegationStat(t)] / r.statScale;      // (8) 방어자 그 타입 피해감소율
                 d *= (1 - neg);                                                 // (9) 감소 적용
                 total += Math.Max(0, d);                                        // 음수 피해는 0 으로 막고 합산

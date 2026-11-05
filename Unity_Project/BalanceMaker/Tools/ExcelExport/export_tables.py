@@ -26,6 +26,7 @@ import os
 import re
 import sys
 import tempfile
+import math
 
 try:
     import openpyxl
@@ -33,7 +34,7 @@ except ImportError:  # pragma: no cover
     print("openpyxl 이 필요합니다: pip install openpyxl")
     sys.exit(2)
 
-TOOL_VERSION = "1.2.0"
+TOOL_VERSION = "1.3.0"
 SCHEMA_VERSION = 1
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -635,6 +636,7 @@ def export(tables_dir, out_dir, scenario_dir, write_scenarios=True, rules_path=N
 
     # ------------------------------------------------------------------ BUFF (선택: BUFF.xlsx 가 없으면 버프 없음)
     buffs = read_buffs(tables_dir, sources, report, stat_names or [], skills)
+    game_config = read_game_config(tables_dir, sources, report)
 
     # AI 거리 조건과 스킬 사거리가 맞지 않는 조합(예: 원거리형 AI + 사거리 2m 스킬) 경고
     rules, rules_src = load_rules(rules_path or os.path.join(out_dir, "..", "rules.json"))
@@ -652,6 +654,7 @@ def export(tables_dir, out_dir, scenario_dir, write_scenarios=True, rules_path=N
         "ai.json": {"schemaVersion": SCHEMA_VERSION, "actions": actions, "behaviors": behaviors,
                     "phases": phases, "maps": maps},
         "buffs.json": {"schemaVersion": SCHEMA_VERSION, "buffs": buffs},
+        "gameconfig.json": {"schemaVersion": SCHEMA_VERSION, "entries": game_config},
     }
     tmpdir = tempfile.mkdtemp(prefix="arpg_export_", dir=out_dir)
     outputs = []
@@ -671,6 +674,7 @@ def export(tables_dir, out_dir, scenario_dir, write_scenarios=True, rules_path=N
             "sources": list(sources.values()),
             "outputs": outputs,
             "counts": {
+                "gameConfigEntries": len(game_config),
                 "characters": len(characters),
                 "charactersEnabled": sum(1 for x in characters if x["enabled"]),
                 "skills": len(skills),
@@ -698,6 +702,63 @@ def export(tables_dir, out_dir, scenario_dir, write_scenarios=True, rules_path=N
     if write_scenarios:
         write_default_scenarios(scenario_dir, characters)
     return report, manifest
+
+
+GAME_CONFIG_TYPES = {
+    "STUN_TIME": "FLAT", "STUN_ADD_DAMAGE_PCT": "RATE", "WOUND_DAMAGE_PCT": "RATE",
+    "POISON_TIME": "FLAT", "POISON_DAMAGE_PCT": "RATE", "FROST_TIME": "FLAT",
+    "FROST_SLOWDOWN_PCT": "RATE", "STAGGER_TIME": "FLAT", "GUARD_BREAK_TIME": "FLAT",
+    "GUARD_BREAK_ADD_DAMAGE_PCT": "RATE",
+}
+
+
+def read_game_config(tables_dir, sources, report):
+    path = os.path.join(tables_dir, "GameConfig.xlsm")
+    if not os.path.exists(path):
+        report.info("GameConfig.xlsm", "파일 없음: 기존 rules.json 기본값 사용")
+        return []
+    sources["GameConfig.xlsm"] = {"file": "GameConfig.xlsm", "sha256": sha256_file(path),
+        "modified": datetime.datetime.fromtimestamp(os.path.getmtime(path)).isoformat(timespec="seconds")}
+    wb, wbf = open_wb(path)
+    entries, seen = [], set()
+    try:
+        sheet = Sheet(wb, wbf, "GameConfig", 1, report, "GameConfig.xlsm")
+        if not sheet.ok:
+            return []
+        try:
+            ix, use, ty, val = [sheet.col(k) for k in ("Index", "is_use", "Value_Type", "Value")]
+        except KeyError as e:
+            report.error("GameConfig.xlsm!GameConfig", str(e))
+            return []
+        for rowno, row in sheet.rows():
+            if row[use] != "All":
+                continue
+            where = f"GameConfig.xlsm!GameConfig!A{rowno}"
+            key = str(row[ix] or "").strip()
+            kind = str(row[ty] or "").strip().upper()
+            raw = num(row[val], None)
+            if not key or key in seen:
+                report.error(where, f"빈 Index 또는 중복 Index: {key}")
+                continue
+            seen.add(key)
+            if kind not in ("RATE", "FLAT") or raw is None or not math.isfinite(raw):
+                report.error(where, "Value_Type은 RATE/FLAT, Value는 유한한 숫자여야 함(수식 캐시 확인)")
+                continue
+            if key in GAME_CONFIG_TYPES:
+                if kind != GAME_CONFIG_TYPES[key] or raw < 0 or (key.endswith("_TIME") and raw <= 0):
+                    report.error(where, f"{key}: 타입은 {GAME_CONFIG_TYPES[key]}, 시간은 양수, 비율은 0 이상 필요")
+                    continue
+                if key == "FROST_SLOWDOWN_PCT" and raw > 100000:
+                    report.error(where, "감속 비율은 0~100000 범위")
+                    continue
+            else:
+                report.warn(where, f"{key}: 변환하지만 현재 전투 규칙 연결은 없음")
+            entries.append({"id": key, "valueType": kind, "rawValue": raw,
+                            "value": raw / 100000.0 if kind == "RATE" else raw})
+    finally:
+        wb.close()
+        wbf.close()
+    return entries
 
 
 BUFF_ABILITY_RE = re.compile(r"^Buff_Ability(\d+)$")

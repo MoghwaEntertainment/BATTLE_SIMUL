@@ -125,7 +125,7 @@
   }
 </style>
 </head>
-<body>
+<body><section style="margin:20px;padding:20px;border:2px solid #8aafd9;border-radius:10px;overflow:auto"><h2>GameConfig 상태이상 설정 · 2026-11-04</h2><p>기존 설명의 기본 수치보다 이 표의 활성 GameConfig 설정을 우선 적용합니다.</p><table><tr><th>항목</th><th>입력</th><th>현재 효과</th></tr><tr><td>STUN_TIME</td><td>3</td><td>기절 3초</td></tr><tr><td>STUN_ADD_DAMAGE_PCT</td><td>0</td><td>기절 추가 피해 0%</td></tr><tr><td>WOUND_DAMAGE_PCT</td><td>10000</td><td>최대 HP 10% 즉시 피해</td></tr><tr><td>POISON_TIME</td><td>10</td><td>중독 10초</td></tr><tr><td>POISON_DAMAGE_PCT</td><td>2000</td><td>초당 최대 HP 2%</td></tr><tr><td>FROST_TIME</td><td>5</td><td>빙결 5초</td></tr><tr><td>FROST_SLOWDOWN_PCT</td><td>50000</td><td>동작 속도 50% 감소</td></tr><tr><td>STAGGER_TIME</td><td>0.5</td><td>경직 0.5초</td></tr><tr><td>GUARD_BREAK_TIME</td><td>3</td><td>가드 브레이크 3초</td></tr><tr><td>GUARD_BREAK_ADD_DAMAGE_PCT</td><td>0</td><td>가드 브레이크 추가 피해 0%</td></tr></table><p>시간은 초, RATE는 십만분율입니다. Excel에서 저장한 뒤 기존 ARPG 엑셀 → JSON 변환 메뉴를 실행하고 데이터 다시 읽기로 적용합니다. 기절과 가드 브레이크의 추가 피해는 현재 0%입니다. 중독은 1초 뒤부터 매초 최대 HP 2%씩 총 10회입니다. 빙결로 구르기 무적 시간은 늘어나지 않습니다.</p></section><nav data-manual-home style="padding:10px 24px;background:#eef3fa;font:14px/1.8 sans-serif"><a href="index.html" style="color:#2355a0">← 매뉴얼 모음</a></nav>
 
 <div class="topbar">
   <div class="topbar-inner">
@@ -456,12 +456,21 @@
         </ul>
         <ul>
           <li><span class="sw" style="background:#f2913a"></span>주황빛: 경직(강인도 붕괴)</li>
-          <li><span class="sw" style="background:#b3e6ff"></span>하늘빛: 빙결(이동·공격·구르기 느려짐)</li>
-          <li><span class="sw" style="background:#9b4dcc"></span>보랏빛: 중독</li>
-          <li><span class="sw" style="background:#ffe61a"></span>머리 위 노란 고리 회전: 기절</li>
+          <li><span class="sw" style="background:#ffd926"></span>노랑(몸 전체) + 머리 위 노란 고리 회전: 기절</li>
+          <li><span class="sw" style="background:#99e0ff"></span>얼음 파랑(몸 전체): 빙결(이동·공격·구르기 느려짐). 아군 팀색 파랑보다 밝은 색</li>
+          <li><span class="sw" style="background:#b859f2"></span>보라(몸 전체): 중독</li>
           <li><span class="sw" style="background:#595959"></span>회색으로 쓰러짐: 사망</li>
         </ul>
       </div>
+      <h3>머리 위 상태 글자</h3>
+      <p>이름 위에 지금 걸린 상태가 색 글자로 뜹니다. 기절이 맨 앞에 옵니다. 팀은 바닥 고리 색으로 구별하세요(상태이상 중에는 몸 색이 상태 색으로 바뀝니다).</p>
+      <ul>
+        <li><span class="sw" style="background:#ffd926"></span>기절 — 가드가 깨져 걸린 기절은 "기절(가드 브레이크)"</li>
+        <li><span class="sw" style="background:#ff991a"></span>경직</li>
+        <li><span class="sw" style="background:#99e0ff"></span>빙결</li>
+        <li><span class="sw" style="background:#b859f2"></span>중독</li>
+        <li><span class="sw" style="background:#ff5252"></span>상처 — 즉시 피해라 발동 후 전투 시간 1초 동안만 표시</li>
+      </ul>
       <h3>머리 위 막대와 바닥 고리</h3>
       <ul>
         <li><span class="sw" style="background:#d33"></span>HP · <span class="sw" style="background:#36c"></span>FP · <span class="sw" style="background:#3a3"></span>스태미나. 회색 막대는 쓰지 않는 자원(몬스터의 FP·스태미나)입니다.</li>
@@ -475,7 +484,7 @@
           <tr><td>공격</td><td>준비 동작에서 몸을 살짝 뒤로 젖혔다가, 타격 직전 <b>앞으로 숙이며 한 발 내딛고</b>, 타격마다 조금 더 숙입니다. 무기는 옆으로 휘두르며, 공격 중에는 스킬 피해 타입에 따라 모양이 바뀝니다(아래 공격 이펙트 표).</td></tr>
           <tr><td>구르기(회피)</td><td>몸이 <b>앞뒤로 한 바퀴(360°)</b> 굴러갑니다. 상대 쪽으로 피하면 앞구르기, 뒤로 피하면 뒷구르기. 구르는 동안 무기는 숨기고, 무적 시간에는 청록색입니다.</td></tr>
           <tr><td>가드</td><td>몸 앞에 청록 방패가 나타납니다. 막으면 방패가 흰색으로 깜빡입니다.</td></tr>
-          <tr><td>경직 · 기절</td><td>몸이 뒤로 기울고 색이 바뀝니다(위 색 설명). 경직(1초) 중에는 맞아도 HP 만 줄고 강인도는 깎이지 않아 다시 경직되지 않습니다.</td></tr>
+          <tr><td>경직 · 기절</td><td>몸이 뒤로 기울고 색이 바뀝니다(위 색 설명). 경직(1초) 중에는 맞아도 HP 만 줄고 강인도는 깎이지 않아 다시 경직되지 않습니다. 경직·기절·가드 브레이크·중독·빙결은 그 tick 의 공격이 모두 끝난 뒤 걸리므로, 같은 순간에 함께 맞은 다른 공격은 걸리기 전 상태(가드 유지, 그로기 추가 피해 없음)로 계산됩니다.</td></tr>
         </tbody>
       </table>
       <h3>공격 이펙트 (막대·착탄)</h3>
@@ -583,6 +592,7 @@
           <tr><td><code>dodgeIFrameStartSec</code> ~ <code>EndSec</code></td><td>0.1 ~ 0.45</td><td>구르기 무적 시간 구간(초)</td></tr>
           <tr><td><code>dodgeStaminaCost</code></td><td>50</td><td>구르기 스태미나 비용</td></tr>
           <tr><td><code>staggerTicks</code> / <code>stunTicks</code></td><td>30 / 90</td><td>경직 / 기절 길이(tick, 30 = 1초)</td></tr>
+          <tr><td><code>deferStateChangesToTickEnd</code></td><td>true</td><td>같은 tick 의 상태 전환(경직·가드 브레이크·기절·중독·빙결)을 그 tick 의 공격이 모두 끝난 뒤 한꺼번에 적용. false 면 맞는 순간 바로 적용(이전 동작)</td></tr>
           <tr><td><code>poiseImmuneWhileStaggered</code></td><td>true</td><td>경직 중 강인도 무적(HP 만 감소). false 면 경직 중에도 강인도가 깎여 다시 경직될 수 있음</td></tr>
           <tr><td><code>guardFrontAngleDeg</code></td><td>180</td><td>가드가 막는 정면 각도</td></tr>
           <tr><td><code>statusDecayPerSec</code></td><td>5</td><td>상태이상 게이지가 초당 줄어드는 양</td></tr>
@@ -722,5 +732,5 @@
   apply();
 })();
 </script>
-</body>
+<section style="padding:18px;border:1px solid #b9cbe4;border-radius:8px;margin:18px"><h2>빙결 중 구르기 무적 · 2026-11-03 변경</h2><p>빙결은 구르기 동작을 느리게 하지만 무적 시간을 늘리지 않습니다. 무적 구간은 정상·빙결 모두 구르기 시작 후 0.10~0.45초 설정을 사용합니다(30Hz tick 판정). 무적 시계는 배속·일시정지·한 tick 진행을 따릅니다.</p></section></body>
 </html>

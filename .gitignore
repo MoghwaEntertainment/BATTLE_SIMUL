@@ -99,3 +99,9 @@ $RECYCLE.BIN/
 # ---------------------------------------------------------
 # /Unity_Plan/backup/
 # /Table_ARPG/backup/
+
+# AI harness generated files
+/Tools/AIHarness/artifacts/
+/Tools/AIHarness/CoreRunner/bin/
+/Tools/AIHarness/CoreRunner/obj/
+!/Tools/AIHarness/CoreRunner/CoreRunner.csproj
