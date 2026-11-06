@@ -1,0 +1,51 @@
+{
+    "name": "guardian vs all",
+    "description": "근접 1대1: 대미지메이커 예시 조합",
+    "masterSeed": 12345,
+    "runs": 100,
+    "maxBattleSec": 300.0,
+    "spawnDistance": 10.0,
+    "spawnSpacing": 1.5,
+    "teams": [
+        {
+            "teamId": 0,
+            "name": "아군",
+            "members": [
+                {
+                    "definitionId": "21060",
+                    "count": 1
+                },
+                {
+                    "definitionId": "22060",
+                    "count": 1
+                },
+                {
+                    "definitionId": "23060",
+                    "count": 1
+                },
+                {
+                    "definitionId": "24060",
+                    "count": 1
+                },
+                {
+                    "definitionId": "25060",
+                    "count": 1
+                },
+                {
+                    "definitionId": "26060",
+                    "count": 1
+                }
+            ]
+        },
+        {
+            "teamId": 1,
+            "name": "적군",
+            "members": [
+                {
+                    "definitionId": "21060",
+                    "count": 6
+                }
+            ]
+        }
+    ]
+}

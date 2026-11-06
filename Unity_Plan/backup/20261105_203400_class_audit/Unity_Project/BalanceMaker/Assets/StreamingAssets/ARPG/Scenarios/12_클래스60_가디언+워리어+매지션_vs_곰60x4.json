@@ -1,0 +1,39 @@
+{
+    "name": "12_클래스60_가디언+워리어+매지션_vs_곰60x4",
+    "description": "3인 조합(전열·폭딜) vs 곰 4마리",
+    "masterSeed": 12345,
+    "runs": 100,
+    "maxBattleSec": 300.0,
+    "spawnDistance": 10.0,
+    "spawnSpacing": 1.5,
+    "teams": [
+        {
+            "teamId": 0,
+            "name": "아군",
+            "members": [
+                {
+                    "definitionId": "21060",
+                    "count": 1
+                },
+                {
+                    "definitionId": "22060",
+                    "count": 1
+                },
+                {
+                    "definitionId": "25060",
+                    "count": 1
+                }
+            ]
+        },
+        {
+            "teamId": 1,
+            "name": "적군",
+            "members": [
+                {
+                    "definitionId": "10134",
+                    "count": 4
+                }
+            ]
+        }
+    ]
+}

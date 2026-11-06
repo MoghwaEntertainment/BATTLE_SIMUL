@@ -27,6 +27,7 @@ namespace ARPG.Core.Simulation
     /// </summary>
     public sealed class BattleSimulation : IBattleSimulation
     {
+        private long _buffApplyOrder;
         private readonly DataCatalog _cat;
         private readonly CombatRules _r;
         private readonly BattleScenario _scenario;
@@ -45,6 +46,8 @@ namespace ARPG.Core.Simulation
         private readonly List<int> _interruptPriority = new List<int>();
         private readonly List<PendingState> _pendingStates = new List<PendingState>();
         private readonly List<Combatant> _targetsBuffer = new List<Combatant>();
+        private bool _useRefPos;          // AdvanceActions 중 상대 위치를 MoveRefPos(단계 시작 위치)로 읽음
+        private Vec2[] _overlapPush;      // ResolveOverlaps 동시 계산용
         private readonly HashSet<int> _aliveTeamsBuffer = new HashSet<int>();
         private readonly List<PendingBuff> _pendingBuffs = new List<PendingBuff>();
         private readonly List<ActiveBuff> _expiredBuffer = new List<ActiveBuff>();
@@ -362,6 +365,37 @@ namespace ARPG.Core.Simulation
         }
 
         // ------------------------------------------------------------------ 2) 타겟/AI
+        private Combatant TauntTarget(Combatant c, long t)
+        {
+            Combatant best = null;
+            long order = -1;
+            foreach (var b in c.Buffs)
+            {
+                if (!b.Def.Taunts || b.EndTick <= t || b.ApplyOrder <= order) continue;
+                foreach (var source in _all)
+                {
+                    if (source.EntityId != b.SourceId || source.Dead || source.Hp <= 0 || source.TeamId == c.TeamId) continue;
+                    best = source;
+                    order = b.ApplyOrder;
+                    break;
+                }
+            }
+            return best;
+        }
+
+        private void ApplyTauntTarget(Combatant c, long t)
+        {
+            var target = TauntTarget(c, t);
+            if (target == null || c.Target == target) return;
+            c.Target = target;
+            c.Perceived = true;
+            var ev = NewEvent(BattleEventType.TargetChanged, c.EntityId);
+            ev.TargetId = target.EntityId;
+            ev.DistanceM = Vec2.Distance(c.Pos, target.Pos);
+            ev.Reason = "ADD_AGGRO: 시전자 우선";
+            Emit(ref ev);
+        }
+
         private void UpdateTargets(long t)
         {
             for (int i = 0; i < _all.Count; i++)
@@ -379,21 +413,27 @@ namespace ARPG.Core.Simulation
                 }
                 Combatant cur = c.Target;
                 Combatant next;
+                // [2026-11-06 작업 목록 A] 인지 거리 안에 적이 없어도 reacquireBeyondPerception 이면 가장 가까운 적을 잡는다(미인지 대기 정지 방지)
+                bool beyond = nearest != null && nd > _r.perceptionRange;
+                Combatant seen = nearest != null && (!beyond || _r.reacquireBeyondPerception) ? nearest : null;
                 if (cur != null && !cur.Dead)
                 {
                     double cd = Vec2.Distance(c.Pos, cur.Pos);
-                    if (cd > _r.aggroReleaseRange) next = (nearest != null && nd <= _r.perceptionRange) ? nearest : null;
+                    if (cd > _r.aggroReleaseRange) next = seen;
                     else if (nearest != null && nearest != cur && nd < cd * _r.targetSwitchRatio) next = nearest;
                     else next = cur;
                 }
-                else next = (nearest != null && nd <= _r.perceptionRange) ? nearest : null;
+                else next = seen;
 
+                var forced = TauntTarget(c, t);
+                if (forced != null) next = forced;
                 if (next != cur)
                 {
                     c.Target = next;
                     var e = NewEvent(BattleEventType.TargetChanged, c.EntityId);
                     e.TargetId = next != null ? next.EntityId : -1;
                     e.DistanceM = next != null ? Vec2.Distance(c.Pos, next.Pos) : double.NaN;
+                    if (forced == null && next != null && next == nearest && beyond) e.Reason = "인지 범위 밖 재탐색";
                     Emit(ref e);
                 }
                 c.Perceived = c.Target != null;
@@ -511,6 +551,45 @@ namespace ARPG.Core.Simulation
             return "NONE";
         }
 
+        private double FpCostMultiplier(Combatant c)
+        {
+            double ratio = 0;
+            foreach (var b in c.Buffs) ratio = Math.Max(ratio, b.Def.FpCostRatio);
+            return 1 + ratio;
+        }
+
+        private bool NeedsCleanse(Combatant c, long t)
+        {
+            if (c.PoisonActive || c.FrostActive(t) || c.IsStunned(t)) return true;
+            foreach (var value in c.Buildup) if (value > 0) return true;
+            foreach (var b in c.Buffs) if (b.Def.Dispellable) return true;
+            return false;
+        }
+
+        private Combatant SupportTarget(Combatant caster, SkillDefinition s, long t)
+        {
+            Combatant best = null;
+            foreach (var c in _all)
+            {
+                if (c.Dead || c.Hp <= 0 || c.TeamId != caster.TeamId) continue;
+                if (c != caster && Vec2.Distance(c.Pos, caster.Pos) > s.EffectiveRange + c.Radius + caster.Radius) continue;
+                if (s.Buff == null || (s.Buff.Cleanse ? !NeedsCleanse(c, t) : c.Hp >= c.MaxHp)) continue;
+                if (best == null || c.Hp / c.MaxHp < best.Hp / best.MaxHp) best = c;
+            }
+            return best;
+        }
+
+        private void Cleanse(Combatant c, long t)
+        {
+            Array.Clear(c.Buildup, 0, c.Buildup.Length);
+            c.PoisonTicksLeft = 0; c.PoisonNextTick = c.PoisonEndTick = -1;
+            c.FrostEndTick = c.StunUntilTick = -1; c.StunFromGuardBreak = false;
+            foreach (var b in c.Buffs) if (b.Def.Dispellable) b.EndTick = t;
+            ExpireBuffs(c, t);
+            var e = NewEvent(BattleEventType.StatusExpired, c.EntityId);
+            e.StatusId = "CLEANSE"; e.Reason = "Removable statuses and debuffs cleared"; Emit(ref e);
+        }
+
         private bool IsInstantRanged(SkillDefinition s) { return s.EffectiveRange > _r.instantRangedThreshold; }
 
         private Plan BuildPlan(Combatant c, string actionId, string forcedSkillId, bool ignoreRange, long t, out string fail)
@@ -537,6 +616,7 @@ namespace ARPG.Core.Simulation
                 }
                 if (sk == null) { fail = "스킬 없음"; return null; }
                 if (!sk.Enabled || !sk.Valid) { fail = "스킬 비활성/검증 실패 " + sk.Id; return null; }
+                if (sk.SupportSingle && SupportTarget(c, sk, t) == null) { fail = "No eligible ally"; return null; }
                 p.Skill = sk;
                 p.Node = node;
                 p.IsChain = chain;
@@ -544,7 +624,7 @@ namespace ARPG.Core.Simulation
                 if (!ignoreCosts)
                 {
                     p.CostHp = sk.CostHp;
-                    p.CostFp = sk.CostFp;
+                    p.CostFp = sk.CostFp * FpCostMultiplier(c);
                     p.CostSt = sk.CostStamina;
                 }
                 if (p.Kind == ActionKind.Skill && sk.IsAttack && sk.HasHits && !ignoreRange)
@@ -618,6 +698,7 @@ namespace ARPG.Core.Simulation
                 if (c.Dead || c.IsLocked(t)) continue;
                 if (c.Action != null && !c.Action.InCancelWindow) continue;
                 if (c.Action != null && d.P.Kind == ActionKind.Idle && _r.idleDoesNotCancel) continue;
+                if (d.P.Skill != null && !(c.IsMonster && _r.monsterIgnoreSkillCosts)) d.P.CostFp = d.P.Skill.CostFp * FpCostMultiplier(c);
                 var chk = ResourceRules.Check(c.Hp, c.Fp, c.Stamina, d.P.CostHp, d.P.CostFp, d.P.CostSt, _r);
                 if (chk != ResourceCheck.Ok)
                 {
@@ -763,6 +844,9 @@ namespace ARPG.Core.Simulation
         private void AdvanceActions(long t)
         {
             _pendingHits.Clear();
+            // [2026-11-06 작업 목록 C] 상대 위치는 이 단계 시작 시 위치로 고정한다(앞 순서 개체가 먼저 움직인 위치를 뒤 개체가 보지 않게)
+            for (int i = 0; i < _all.Count; i++) _all[i].MoveRefPos = _all[i].Pos;
+            _useRefPos = _r.simultaneousMovement;
             for (int i = 0; i < _all.Count; i++)
             {
                 var c = _all[i];
@@ -806,19 +890,24 @@ namespace ARPG.Core.Simulation
                         break;
                 }
             }
+            _useRefPos = false;
         }
 
-        private static void FaceTarget(Combatant c, Combatant tg)
+        /// <summary>상대 개체 위치. AdvanceActions 중 simultaneousMovement 이면 그 단계 시작 시 위치를 쓴다.</summary>
+        private Vec2 PosOf(Combatant other) { return _useRefPos ? other.MoveRefPos : other.Pos; }
+
+        private void FaceTarget(Combatant c, Combatant tg)
         {
             if (tg == null) return;
-            var d = (tg.Pos - c.Pos).Normalized;
+            var d = (PosOf(tg) - c.Pos).Normalized;
             if (d.SqrLength > 0) c.Facing = d;
         }
 
         private void MoveSoft(Combatant c, ActionInstance a, Combatant tg, bool frost)
         {
             if (tg == null) return;
-            Vec2 to = tg.Pos - c.Pos;
+            Vec2 tp = PosOf(tg);
+            Vec2 to = tp - c.Pos;
             double d = to.Length;
             Vec2 dir = d > 1e-9 ? to * (1.0 / d) : c.Facing;
             double step = a.MoveSpeed * _r.TickSec * (frost ? _r.frostSpeedMult : 1.0);
@@ -836,8 +925,8 @@ namespace ARPG.Core.Simulation
                 {
                     Vec2 tangent = a.Move == MoveMode.StrafeLeft ? dir.PerpLeft : -dir.PerpLeft;
                     Vec2 np = c.Pos + tangent * step;
-                    Vec2 back = (np - tg.Pos).Normalized;
-                    if (back.SqrLength > 0 && d > 1e-9) np = tg.Pos + back * d; // 같은 반경 유지
+                    Vec2 back = (np - tp).Normalized;
+                    if (back.SqrLength > 0 && d > 1e-9) np = tp + back * d; // 같은 반경 유지
                     c.Pos = np;
                     break;
                 }
@@ -854,7 +943,7 @@ namespace ARPG.Core.Simulation
             // 추적: Tracking_Start~End 구간에서 대상 방향으로 회전(시작 방향 기준 ±Tracking_Angle/2)
             if (tg != null && now >= s.TrackingStartMs - 1e-6 && prev <= s.TrackingEndMs + 1e-6 && s.TrackingAngleDeg > 0)
             {
-                Vec2 want = (tg.Pos - c.Pos).Normalized;
+                Vec2 want = (PosOf(tg) - c.Pos).Normalized;
                 if (want.SqrLength > 0)
                 {
                     double limit = s.TrackingAngleDeg * 0.5;
@@ -872,8 +961,9 @@ namespace ARPG.Core.Simulation
                 {
                     if (tg != null)
                     {
-                        double gap = Vec2.Distance(c.Pos, tg.Pos) - (c.Radius + tg.Radius);
-                        double along = Vec2.Dot(c.Facing, (tg.Pos - c.Pos).Normalized);
+                        Vec2 tp = PosOf(tg);
+                        double gap = Vec2.Distance(c.Pos, tp) - (c.Radius + tg.Radius);
+                        double along = Vec2.Dot(c.Facing, (tp - c.Pos).Normalized);
                         if (along > 0.5) delta = Math.Min(delta, Math.Max(0, gap));
                     }
                     c.Pos = c.Pos + c.Facing * delta;
@@ -894,6 +984,13 @@ namespace ARPG.Core.Simulation
         // ------------------------------------------------------------------ 5) 겹침 해소
         private void ResolveOverlaps()
         {
+            // [2026-11-06 작업 목록 C] simultaneousMovement: 모든 쌍의 밀어내기를 같은 시작 위치로 계산한 뒤 한꺼번에 적용(처리 순서 무관)
+            bool simul = _r.simultaneousMovement;
+            if (simul)
+            {
+                if (_overlapPush == null || _overlapPush.Length < _all.Count) _overlapPush = new Vec2[_all.Count];
+                for (int i = 0; i < _all.Count; i++) _overlapPush[i] = new Vec2(0, 0);
+            }
             for (int i = 0; i < _all.Count; i++)
             {
                 var a = _all[i];
@@ -908,9 +1005,22 @@ namespace ARPG.Core.Simulation
                     if (d >= min - 1e-9) continue;
                     Vec2 n = d > 1e-9 ? delta * (1.0 / d) : new Vec2(1, 0);
                     double push = (min - d) * 0.5;
-                    a.Pos = a.Pos - n * push;
-                    b.Pos = b.Pos + n * push;
+                    if (simul)
+                    {
+                        _overlapPush[i] = _overlapPush[i] - n * push;
+                        _overlapPush[j] = _overlapPush[j] + n * push;
+                    }
+                    else
+                    {
+                        a.Pos = a.Pos - n * push;
+                        b.Pos = b.Pos + n * push;
+                    }
                 }
+            }
+            if (simul)
+            {
+                for (int i = 0; i < _all.Count; i++)
+                    if (!_all[i].Dead) _all[i].Pos = _all[i].Pos + _overlapPush[i];
             }
             double h = _r.arenaHalfSize;
             for (int i = 0; i < _all.Count; i++)
@@ -962,6 +1072,7 @@ namespace ARPG.Core.Simulation
                 if (d > A.Radius + s.EffectiveRange + P.Radius + 1e-9) return;
                 if (d > 1e-9 && Vec2.Dot(A.Facing, to * (1.0 / d)) < 0) return; // 전방 반원
                 outList.Add(P);
+                if (s.HitRange <= 0) return; // Explicit single-target ranged attack.
                 for (int i = 0; i < _all.Count; i++)
                 {
                     var e = _all[i];
@@ -969,6 +1080,7 @@ namespace ARPG.Core.Simulation
                     if (Vec2.Distance(e.Pos, P.Pos) <= s.HitRange + e.Radius + 1e-9) outList.Add(e);
                 }
                 outList.Sort((x, y) => x.EntityId.CompareTo(y.EntityId));
+                LimitTargets(s, P, P.Pos, outList);
                 return;
             }
             Vec2 center = A.Pos + A.Facing * (A.Radius + Math.Max(s.EffectiveRange - s.HitRange, 0));
@@ -978,6 +1090,27 @@ namespace ARPG.Core.Simulation
                 if (e.Dead || e.TeamId == A.TeamId) continue;
                 if (Vec2.Distance(center, e.Pos) <= s.HitRange + e.Radius + 1e-9) outList.Add(e);
             }
+            var primary = a.TargetAtStart != null && !a.TargetAtStart.Dead ? a.TargetAtStart : A.Target;
+            LimitTargets(s, primary, center, outList);
+        }
+
+        /// <summary>
+        /// [2026-11-06 사용자 요청] SKILL Max_Target(0 = 제한 없음). 판정 범위 안 대상이 더 많으면
+        /// 행동 시작 시 대상 → 판정 중심에서 가까운 순 → EntityId 순으로 남기고, 결과는 EntityId 순으로 둔다.
+        /// </summary>
+        private static void LimitTargets(SkillDefinition s, Combatant primary, Vec2 center, List<Combatant> list)
+        {
+            int max = s.MaxTargets;
+            if (max <= 0 || list.Count <= max) return;
+            list.Sort((x, y) =>
+            {
+                bool px = x == primary, py = y == primary;
+                if (px != py) return px ? -1 : 1;
+                int c = Vec2.Distance(center, x.Pos).CompareTo(Vec2.Distance(center, y.Pos));
+                return c != 0 ? c : x.EntityId.CompareTo(y.EntityId);
+            });
+            list.RemoveRange(max, list.Count - max);
+            list.Sort((x, y) => x.EntityId.CompareTo(y.EntityId));
         }
 
         /// <summary>근접 판정 원(화면 표시용). 즉발 원거리는 대상 중심.</summary>
@@ -1090,7 +1223,7 @@ namespace ARPG.Core.Simulation
                      + (dmg.RangedMult != 1 ? " ranged×" + dmg.RangedMult.ToString("0.00") : "");
 
             // 강인도
-            double poiseAtk = A.Stat(StatId.STAGGER_BUILDUP) * (_r.poiseDamageUsesMotionValue ? mv : 1.0);
+            double poiseAtk = (A.Stat(StatId.STAGGER_BUILDUP) + s.ExtraPoise) * (_r.poiseDamageUsesMotionValue ? mv : 1.0);
             bool staggered = false;
             // [기획 확정] 경직 중 강인도 무적: 경직이 시작될 때 강인도를 최대치로 채우고,
             // 경직이 끝날 때까지는 맞아도 HP 피해만 받으며 강인도는 깎이지 않는다(재경직 없음).
@@ -1174,6 +1307,7 @@ namespace ARPG.Core.Simulation
                     break;
                 }
                 case BuffTarget.Ally:
+                    if (s.SupportSingle) { var al = SupportTarget(caster, s, t); if (al != null) ApplyBuff(al, b, caster, s, t, end); break; }
                     for (int i = 0; i < _all.Count; i++)
                     {
                         var al = _all[i];
@@ -1198,8 +1332,10 @@ namespace ARPG.Core.Simulation
         /// <summary>같은 Buff_ID 가 이미 있으면 지속 시간만 새로 시작(중첩 없음), 없으면 추가하고 능력치를 다시 계산.</summary>
         private void ApplyBuff(Combatant T, BuffDefinition b, Combatant src, SkillDefinition s, long t, long end)
         {
+            if (T.Dead || T.Hp <= 0) return; // No resurrection.
+            bool persistent = b.Stats.Length > 0 || b.Taunts || b.FpCostRatio > 0;
             ActiveBuff ab = null;
-            for (int i = 0; i < T.Buffs.Count; i++)
+            for (int i = 0; persistent && i < T.Buffs.Count; i++)
             {
                 if (T.Buffs[i].Def.Id == b.Id) { ab = T.Buffs[i]; break; }
             }
@@ -1207,15 +1343,18 @@ namespace ARPG.Core.Simulation
             if (!refresh)
             {
                 ab = new ActiveBuff { Def = b };
-                T.Buffs.Add(ab);
+                if (persistent) T.Buffs.Add(ab);
             }
+            ab.ApplyOrder = ++_buffApplyOrder;
             ab.SourceId = src.EntityId;
             ab.SkillId = s.Id;
             ab.StartTick = t;
             ab.EndTick = end;
             T.BuffsApplied++;
             double hpB = T.Hp;
-            if (!refresh) RecalcStats(T);
+            if (!refresh && persistent) RecalcStats(T);
+            if (b.Cleanse) Cleanse(T, t);
+            if (b.HealRatio > 0) T.Hp = Math.Min(T.MaxHp, T.Hp + T.MaxHp * b.HealRatio);
             var e = NewEvent(BattleEventType.BuffApplied, T.EntityId);
             e.TargetId = src.EntityId;
             e.SkillId = s.Id;
@@ -1225,6 +1364,7 @@ namespace ARPG.Core.Simulation
             e.ActorHpAfter = T.Hp;
             e.Reason = b.Describe() + " | " + (s.BuffDurationMs / 1000.0).ToString("0.###") + "초";
             Emit(ref e);
+            if (b.Taunts) ApplyTauntTarget(T, t);
         }
 
         private void ExpireBuffs(Combatant c, long t)
@@ -1309,7 +1449,7 @@ namespace ARPG.Core.Simulation
         private void ApplyBuildup(Combatant A, Combatant T, SkillDefinition s, double mv, long t,
                                   StatusKind kind, StatId buildStat, StatId pctStat, StatId resistStat)
         {
-            double build = A.Stat(buildStat) * (_r.statusBuildupUsesMotionValue ? mv : 1.0) * (1 + A.Stat(pctStat) / _r.statScale);
+            double build = (A.Stat(buildStat) + (kind == StatusKind.Frost ? s.ExtraFrost : 0)) * (_r.statusBuildupUsesMotionValue ? mv : 1.0) * (1 + A.Stat(pctStat) / _r.statScale);
             if (build <= 0 || IsImmune(T, kind, t)) return;
             int k = (int)kind;
             double before = T.Buildup[k];

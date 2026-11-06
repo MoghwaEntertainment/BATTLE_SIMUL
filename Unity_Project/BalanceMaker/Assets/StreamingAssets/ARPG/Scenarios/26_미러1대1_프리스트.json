@@ -1,0 +1,31 @@
+{
+    "name": "26_미러1대1_프리스트",
+    "description": "프리스트 1대1 미러. 처리 순서 편향 확인(승패 난 판 기준 50%와 비교)",
+    "masterSeed": 12345,
+    "runs": 1000,
+    "maxBattleSec": 300.0,
+    "spawnDistance": 10.0,
+    "spawnSpacing": 1.5,
+    "teams": [
+        {
+            "teamId": 0,
+            "name": "아군",
+            "members": [
+                {
+                    "definitionId": "50007",
+                    "count": 1
+                }
+            ]
+        },
+        {
+            "teamId": 1,
+            "name": "적군",
+            "members": [
+                {
+                    "definitionId": "50007",
+                    "count": 1
+                }
+            ]
+        }
+    ]
+}

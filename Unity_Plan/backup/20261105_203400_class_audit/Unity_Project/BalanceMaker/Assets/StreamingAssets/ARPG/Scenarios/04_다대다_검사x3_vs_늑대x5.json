@@ -1,0 +1,31 @@
+{
+  "name": "04_다대다_검사x3_vs_늑대x5",
+  "description": "다대다: 같은 캐릭터 여러 개체 식별 확인",
+  "masterSeed": 12345,
+  "runs": 100,
+  "maxBattleSec": 300,
+  "spawnDistance": 10,
+  "spawnSpacing": 1.5,
+  "teams": [
+    {
+      "teamId": 0,
+      "name": "아군",
+      "members": [
+        {
+          "definitionId": "20030",
+          "count": 3
+        }
+      ]
+    },
+    {
+      "teamId": 1,
+      "name": "적군",
+      "members": [
+        {
+          "definitionId": "10124",
+          "count": 5
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ARPG 전투 밸런스 시뮬레이터 사용 설명서</title>
+<style>
+  :root {
+    --bg: #faf9f6;
+    --paper: #ffffff;
+    --ink: #1f1f1d;
+    --ink-2: #4a4945;
+    --muted: #75736c;
+    --line: #dddbd3;
+    --accent: #0f6e56;
+    --accent-soft: #e1f5ee;
+    --core: #534ab7;
+    --core-soft: #eeedfe;
+    --tip: #e8f4ec;
+    --tip-line: #3f8f5a;
+    --warn: #fff4e0;
+    --warn-line: #c98a1b;
+    --ally: #3f8cff;
+    --enemy: #ff5a4d;
+  }
+  html { font-size: 19px; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: "Malgun Gothic", "맑은 고딕", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+    line-height: 1.75; word-break: keep-all; overflow-wrap: anywhere;
+  }
+  a { color: var(--accent); }
+  .topbar {
+    position: sticky; top: 0; z-index: 10; background: rgba(250,249,246,0.96);
+    border-bottom: 1px solid var(--line); backdrop-filter: blur(4px);
+  }
+  .topbar-inner { max-width: 1240px; margin: 0 auto; padding: 0.55rem 1.2rem; display: flex; align-items: center; gap: 1rem; }
+  .topbar .title { font-weight: 700; font-size: 1.05rem; flex: 1; }
+  .fontctl { display: flex; align-items: center; gap: 0.4rem; font-size: 0.9rem; color: var(--ink-2); }
+  .fontctl button {
+    font: inherit; font-weight: 700; min-width: 2.6rem; height: 2.2rem; border-radius: 8px;
+    border: 1px solid var(--line); background: var(--paper); cursor: pointer;
+  }
+  .fontctl button:hover { border-color: var(--accent); }
+  .layout { max-width: 1240px; margin: 0 auto; display: grid; grid-template-columns: 16rem minmax(0, 1fr); gap: 2rem; padding: 1.5rem 1.2rem 4rem; }
+  nav.toc { position: sticky; top: 4.2rem; align-self: start; max-height: calc(100vh - 5rem); overflow: auto; font-size: 0.88rem; }
+  nav.toc ol { list-style: none; padding: 0; margin: 0; counter-reset: toc; }
+  nav.toc li { counter-increment: toc; }
+  nav.toc a { display: block; padding: 0.3rem 0.6rem; border-radius: 6px; color: var(--ink-2); text-decoration: none; }
+  nav.toc a::before { content: counter(toc) ". "; color: var(--muted); }
+  nav.toc a:hover { background: var(--accent-soft); color: var(--accent); }
+  main { min-width: 0; max-width: 54rem; }
+  header.hero { padding: 0.4rem 0 1.2rem; border-bottom: 2px solid var(--ink); margin-bottom: 2rem; }
+  header.hero h1 { font-size: 2.1rem; line-height: 1.3; margin: 0 0 0.5rem; letter-spacing: -0.02em; }
+  header.hero p { margin: 0.2rem 0; color: var(--ink-2); }
+  .stamp { font-size: 0.85rem; color: var(--muted); }
+  section { margin: 0 0 3.2rem; scroll-margin-top: 4.5rem; }
+  h2 { font-size: 1.55rem; margin: 0 0 1rem; padding-bottom: 0.35rem; border-bottom: 1px solid var(--line); letter-spacing: -0.01em; }
+  h2 .num { display: inline-block; min-width: 2.8rem; color: var(--accent); }
+  h3 { font-size: 1.18rem; margin: 1.8rem 0 0.6rem; }
+  p { margin: 0.6rem 0; }
+  ul, ol { padding-left: 1.4rem; }
+  li { margin: 0.25rem 0; }
+  code, .path {
+    font-family: Consolas, "D2Coding", "Courier New", monospace; font-size: 0.86em;
+    background: #f0eee8; border: 1px solid #e3e0d7; border-radius: 5px; padding: 0.05rem 0.35rem;
+  }
+  .path { word-break: normal; overflow-wrap: normal; }
+  pre {
+    background: #23231f; color: #f2f1ec; border-radius: 10px; padding: 1rem 1.2rem; overflow-x: auto;
+    font-family: Consolas, "D2Coding", monospace; font-size: 0.82rem; line-height: 1.6;
+  }
+  kbd {
+    display: inline-block; min-width: 1.7em; text-align: center; font-family: inherit; font-size: 0.85em; font-weight: 700;
+    padding: 0.05rem 0.45rem; border: 1px solid #bdbab0; border-bottom-width: 3px; border-radius: 6px; background: #fff;
+  }
+  .ui {
+    display: inline-block; font-size: 0.88em; font-weight: 700; padding: 0.05rem 0.55rem; border-radius: 6px;
+    background: #ececec; border: 1px solid #c9c9c9; color: #222; white-space: nowrap;
+  }
+  table { width: 100%; border-collapse: collapse; margin: 0.8rem 0 1.2rem; font-size: 0.93rem; background: var(--paper); }
+  th, td { text-align: left; vertical-align: top; padding: 0.55rem 0.75rem; border-bottom: 1px solid var(--line); }
+  th { background: #f1efe9; font-weight: 700; }
+  tbody tr:nth-child(even) td { background: #fcfbf8; }
+  .steps { list-style: none; padding: 0; margin: 1rem 0; counter-reset: step; }
+  .steps > li {
+    counter-increment: step; position: relative; padding: 0.9rem 1.1rem 0.9rem 4.1rem; margin: 0 0 0.8rem;
+    background: var(--paper); border: 1px solid var(--line); border-radius: 12px;
+  }
+  .steps > li::before {
+    content: counter(step); position: absolute; left: 1rem; top: 0.85rem; width: 2.2rem; height: 2.2rem; border-radius: 50%;
+    background: var(--accent); color: #fff; font-weight: 700; display: flex; align-items: center; justify-content: center;
+  }
+  .steps > li b.head { display: block; font-size: 1.05rem; margin-bottom: 0.15rem; }
+  .callout { border-left: 5px solid; border-radius: 0 10px 10px 0; padding: 0.75rem 1rem; margin: 1rem 0; }
+  .callout.tip { background: var(--tip); border-color: var(--tip-line); }
+  .callout.warn { background: var(--warn); border-color: var(--warn-line); }
+  .callout b.label { display: block; margin-bottom: 0.15rem; }
+  .quick { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.9rem; margin: 1rem 0; }
+  .quick .card { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 1rem; }
+  .quick .card .n { font-size: 1.9rem; font-weight: 800; color: var(--accent); line-height: 1; }
+  .quick .card .t { font-weight: 700; margin: 0.4rem 0 0.2rem; }
+  .figure { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 0.8rem; margin: 1rem 0; }
+  .figure svg { width: 100%; height: auto; display: block; }
+  .figure .cap { font-size: 0.85rem; color: var(--muted); margin-top: 0.4rem; text-align: center; }
+  .sw { display: inline-block; width: 1.05em; height: 1.05em; border-radius: 4px; vertical-align: -0.15em; border: 1px solid rgba(0,0,0,0.25); margin-right: 0.35rem; }
+  .badge { display: inline-flex; width: 1.6rem; height: 1.6rem; border-radius: 50%; background: #e0592a; color: #fff; font-weight: 700; font-size: 0.85rem; align-items: center; justify-content: center; margin-right: 0.3rem; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .muted { color: var(--muted); }
+  .faq dt { font-weight: 700; margin-top: 1rem; }
+  .faq dt::before { content: "Q. "; color: var(--accent); }
+  .faq dd { margin: 0.2rem 0 0 0; padding-left: 1.6rem; }
+  .faq dd::before { content: "A. "; margin-left: -1.6rem; color: var(--muted); font-weight: 700; }
+  @media (max-width: 960px) {
+    .layout { grid-template-columns: 1fr; }
+    nav.toc { position: static; max-height: none; border: 1px solid var(--line); border-radius: 12px; padding: 0.6rem; background: var(--paper); }
+    .quick, .two { grid-template-columns: 1fr; }
+  }
+  @media print {
+    .topbar, nav.toc { display: none; }
+    .layout { display: block; padding: 0; }
+    section { break-inside: auto; }
+    .steps > li, .callout, table, .figure { break-inside: avoid; }
+  }
+</style>
+</head>
+<body><section style="margin:20px;padding:20px;border:2px solid #8aafd9;border-radius:10px;overflow:auto"><h2>GameConfig 상태이상 설정 · 2026-11-04</h2><p>기존 설명의 기본 수치보다 이 표의 활성 GameConfig 설정을 우선 적용합니다.</p><table><tr><th>항목</th><th>입력</th><th>현재 효과</th></tr><tr><td>STUN_TIME</td><td>3</td><td>기절 3초</td></tr><tr><td>STUN_ADD_DAMAGE_PCT</td><td>0</td><td>기절 추가 피해 0%</td></tr><tr><td>WOUND_DAMAGE_PCT</td><td>10000</td><td>최대 HP 10% 즉시 피해</td></tr><tr><td>POISON_TIME</td><td>10</td><td>중독 10초</td></tr><tr><td>POISON_DAMAGE_PCT</td><td>2000</td><td>초당 최대 HP 2%</td></tr><tr><td>FROST_TIME</td><td>5</td><td>빙결 5초</td></tr><tr><td>FROST_SLOWDOWN_PCT</td><td>50000</td><td>동작 속도 50% 감소</td></tr><tr><td>STAGGER_TIME</td><td>0.5</td><td>경직 0.5초</td></tr><tr><td>GUARD_BREAK_TIME</td><td>3</td><td>가드 브레이크 3초</td></tr><tr><td>GUARD_BREAK_ADD_DAMAGE_PCT</td><td>0</td><td>가드 브레이크 추가 피해 0%</td></tr></table><p>시간은 초, RATE는 십만분율입니다. Excel에서 저장한 뒤 기존 ARPG 엑셀 → JSON 변환 메뉴를 실행하고 데이터 다시 읽기로 적용합니다. 기절과 가드 브레이크의 추가 피해는 현재 0%입니다. 중독은 1초 뒤부터 매초 최대 HP 2%씩 총 10회입니다. 빙결로 구르기 무적 시간은 늘어나지 않습니다.</p></section><nav data-manual-home style="padding:10px 24px;background:#eef3fa;font:14px/1.8 sans-serif"><a href="index.html" style="color:#2355a0">← 매뉴얼 모음</a></nav>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <div class="title">ARPG 전투 밸런스 시뮬레이터 · 사용 설명서</div>
+    <div class="fontctl" aria-label="이 문서 글자 크기">
+      <span>문서 글자</span>
+      <button type="button" onclick="fs(-1)" title="글자 작게">가−</button>
+      <span id="fsv">100%</span>
+      <button type="button" onclick="fs(1)" title="글자 크게">가+</button>
+    </div>
+  </div>
+</div>
+
+<div class="layout">
+  <nav class="toc" aria-label="목차">
+    <ol>
+      <li><a href="#quick">빠른 시작</a></li>
+      <li><a href="#screen">화면 구성</a></li>
+      <li><a href="#scenario">시나리오 만들기</a></li>
+      <li><a href="#observe">관찰 모드 (한 판씩 보기)</a></li>
+      <li><a href="#auto">자동 다음 회차</a></li>
+      <li><a href="#batch">고속 반복 (승률 내기)</a></li>
+      <li><a href="#legend">화면 표시 읽는 법</a></li>
+      <li><a href="#results">결과 파일</a></li>
+      <li><a href="#tables">엑셀 테이블 수정 → 반영</a></li>
+      <li><a href="#rules">전투 규칙 값 바꾸기</a></li>
+      <li><a href="#keys">조작 키 모음</a></li>
+      <li><a href="#fontsize">글자 크기</a></li>
+      <li><a href="#cli">명령줄 실행 (고급)</a></li>
+      <li><a href="#faq">문제 해결 · 자주 묻는 질문</a></li>
+      <li><a href="#paths">파일 위치 한눈에</a></li>
+    </ol>
+  </nav>
+
+  <main>
+    <header class="hero">
+      <h1>ARPG 전투 밸런스 시뮬레이터<br>사용 설명서</h1>
+      <p>엑셀 기획 테이블의 캐릭터·스킬·AI 로 전투를 돌려 보고, 화면으로 확인하거나 수백 판을 빠르게 돌려 승률을 내는 Unity 도구입니다.</p>
+      <p class="stamp">기준: 2026-11-01 · Unity 6000.6 · 규칙 rules 2026.11.01-r2 · 화면 오른쪽 위 <b>가− / 가+</b> 로 이 문서의 글자 크기를 바꿀 수 있습니다.</p>
+    </header>
+
+    <!-- 1 -->
+    <section id="quick">
+      <h2><span class="num">1</span>빠른 시작</h2>
+      <div class="quick">
+        <div class="card"><div class="n">1</div><div class="t">프로젝트 열기</div>Unity Hub 에서 <span class="path">Unity_Project/<wbr>BalanceMaker</span> 를 엽니다.</div>
+        <div class="card"><div class="n">2</div><div class="t">Play</div>Project 창에서 <span class="path">Assets/<wbr>Scenes/<wbr>SampleScene</span> 을 더블클릭하고 위쪽 <span class="ui">▶</span> Play 를 누릅니다.</div>
+        <div class="card"><div class="n">3</div><div class="t">전투 시작</div>왼쪽 패널에서 시나리오를 고르고 <span class="ui">▶ 시작/재개</span> 를 누릅니다.</div>
+      </div>
+      <div class="callout tip"><b class="label">알아두면 좋은 점</b>
+        시뮬레이터 화면은 Play 를 누르면 저절로 만들어집니다. 장면에 따로 무언가를 배치할 필요가 없습니다.
+        전용 장면이 필요하면 메뉴 <span class="ui">ARPG › 1. Simulator 장면 만들기</span> 로 <span class="path">Assets/<wbr>ARPG/<wbr>Scenes/<wbr>Simulator.unity</span> 를 만들어 쓰세요.
+      </div>
+      <div class="callout warn"><b class="label">처음 한 번 확인</b>
+        Play 를 눌렀는데 아래쪽 Console 창에 <b>빨간 오류</b>가 있으면 실행되지 않습니다. 오류 문구를 그대로 복사해 전달하면 고칠 수 있습니다.
+      </div>
+    </section>
+
+    <!-- 2 -->
+    <section id="screen">
+      <h2><span class="num">2</span>화면 구성</h2>
+      <p>Play 중인 Game 화면은 다섯 부분으로 나뉩니다. 번호는 아래 표와 같습니다.</p>
+      <div class="figure">
+        <svg viewBox="0 0 1000 620" role="img" aria-label="시뮬레이터 화면 구성도">
+          <defs>
+            <style>
+              .f { font-family: "Malgun Gothic","Apple SD Gothic Neo","Noto Sans KR",sans-serif; }
+              .t13 { font-size: 13px; fill: #e9e9e9; } .t12 { font-size: 12px; fill: #d0d0d0; } .t11 { font-size: 11px; fill: #b8b8b8; }
+              .tb { font-size: 13px; font-weight: 700; fill: #ffffff; }
+              .btn { fill: #4a4d55; stroke: #6c707a; stroke-width: 1; } .btnt { font-size: 11.5px; fill: #f0f0f0; }
+              .sel { fill: #2f6fd1; } .panel { fill: rgba(20,22,26,0.82); stroke: #555a63; stroke-width: 1; }
+              .num circle { fill: #e0592a; } .num text { font-size: 15px; font-weight: 700; fill: #fff; }
+            </style>
+          </defs>
+          <!-- 배경(전장) -->
+          <rect x="0" y="0" width="1000" height="620" rx="10" fill="#1f2125"/>
+          <ellipse cx="560" cy="330" rx="300" ry="120" fill="#3a3c41"/>
+          <!-- 캐릭터 -->
+          <g>
+            <ellipse cx="480" cy="352" rx="34" ry="11" fill="#2d5aa8" opacity="0.8"/>
+            <rect x="466" y="282" width="28" height="70" rx="14" fill="#3f8cff"/>
+            <rect x="452" y="262" width="56" height="5" fill="#c33"/><rect x="452" y="268" width="56" height="4" fill="#36c"/><rect x="452" y="273" width="56" height="4" fill="#3a3"/>
+            <text class="f t11" x="480" y="255" text-anchor="middle">A1 검사</text>
+            <line x1="498" y1="300" x2="560" y2="292" stroke="#ffe680" stroke-width="5" stroke-linecap="round"/>
+            <ellipse cx="640" cy="352" rx="38" ry="12" fill="#a8322b" opacity="0.8"/>
+            <rect x="624" y="276" width="32" height="76" rx="16" fill="#ff5a4d"/>
+            <rect x="612" y="256" width="56" height="5" fill="#c33"/><rect x="612" y="262" width="56" height="4" fill="#666"/><rect x="612" y="267" width="56" height="4" fill="#666"/>
+            <text class="f t11" x="640" y="249" text-anchor="middle">B1 기사단장</text>
+            <circle cx="575" cy="292" r="12" fill="#ffb326" opacity="0.9"/>
+            <ellipse cx="545" cy="345" rx="40" ry="13" fill="none" stroke="#ffd84a" stroke-width="2"/>
+          </g>
+          <!-- ② 상단 바 -->
+          <rect class="panel" x="332" y="12" width="356" height="30" rx="4"/>
+          <text class="f t12" x="510" y="32" text-anchor="middle">회차 1 | tick 120 / 4.000s | 1배속</text>
+          <!-- ① 왼쪽 패널 -->
+          <rect class="panel" x="12" y="12" width="308" height="596" rx="6"/>
+          <text class="f tb" x="24" y="36">ARPG 전투 밸런스 시뮬레이터</text>
+          <text class="f t11" x="218" y="36">글자</text>
+          <rect class="btn" x="244" y="24" width="16" height="17" rx="3"/><text class="f btnt" x="252" y="37" text-anchor="middle">-</text>
+          <text class="f t11" x="278" y="36" text-anchor="middle">100%</text>
+          <rect class="btn" x="296" y="24" width="16" height="17" rx="3"/><text class="f btnt" x="304" y="37" text-anchor="middle">+</text>
+          <text class="f t11" x="24" y="56">데이터 128명 / 스킬 1,432 / dataHash 92c8…</text>
+          <rect class="btn" x="22" y="64" width="96" height="22" rx="3"/><text class="f btnt" x="70" y="79" text-anchor="middle">데이터 다시 읽기</text>
+          <rect class="btn" x="122" y="64" width="90" height="22" rx="3"/><text class="f btnt" x="167" y="79" text-anchor="middle">검증 보고서</text>
+          <rect class="btn" x="216" y="64" width="94" height="22" rx="3"/><text class="f btnt" x="263" y="79" text-anchor="middle">Export 폴더</text>
+          <text class="f tb" x="24" y="110">■ 시나리오</text>
+          <rect class="btn" x="22" y="118" width="22" height="22" rx="3"/><text class="f btnt" x="33" y="133" text-anchor="middle">◀</text>
+          <text class="f t11" x="50" y="133">1/5</text>
+          <rect class="btn" x="74" y="118" width="22" height="22" rx="3"/><text class="f btnt" x="85" y="133" text-anchor="middle">▶</text>
+          <rect x="100" y="118" width="164" height="22" rx="3" fill="#2a2c31" stroke="#6c707a"/><text class="f t11" x="106" y="133">01_근접1대1_검사37_vs…</text>
+          <rect class="btn" x="268" y="118" width="42" height="22" rx="3"/><text class="f btnt" x="289" y="133" text-anchor="middle">저장</text>
+          <text class="f t13" x="24" y="162" fill="#7fb0ff">팀 0 아군</text>
+          <rect class="btn" x="258" y="149" width="52" height="20" rx="3"/><text class="f btnt" x="284" y="163" text-anchor="middle">+ 추가</text>
+          <text class="f t11" x="30" y="184">검사 [20037]</text>
+          <text class="f t11" x="226" y="184">-  ×1  +  x</text>
+          <text class="f t13" x="24" y="208" fill="#ff8e85">팀 1 적군</text>
+          <rect class="btn" x="258" y="195" width="52" height="20" rx="3"/><text class="f btnt" x="284" y="209" text-anchor="middle">+ 추가</text>
+          <text class="f t11" x="30" y="230">기사단장 [10115]</text>
+          <text class="f t11" x="226" y="230">-  ×1  +  x</text>
+          <text class="f t11" x="24" y="254">masterSeed [12345]   반복 [100]</text>
+          <text class="f t11" x="24" y="274">제한(초) [300]          거리 [10]</text>
+          <rect class="sel" x="22" y="284" width="144" height="22" rx="3"/><text class="f btnt" x="94" y="299" text-anchor="middle">관찰 모드</text>
+          <rect class="btn" x="166" y="284" width="144" height="22" rx="3"/><text class="f btnt" x="238" y="299" text-anchor="middle">고속 반복(비시각)</text>
+          <text class="f tb" x="24" y="328">■ 관찰</text>
+          <rect class="btn" x="22" y="336" width="78" height="22" rx="3"/><text class="f btnt" x="61" y="351" text-anchor="middle">▶ 시작/재개</text>
+          <rect class="btn" x="104" y="336" width="48" height="22" rx="3"/><text class="f btnt" x="128" y="351" text-anchor="middle">1 tick</text>
+          <rect class="btn" x="156" y="336" width="78" height="22" rx="3"/><text class="f btnt" x="195" y="351" text-anchor="middle">재시작</text>
+          <rect class="btn" x="238" y="336" width="72" height="22" rx="3"/><text class="f btnt" x="274" y="351" text-anchor="middle">다음 회차</text>
+          <text class="f t11" x="24" y="378">☐ 자동 다음 회차 (회차 100까지)</text>
+          <text class="f t11" x="24" y="400">배속  [0.5x | 1x | 2x | 4x | 8x]</text>
+          <text class="f t11" x="24" y="420">Console     [끔 | 핵심 | 상세]</text>
+          <text class="f t11" x="24" y="440">화면 로그  [끔 | 핵심 | 상세]</text>
+          <text class="f t11" x="24" y="462">☑ 이벤트 CSV 기록   ☑ 로그창</text>
+          <text class="f t11" x="24" y="482">☑ 판정 범위 표시   ☑ 공격 이펙트(막대·착탄)</text>
+          <rect class="btn" x="22" y="492" width="288" height="22" rx="3"/><text class="f btnt" x="166" y="507" text-anchor="middle">저장 폴더 열기</text>
+          <text class="f t11" x="24" y="534">[A1] 검사  HP 1840/2000  ST 72.0</text>
+          <text class="f t11" x="24" y="552">[B1] 기사단장  HP 5210/6000</text>
+          <text class="f tb" x="24" y="580">■ 검증</text>
+          <rect class="btn" x="82" y="566" width="228" height="22" rx="3"/><text class="f btnt" x="196" y="581" text-anchor="middle">Self Test 실행 (규칙 사례·결정성)</text>
+          <!-- ④ 오른쪽 정보창 -->
+          <rect class="panel" x="700" y="12" width="288" height="300" rx="6"/>
+          <text class="f tb" x="712" y="36">A1 검사</text>
+          <text class="f t11" x="712" y="58">EntityId 0 / 정의 20037 / 팀 0</text>
+          <text class="f t11" x="712" y="76">AI SWORD_AI / 무브셋 SWORD</text>
+          <text class="f t11" x="712" y="94">HP 1840.00 / 2000.00</text>
+          <text class="f t11" x="712" y="112">스태미나 72.00 / 120.00</text>
+          <text class="f t11" x="712" y="130">강인도 40.0 / 60.0</text>
+          <text class="f t11" x="712" y="148">상태: attacking</text>
+          <text class="f t11" x="712" y="166">행동 LIGHT_ATK  진행 230 / 900ms</text>
+          <text class="f t11" x="712" y="184">AI 행 #12 …</text>
+          <text class="f t11" x="712" y="202">대상 B1 기사단장 / 거리 2.31m</text>
+          <text class="f t11" x="712" y="220">쿨다운: …</text>
+          <text class="f t11" x="712" y="238">누적 피해 160 / 받은 피해 0</text>
+          <rect class="btn" x="712" y="252" width="264" height="22" rx="3"/><text class="f btnt" x="844" y="267" text-anchor="middle">카메라 추적(F)</text>
+          <rect class="btn" x="712" y="280" width="264" height="22" rx="3"/><text class="f btnt" x="844" y="295" text-anchor="middle">선택 해제</text>
+          <!-- ⑤ 로그창 -->
+          <rect class="panel" x="332" y="468" width="356" height="140" rx="4"/>
+          <text class="f t11" x="344" y="490">[t120] A1 검사 → B1 HIT 160.2 (HP 6000→5839)</text>
+          <text class="f t11" x="344" y="510">[t108] A1 검사 행동 시작 LIGHT_ATK</text>
+          <text class="f t11" x="344" y="530">[t96] B1 기사단장 GUARD …</text>
+          <text class="f t11" x="344" y="550">…</text>
+          <!-- 번호 -->
+          <g class="num f"><circle cx="326" cy="16" r="13"/><text x="326" y="21" text-anchor="middle">1</text></g>
+          <g class="num f"><circle cx="694" cy="27" r="13"/><text x="694" y="32" text-anchor="middle">2</text></g>
+          <g class="num f"><circle cx="560" cy="410" r="13"/><text x="560" y="415" text-anchor="middle">3</text></g>
+          <g class="num f"><circle cx="982" cy="16" r="13"/><text x="982" y="21" text-anchor="middle">4</text></g>
+          <g class="num f"><circle cx="694" cy="474" r="13"/><text x="694" y="479" text-anchor="middle">5</text></g>
+        </svg>
+        <div class="cap">화면 구성 예시(숫자·이름은 예시입니다). 실제 글자와 버튼은 글자 크기 설정에 따라 커집니다.</div>
+      </div>
+      <table>
+        <thead><tr><th style="width:4.5rem">번호</th><th style="width:9rem">부분</th><th>하는 일</th></tr></thead>
+        <tbody>
+          <tr><td><span class="badge">1</span></td><td>왼쪽 패널</td><td>모든 조작이 여기 있습니다. 데이터 읽기, 시나리오 편집, 관찰 모드/고속 반복 전환, 재생 조작, 표시 옵션, Self Test.</td></tr>
+          <tr><td><span class="badge">2</span></td><td>상단 바</td><td>지금 회차, tick(1/30초 단위 시간), 경과 시간, 배속, 일시정지 여부, 결과를 보여 줍니다.</td></tr>
+          <tr><td><span class="badge">3</span></td><td>전장</td><td>캐릭터(캡슐)들이 싸우는 곳. 마우스로 카메라를 움직이고, 캐릭터를 <b>왼쪽 클릭</b>하면 선택됩니다.</td></tr>
+          <tr><td><span class="badge">4</span></td><td>정보창</td><td>선택한 캐릭터의 HP·FP·스태미나 실제 값, 강인도, 상태이상 게이지, 현재 행동과 진행, AI 가 고른 행 번호, 대상과 거리, 쿨다운, 누적 통계.</td></tr>
+          <tr><td><span class="badge">5</span></td><td>로그창</td><td>최근 전투 사건(행동 시작, 명중, 가드, 상태이상 등)이 아래로 쌓이며 <b>최신 줄이 맨 아래</b>에 나옵니다. 맨 아래를 보고 있으면 새 줄을 따라 내려가고, 위로 올려 읽는 동안에는 멈춥니다. 그때 나타나는 <span class="ui">▼ 최신으로</span> 를 누르면 다시 맨 아래로 갑니다.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- 3 -->
+    <section id="scenario">
+      <h2><span class="num">3</span>시나리오 만들기</h2>
+      <p><b>시나리오</b>는 “누가 누구와, 몇 명씩, 어떤 조건으로 싸우는가”를 정한 설정입니다. 화면에서 만드는 방법과 파일을 직접 고치는 방법이 있습니다.</p>
+
+      <h3>화면에서 만들기 (Play 중)</h3>
+      <ol class="steps">
+        <li><b class="head">시나리오 고르기</b>왼쪽 패널 <b>■ 시나리오</b> 의 <span class="ui">◀</span> <span class="ui">▶</span> 로 저장된 시나리오를 넘깁니다. 예시 5개가 들어 있습니다.</li>
+        <li><b class="head">캐릭터 넣기</b>팀 줄의 <span class="ui">+ 추가</span> 를 누르면 선택 창이 열립니다. 이름이나 ID 로 검색하고, <b>PC</b>/<b>몬스터</b> 체크로 거른 뒤 목록에서 누르면 그 팀에 들어갑니다. 이미 있는 캐릭터를 또 누르면 인원이 1 늘어납니다.</li>
+        <li><b class="head">인원 조정</b>캐릭터 줄의 <span class="ui">-</span> <span class="ui">+</span> 로 마릿수를 바꾸고, <span class="ui">x</span> 로 뺍니다.</li>
+        <li><b class="head">조건 입력</b>masterSeed, 반복, 제한(초), 거리를 입력합니다(아래 표).</li>
+        <li><b class="head">이름 정하고 저장</b>이름 칸에 이름을 쓰고 <span class="ui">저장</span>. 같은 이름이면 덮어쓰고, <b>이름을 바꿔 저장하면 새 시나리오</b>가 됩니다.</li>
+      </ol>
+      <table>
+        <thead><tr><th style="width:9rem">칸</th><th>뜻</th></tr></thead>
+        <tbody>
+          <tr><td><b>masterSeed</b></td><td>난수의 기준값. <b>같은 값이면 결과도 항상 같습니다.</b> 다른 결과를 보고 싶으면 값을 바꾸거나 다음 회차로 넘어가세요.</td></tr>
+          <tr><td><b>반복</b></td><td>고속 반복에서 돌릴 판 수. 자동 다음 회차에서는 여기까지 진행합니다.</td></tr>
+          <tr><td><b>제한(초)</b></td><td>이 시간이 지나도 승부가 안 나면 <b>시간 초과</b>로 끝납니다.</td></tr>
+          <tr><td><b>거리</b></td><td>두 팀이 처음 떨어져 서는 거리(m).</td></tr>
+        </tbody>
+      </table>
+      <div class="callout tip"><b class="label">바로 반영</b>
+        화면에서 바꾼 내용은 관찰 모드에 바로 적용되어 회차 1부터 다시 준비됩니다. 단, <span class="ui">저장</span> 을 누르기 전까지는 파일에 남지 않습니다.
+      </div>
+
+      <h3>파일로 직접 고치기</h3>
+      <p>위치: <span class="path">Unity_Project/<wbr>BalanceMaker/<wbr>Assets/<wbr>StreamingAssets/<wbr>ARPG/<wbr>Scenarios/<wbr></span> 의 <code>.json</code> 파일. 메모장으로 열어 고칠 수 있습니다.</p>
+<pre>{
+  "name": "01_근접1대1_검사37_vs_기사단장37",
+  "description": "근접 1대1: 대미지메이커 예시 조합",
+  "masterSeed": 12345,
+  "runs": 100,
+  "maxBattleSec": 300,
+  "spawnDistance": 10,
+  "spawnSpacing": 1.5,
+  "teams": [
+    { "teamId": 0, "name": "아군", "members": [ { "definitionId": "20037", "count": 1 } ] },
+    { "teamId": 1, "name": "적군", "members": [ { "definitionId": "10115", "count": 1 } ] }
+  ]
+}</pre>
+      <table>
+        <thead><tr><th style="width:10rem">항목</th><th>뜻</th></tr></thead>
+        <tbody>
+          <tr><td><code>runs</code> / <code>maxBattleSec</code> / <code>spawnDistance</code></td><td>화면의 반복 / 제한(초) / 거리와 같습니다.</td></tr>
+          <tr><td><code>description</code></td><td>설명 문구. 화면에 보이지만 화면에서는 고칠 수 없습니다.</td></tr>
+          <tr><td><code>spawnSpacing</code></td><td>같은 팀끼리 나란히 설 때의 간격(m). <b>파일에서만</b> 바꿀 수 있습니다.</td></tr>
+          <tr><td><code>teams</code></td><td>팀 목록. 팀 2, 3… 을 더하는 것도 <b>파일에서만</b> 됩니다.</td></tr>
+          <tr><td><code>definitionId</code></td><td>캐릭터 테이블의 ID. 선택 창에 <code>[20037]</code> 처럼 대괄호로 보이는 값입니다.</td></tr>
+        </tbody>
+      </table>
+      <div class="callout warn"><b class="label">Play 중에 파일을 고쳤다면</b>
+        왼쪽 위 <span class="ui">데이터 다시 읽기</span> 를 눌러야 반영됩니다. 캐릭터 능력치·레벨은 시나리오가 아니라 엑셀 테이블에서 바꿉니다(<a href="#tables">9장</a>).
+      </div>
+    </section>
+
+    <!-- 4 -->
+    <section id="observe">
+      <h2><span class="num">4</span>관찰 모드 (한 판씩 보기)</h2>
+      <p>왼쪽 패널 가운데의 <span class="ui">관찰 모드</span> 를 고른 상태입니다. 한 판을 화면으로 재생하며 행동과 수치를 확인합니다.</p>
+      <table>
+        <thead><tr><th style="width:11rem">버튼 · 옵션</th><th>하는 일</th></tr></thead>
+        <tbody>
+          <tr><td><span class="ui">▶ 시작/재개</span> <span class="ui">⏸ 정지</span></td><td>재생과 일시정지. 키보드 <kbd>Space</kbd> 도 같습니다.</td></tr>
+          <tr><td><span class="ui">1 tick</span></td><td>1/30초만 진행하고 멈춥니다. 한 동작씩 뜯어볼 때. 키보드 <kbd>.</kbd></td></tr>
+          <tr><td><span class="ui">재시작(같은 seed)</span></td><td>지금 회차를 처음부터. 같은 결과가 다시 나옵니다.</td></tr>
+          <tr><td><span class="ui">다음 회차</span></td><td>다음 난수로 새 판을 준비합니다.</td></tr>
+          <tr><td>자동 다음 회차</td><td>판이 끝나면 다음 판을 저절로 시작합니다(<a href="#auto">5장</a>).</td></tr>
+          <tr><td>배속</td><td>0.5x · 1x · 2x · 4x · 8x. 너무 빨라 처리가 못 따라가면 상단 바에 <b>처리 지연</b>이 뜹니다.</td></tr>
+          <tr><td>Console / 화면 로그</td><td>Unity Console 과 로그창에 얼마나 자세히 남길지. <b>끔 · 핵심 · 상세</b>.</td></tr>
+          <tr><td>이벤트 CSV 기록</td><td>켜 두면 판마다 사건 기록 파일을 남깁니다(<a href="#results">8장</a>).</td></tr>
+          <tr><td>로그창</td><td>화면 아래 로그창 보이기/숨기기. 최신 줄이 맨 아래에 쌓입니다.</td></tr>
+          <tr><td>판정 범위 표시</td><td>공격 판정 원, 선택 캐릭터의 거리 원과 대상 선(<a href="#legend">7장</a>).</td></tr>
+          <tr><td>공격 이펙트(막대·착탄)</td><td>공격이 맞을 때 날아가는 막대와 착탄 표시 켜기/끄기.</td></tr>
+          <tr><td><span class="ui">저장 폴더 열기</span></td><td>이번 관찰 기록이 저장되는 폴더를 엽니다.</td></tr>
+          <tr><td>캐릭터 목록 버튼</td><td>패널 아래쪽 <code>A1</code>, <code>B1</code> 같은 버튼을 누르면 그 캐릭터가 선택됩니다.</td></tr>
+        </tbody>
+      </table>
+      <div class="callout tip"><b class="label">한 캐릭터만 따라가기</b>
+        캐릭터를 왼쪽 클릭으로 선택한 뒤 <kbd>F</kbd> (또는 정보창의 <span class="ui">카메라 추적(F)</span>) 를 누르면 카메라가 그 캐릭터를 따라갑니다. 가운데 버튼으로 끌거나 <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> 로 카메라를 옮기면 추적이 풀립니다.
+      </div>
+    </section>
+
+    <!-- 5 -->
+    <section id="auto">
+      <h2><span class="num">5</span>자동 다음 회차</h2>
+      <p>관찰 모드에서 <b>자동 다음 회차</b>를 체크하면, 판이 끝날 때마다 다음 판이 저절로 이어집니다. 화면으로 보면서 여러 판을 계속 돌릴 때 씁니다.</p>
+      <ol class="steps">
+        <li><b class="head">체크하기</b><b>☐ 자동 다음 회차 (회차 N까지)</b> 를 체크합니다. 멈춰 있던 판은 바로 재생됩니다.</li>
+        <li><b class="head">자동으로 이어짐</b>판이 끝나면 결과를 볼 수 있게 <b>약 1.2초</b> 쉬었다가(배속이 높으면 그만큼 짧게) 다음 회차를 시작합니다.</li>
+        <li><b class="head">끝나는 때</b>회차 번호가 시나리오의 <b>반복</b> 값에 닿으면 멈춥니다. 중간에 멈추려면 체크를 풉니다.</li>
+      </ol>
+      <ul>
+        <li>체크 아래에 <b>누적 결과</b>가 표시됩니다. 예: <code>12판: 아군 승 8 / 적군 승 3 / 무승부·시간초과 1</code></li>
+        <li>카메라 위치와 추적 중인 캐릭터는 다음 판에도 그대로 유지됩니다.</li>
+        <li>시나리오를 바꾸면 누적 결과가 0 부터 다시 셉니다.</li>
+      </ul>
+      <div class="callout warn"><b class="label">파일이 많이 생길 수 있어요</b>
+        <b>이벤트 CSV 기록</b>이 켜져 있으면 판마다 기록 파일이 생깁니다. 많이 돌릴 때 필요 없으면 꺼 두세요.
+      </div>
+      <div class="callout tip"><b class="label">승률만 빨리 알고 싶다면</b>
+        화면을 볼 필요가 없으면 <a href="#batch">고속 반복</a>이 훨씬 빠릅니다. 같은 masterSeed 면 고속 반복과 관찰 모드의 회차별 결과가 같습니다.
+      </div>
+    </section>
+
+    <!-- 6 -->
+    <section id="batch">
+      <h2><span class="num">6</span>고속 반복 (승률 내기)</h2>
+      <p>캐릭터를 화면에 그리지 않고 시나리오를 <b>반복 횟수만큼</b> 빠르게 돌려 승률과 통계를 냅니다. “반복 100” 은 이 모드에서 100판을 뜻합니다.</p>
+      <ol class="steps">
+        <li><b class="head">모드 바꾸기</b>왼쪽 패널 가운데 <span class="ui">고속 반복(비시각)</span> 을 누릅니다.</li>
+        <li><b class="head">옵션 고르기</b>
+          <b>이벤트 CSV</b>: <i>없음</i>(가장 빠름) · <i>처음 N회</i>(앞의 몇 판만 상세 기록) · <i>전체</i>(모든 판, 파일이 큼).<br>
+          <b>프레임 예산</b>: 한 화면 프레임에 계산에 쓰는 시간(4~60ms). 크게 하면 빨리 끝나지만 화면 반응이 둔해집니다.</li>
+        <li><b class="head">실행</b><span class="ui">실행</span> 을 누르면 진행 막대가 차오릅니다. 중간에 <span class="ui">취소</span> 하면 그때까지의 결과가 <b>부분 결과</b>로 저장됩니다.</li>
+        <li><b class="head">결과 보기</b>패널에 요약이 나오고, <span class="ui">결과 폴더 열기</span> 로 CSV 파일을 엽니다.</li>
+      </ol>
+      <h3>결과 요약 읽는 법</h3>
+      <table>
+        <thead><tr><th style="width:12rem">표시</th><th>뜻</th></tr></thead>
+        <tbody>
+          <tr><td>완료 / 중단 / 오류</td><td>끝난 판 수, 취소로 멈춘 판 수, 오류난 판 수.</td></tr>
+          <tr><td>아군 승 / 적군 승 / 동시 전멸 / 시간 초과</td><td>판 결과별 횟수.</td></tr>
+          <tr><td>아군 승률 (95% CI a~b%)</td><td>아군이 이긴 비율. 괄호 안은 <b>판 수가 적어서 생기는 오차 범위</b>입니다. 판을 많이 돌릴수록 범위가 좁아집니다.</td></tr>
+          <tr><td>승패난 전투 중 %</td><td>무승부·시간 초과를 빼고 계산한 아군 승률.</td></tr>
+          <tr><td>전투 시간 평균 / 중앙</td><td>한 판이 걸린 전투 속 시간(초).</td></tr>
+          <tr><td>처리 전투/초</td><td>1초에 몇 판을 계산했는지(속도 참고용).</td></tr>
+        </tbody>
+      </table>
+      <div class="callout warn"><b class="label">30판 미만이면</b>
+        “완료 수가 적어 승률을 확정적으로 해석하지 마세요” 경고가 나옵니다. 밸런스 판단에는 수백 판 이상을 권장합니다.
+      </div>
+    </section>
+
+    <!-- 7 -->
+    <section id="legend">
+      <h2><span class="num">7</span>화면 표시 읽는 법</h2>
+      <h3>캐릭터 색</h3>
+      <div class="two">
+        <ul>
+          <li><span class="sw" style="background:#3f8cff"></span>파랑: 팀 0(아군)</li>
+          <li><span class="sw" style="background:#ff5a4d"></span>빨강: 팀 1(적군)</li>
+          <li><span class="sw" style="background:#4dd966"></span><span class="sw" style="background:#e6bf33"></span>초록·노랑: 팀 2·3</li>
+          <li><span class="sw" style="background:#ffffff"></span>흰색 깜빡임: 맞음</li>
+          <li><span class="sw" style="background:#66ffff"></span>청록: 회피 무적 시간</li>
+        </ul>
+        <ul>
+          <li><span class="sw" style="background:#f2913a"></span>주황빛: 경직(강인도 붕괴)</li>
+          <li><span class="sw" style="background:#ffd926"></span>노랑(몸 전체) + 머리 위 노란 고리 회전: 기절</li>
+          <li><span class="sw" style="background:#99e0ff"></span>얼음 파랑(몸 전체): 빙결(이동·공격·구르기 느려짐). 아군 팀색 파랑보다 밝은 색</li>
+          <li><span class="sw" style="background:#b859f2"></span>보라(몸 전체): 중독</li>
+          <li><span class="sw" style="background:#595959"></span>회색으로 쓰러짐: 사망</li>
+        </ul>
+      </div>
+      <h3>머리 위 상태 글자</h3>
+      <p>이름 위에 지금 걸린 상태가 색 글자로 뜹니다. 기절이 맨 앞에 옵니다. 팀은 바닥 고리 색으로 구별하세요(상태이상 중에는 몸 색이 상태 색으로 바뀝니다).</p>
+      <ul>
+        <li><span class="sw" style="background:#ffd926"></span>기절 — 가드가 깨져 걸린 기절은 "기절(가드 브레이크)"</li>
+        <li><span class="sw" style="background:#ff991a"></span>경직</li>
+        <li><span class="sw" style="background:#99e0ff"></span>빙결</li>
+        <li><span class="sw" style="background:#b859f2"></span>중독</li>
+        <li><span class="sw" style="background:#ff5252"></span>상처 — 즉시 피해라 발동 후 전투 시간 1초 동안만 표시</li>
+      </ul>
+      <h3>머리 위 막대와 바닥 고리</h3>
+      <ul>
+        <li><span class="sw" style="background:#d33"></span>HP · <span class="sw" style="background:#36c"></span>FP · <span class="sw" style="background:#3a3"></span>스태미나. 회색 막대는 쓰지 않는 자원(몬스터의 FP·스태미나)입니다.</li>
+        <li>스태미나가 0 아래(음수)로 내려가면 막대는 0 이고 <b>배경이 붉게</b> 바뀝니다. 실제 음수 값은 정보창·로그·CSV 에 남습니다.</li>
+        <li>바닥 고리는 팀 색. 선택한 캐릭터는 <b>노란 고리</b>로 커집니다.</li>
+      </ul>
+      <h3>동작</h3>
+      <table>
+        <thead><tr><th style="width:9rem">동작</th><th>보이는 모습</th></tr></thead>
+        <tbody>
+          <tr><td>공격</td><td>준비 동작에서 몸을 살짝 뒤로 젖혔다가, 타격 직전 <b>앞으로 숙이며 한 발 내딛고</b>, 타격마다 조금 더 숙입니다. 무기는 옆으로 휘두르며, 공격 중에는 스킬 피해 타입에 따라 모양이 바뀝니다(아래 공격 이펙트 표).</td></tr>
+          <tr><td>구르기(회피)</td><td>몸이 <b>앞뒤로 한 바퀴(360°)</b> 굴러갑니다. 상대 쪽으로 피하면 앞구르기, 뒤로 피하면 뒷구르기. 구르는 동안 무기는 숨기고, 무적 시간에는 청록색입니다.</td></tr>
+          <tr><td>가드</td><td>몸 앞에 청록 방패가 나타납니다. 막으면 방패가 흰색으로 깜빡입니다.</td></tr>
+          <tr><td>경직 · 기절</td><td>몸이 뒤로 기울고 색이 바뀝니다(위 색 설명). 경직(1초) 중에는 맞아도 HP 만 줄고 강인도는 깎이지 않아 다시 경직되지 않습니다. 경직·기절·가드 브레이크·중독·빙결은 그 tick 의 공격이 모두 끝난 뒤 걸리므로, 같은 순간에 함께 맞은 다른 공격은 걸리기 전 상태(가드 유지, 그로기 추가 피해 없음)로 계산됩니다.</td></tr>
+        </tbody>
+      </table>
+      <h3>공격 이펙트 (막대·착탄)</h3>
+      <p>공격 판정이 나면 공격자의 무기 높이에서 대상 몸통으로 투사체가 날아가고, 닿는 순간 착탄 구체가 생기며 대상이 깜빡입니다. 판정에는 영향을 주지 않는 <b>화면 표시</b>입니다.</p>
+      <p>투사체와 공격 중 손에 든 무기의 모양은 스킬의 <code>Damage_Type</code> 으로 정해집니다. 타입이 여러 개면 <b>앞에 적힌 타입</b>을 따릅니다(예: SLASH, MAGIC → 막대).</p>
+      <table>
+        <thead><tr><th style="width:12rem">Damage_Type</th><th>모양</th></tr></thead>
+        <tbody>
+          <tr><td>PHYSICAL · SLASH</td><td>막대(기존 그대로)</td></tr>
+          <tr><td>RANGED · THRUST</td><td>막대 앞에 삼각뿔 촉 — 화살</td></tr>
+          <tr><td>STRIKE</td><td>막대 끝에 사면체 머리 — 망치</td></tr>
+          <tr><td>MAGIC</td><td><span class="sw" style="background:#73d9ff"></span>하늘색 구체</td></tr>
+          <tr><td>FIRE</td><td><span class="sw" style="background:#ff2e1f"></span>빨간 구체</td></tr>
+          <tr><td>WATER</td><td><span class="sw" style="background:#1f52ff"></span>파란 구체</td></tr>
+          <tr><td>HOLY</td><td><span class="sw" style="background:#ffe633"></span>노란 구체</td></tr>
+          <tr><td>LIGHTNING</td><td><span class="sw" style="background:#ffe000"></span>진한 노란 막대(조금 굵음)</td></tr>
+        </tbody>
+      </table>
+      <p>막대·화살·망치의 색은 아래처럼 <b>결과</b>를 나타냅니다. 구체와 번개 막대는 속성 색을 유지하고, 빗나가면 회색이 섞입니다. 결과는 착탄 구체 색으로도 구별됩니다.</p>
+      <ul>
+        <li><span class="sw" style="background:#fff28c"></span>노랑: 명중</li>
+        <li><span class="sw" style="background:#80ffff"></span>청록: 가드에 막힘</li>
+        <li><span class="sw" style="background:#cdf2ff"></span>옅은 하늘: 회피 무적으로 무효</li>
+        <li><span class="sw" style="background:#999"></span>회색: 빗나감(앞으로 날아가 사라짐)</li>
+      </ul>
+      <h3>판정 범위 표시 (켰을 때)</h3>
+      <ul>
+        <li><b>노란 원</b>: 공격이 맞을 범위(준비 동작 중). <b>빨간 원</b>: 곧 타격.</li>
+        <li>선택한 캐릭터 주변의 옅은 원 두 개: 안쪽 <b>2.5m(근접)</b>, 바깥 <b>6m(중거리)</b>. 그보다 멀면 AI 조건의 <code>far</code> 입니다.</li>
+        <li>선택한 캐릭터에서 대상으로 이어지는 노란 선: 지금 노리는 대상.</li>
+      </ul>
+    </section>
+
+    <!-- 8 -->
+    <section id="results">
+      <h2><span class="num">8</span>결과 파일</h2>
+      <p>모든 결과는 아래 폴더에 쌓입니다. 왼쪽 패널 <span class="ui">Export 폴더</span>, <span class="ui">저장 폴더 열기</span>, <span class="ui">결과 폴더 열기</span> 버튼으로 바로 열 수 있습니다.</p>
+      <p><span class="path">%USERPROFILE%\<wbr>AppData\<wbr>LocalLow\<wbr>DefaultCompany\<wbr>BalanceMaker\<wbr>Exports\<wbr></span></p>
+      <p class="muted">결과 폴더는 PC 마다 따로 생깁니다(<code>%USERPROFILE%</code> = 그 PC 의 사용자 폴더). 탐색기 주소창에 그대로 붙여 넣으면 열립니다. git 저장소에는 들어가지 않습니다.</p>
+      <p>실행할 때마다 <code>날짜_시각_모드_시나리오이름</code> 폴더가 새로 생깁니다. 모드는 <code>observe</code>(관찰) · <code>batch</code>(고속 반복) · <code>headless</code>(명령줄).</p>
+      <table>
+        <thead><tr><th style="width:15rem">파일</th><th>내용</th></tr></thead>
+        <tbody>
+          <tr><td colspan="2"><b>관찰 모드</b> (같은 시나리오의 회차들은 한 폴더에)</td></tr>
+          <tr><td><code>events_battle_0001.csv</code></td><td>회차 1의 모든 사건(시간, 누가, 누구에게, 스킬, 피해, HP 변화, 결과…). “이벤트 CSV 기록”이 켜져 있을 때.</td></tr>
+          <tr><td><code>result_battle_0001.csv</code></td><td>회차 1의 결과 한 줄.</td></tr>
+          <tr><td colspan="2"><b>고속 반복</b></td></tr>
+          <tr><td><code>results.csv</code></td><td>판마다 한 줄: 결과, 이긴 팀, 걸린 시간, 팀별 생존 수·남은 HP·준 피해.</td></tr>
+          <tr><td><code>summary.csv</code></td><td>전체 요약: 승수, 승률 범위, 평균·중앙·10%·90% 전투 시간, 팀별 평균 생존·HP 비율·피해.</td></tr>
+          <tr><td><code>skill_stats.csv</code></td><td>팀·스킬별 사용 횟수, 명중, 가드됨, 회피됨, 총 피해, 1회당 피해.</td></tr>
+          <tr><td><code>events.csv</code></td><td>이벤트 CSV 를 “처음 N회” 또는 “전체”로 골랐을 때의 상세 기록.</td></tr>
+          <tr><td colspan="2"><b>공통</b></td></tr>
+          <tr><td><code>manifest.json</code></td><td>다시 똑같이 돌리기 위한 정보: masterSeed, 데이터 해시, 규칙 버전, 시나리오 전체.</td></tr>
+        </tbody>
+      </table>
+      <ul>
+        <li>이름 끝에 <code>_partial</code> 이 붙은 파일은 도중에 멈춘 <b>부분 결과</b>입니다(재시작·다음 회차·취소).</li>
+        <li>시작하지 않은 판(tick 0)은 기록을 남기지 않습니다.</li>
+        <li>CSV 는 한글이 깨지지 않게 저장되므로 <b>엑셀로 바로 열면</b> 됩니다.</li>
+      </ul>
+    </section>
+
+    <!-- 9 -->
+    <section id="tables">
+      <h2><span class="num">9</span>엑셀 테이블 수정 → 반영</h2>
+      <p>시뮬레이터는 엑셀을 직접 읽지 않고, 엑셀을 변환한 <b>JSON 파일</b>을 읽습니다. 엑셀을 고친 뒤에는 <b>직접 변환</b>해야 반영됩니다(자동 변환되지 않음).</p>
+      <ol class="steps">
+        <li><b class="head">엑셀에서 저장</b><span class="path">ARPG_BATTLESIMUL/<wbr>Table_ARPG/<wbr></span> 의 테이블을 고치고 <b>저장</b>합니다. 변환기는 엑셀에 저장된 수식 결과값을 읽으므로 저장하지 않은 수정은 반영되지 않습니다.</li>
+        <li><b class="head">변환 실행</b>Unity 메뉴 <span class="ui">ARPG › 2. 엑셀 → JSON 변환 실행</span>.</li>
+        <li><b class="head">결과 확인</b>Console 에 결과가 나옵니다. 메뉴 <span class="ui">ARPG › 검증 보고서 열기</span> 로 경고·오류 목록을 볼 수 있습니다.</li>
+        <li><b class="head">적용</b>Play 중이 아니면 Play 를 누르면 됩니다. 이미 Play 중이면 <span class="ui">데이터 다시 읽기</span>.</li>
+      </ol>
+      <table>
+        <thead><tr><th style="width:12rem">엑셀 파일</th><th>읽는 내용</th></tr></thead>
+        <tbody>
+          <tr><td><code>SKILL.xlsm</code></td><td>스킬(모션 밸류, 타격 시간, 사거리, 비용, 쿨다운…)</td></tr>
+          <tr><td><code>EX_PC_STAT.xlsm</code></td><td>PC 캐릭터 능력치</td></tr>
+          <tr><td><code>MONSTER.xlsm</code></td><td>몬스터 능력치</td></tr>
+          <tr><td><code>ITEM.xlsm</code></td><td>무기·장비</td></tr>
+          <tr><td><code>AI.xlsx</code></td><td>AI 행동 규칙(조건 → 행동). <code>dist==far</code> 같은 거리 조건도 여기.</td></tr>
+        </tbody>
+      </table>
+      <div class="callout warn"><b class="label">변환이 안 될 때</b>
+        컴퓨터에 Python 과 openpyxl 이 필요합니다. <span class="path">ARPG_BATTLESIMUL/<wbr>ARPG_BATTLESIMULATOR/<wbr>venv</span> 가 있으면 그 Python 을 먼저 씁니다.
+        “python 실행 실패” 가 나오면 명령 프롬프트에서 <code>pip install openpyxl</code> 을 실행하세요.
+      </div>
+      <div class="callout tip"><b class="label">같이 알아둘 점</b>
+        변환해도 <b>시나리오 파일은 덮어쓰지 않습니다</b>. 검증 보고서에 “오류”가 있으면 해당 행은 빠지거나 실행이 막힐 수 있으니 먼저 확인하세요.
+      </div>
+    </section>
+
+    <!-- 10 -->
+    <section id="rules">
+      <h2><span class="num">10</span>전투 규칙 값 바꾸기</h2>
+      <p>엑셀에 없는 공통 규칙 값(거리 기준, 회피 시간 등)은 <span class="path">Assets/<wbr>StreamingAssets/<wbr>ARPG/<wbr>rules.json</span> 에 있습니다. 메모장으로 숫자를 고치고 저장한 뒤 <span class="ui">데이터 다시 읽기</span> 를 누르면 적용됩니다.</p>
+      <table>
+        <thead><tr><th style="width:15rem">항목</th><th style="width:6rem">현재 값</th><th>뜻</th></tr></thead>
+        <tbody>
+          <tr><td><code>distMeleeMax</code></td><td>2.5</td><td>AI 거리 조건 <code>melee</code>(근접)의 최대 거리 m</td></tr>
+          <tr><td><code>distMidMax</code></td><td>6.0</td><td><code>mid</code>(중거리) 최대 거리. 이보다 멀면 <code>far</code></td></tr>
+          <tr><td><code>perceptionRange</code></td><td>18</td><td>적을 인식하는 거리(<code>perceived</code> 조건)</td></tr>
+          <tr><td><code>aggroReleaseRange</code></td><td>30</td><td>이보다 멀어지면 대상을 놓침</td></tr>
+          <tr><td><code>walkSpeed</code> / <code>runSpeed</code></td><td>2 / 4</td><td>걷기·달리기 속도 m/s</td></tr>
+          <tr><td><code>dodgeDistance</code> / <code>dodgeSec</code></td><td>3.0 / 0.7</td><td>구르기 이동 거리 m / 걸리는 시간 초</td></tr>
+          <tr><td><code>dodgeIFrameStartSec</code> ~ <code>EndSec</code></td><td>0.1 ~ 0.45</td><td>구르기 무적 시간 구간(초)</td></tr>
+          <tr><td><code>dodgeStaminaCost</code></td><td>50</td><td>구르기 스태미나 비용</td></tr>
+          <tr><td><code>staggerTicks</code> / <code>stunTicks</code></td><td>30 / 90</td><td>경직 / 기절 길이(tick, 30 = 1초)</td></tr>
+          <tr><td><code>deferStateChangesToTickEnd</code></td><td>true</td><td>같은 tick 의 상태 전환(경직·가드 브레이크·기절·중독·빙결)을 그 tick 의 공격이 모두 끝난 뒤 한꺼번에 적용. false 면 맞는 순간 바로 적용(이전 동작)</td></tr>
+          <tr><td><code>poiseImmuneWhileStaggered</code></td><td>true</td><td>경직 중 강인도 무적(HP 만 감소). false 면 경직 중에도 강인도가 깎여 다시 경직될 수 있음</td></tr>
+          <tr><td><code>guardFrontAngleDeg</code></td><td>180</td><td>가드가 막는 정면 각도</td></tr>
+          <tr><td><code>statusDecayPerSec</code></td><td>5</td><td>상태이상 게이지가 초당 줄어드는 양</td></tr>
+          <tr><td><code>comboContinueWindowSec</code></td><td>0.3</td><td>공격이 끝난 뒤 이 시간 안에 다음 공격이면 콤보 이어짐</td></tr>
+        </tbody>
+      </table>
+      <div class="callout tip"><b class="label">버전 표시를 바꿔 두세요</b>
+        값을 고칠 때 맨 위 <code>"rulesVersion"</code> 도 바꿔 두면(예: <code>2026.11.01-r3</code>) 결과 파일에 어떤 규칙으로 돌렸는지 남습니다.
+        원래 값으로 되돌릴 수 있게 고치기 전에 파일을 복사해 두는 것을 권장합니다.
+      </div>
+    </section>
+
+    <!-- 11 -->
+    <section id="keys">
+      <h2><span class="num">11</span>조작 키 모음</h2>
+      <p class="muted">키보드는 Game 화면을 한 번 클릭해 둔 상태에서 동작합니다. 입력 칸에 글자를 쓰는 중에는 동작하지 않습니다.</p>
+      <table>
+        <thead><tr><th style="width:16rem">조작</th><th>하는 일</th></tr></thead>
+        <tbody>
+          <tr><td>왼쪽 클릭</td><td>캐릭터 선택(빈 곳 클릭 시 선택 해제)</td></tr>
+          <tr><td>오른쪽 버튼 끌기 · <kbd>Q</kbd> <kbd>E</kbd></td><td>카메라 회전</td></tr>
+          <tr><td>휠</td><td>카메라 확대·축소</td></tr>
+          <tr><td>가운데 버튼 끌기 · <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></td><td>카메라 이동</td></tr>
+          <tr><td><kbd>F</kbd></td><td>선택한 캐릭터 따라가기</td></tr>
+          <tr><td><kbd>Space</kbd></td><td>재생 / 일시정지</td></tr>
+          <tr><td><kbd>.</kbd></td><td>1 tick 진행</td></tr>
+          <tr><td><kbd>Ctrl</kbd> + <kbd>+</kbd> / <kbd>Ctrl</kbd> + <kbd>-</kbd></td><td>시뮬레이터 글자 크기 키우기 / 줄이기</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- 12 -->
+    <section id="fontsize">
+      <h2><span class="num">12</span>글자 크기</h2>
+      <ul>
+        <li>왼쪽 패널 제목 옆 <span class="ui">글자 - 100% +</span> 또는 <kbd>Ctrl</kbd>+<kbd>+</kbd> / <kbd>Ctrl</kbd>+<kbd>-</kbd>.</li>
+        <li>80% 부터 200% 까지 8단계. 왼쪽 패널·정보창·로그창·상단 바·캐릭터 선택 창·머리 위 이름이 함께 커집니다.</li>
+        <li>정한 크기는 저장되어 다음에 실행해도 유지됩니다.</li>
+        <li>글꼴 크기 자체를 키우므로 크게 해도 흐려지지 않습니다.</li>
+      </ul>
+      <div class="callout tip"><b class="label">Game 창의 Scale 은 1x 로</b>
+        Unity Game 창 위쪽의 <b>Scale</b> 슬라이더는 화면을 늘리기만 해서 흐릿해집니다. 1x 로 두고 위 기능으로 키우세요. 이 설명서도 오른쪽 위 <b>가− / 가+</b> 로 키울 수 있습니다.
+      </div>
+    </section>
+
+    <!-- 13 -->
+    <section id="cli">
+      <h2><span class="num">13</span>명령줄 실행 (고급)</h2>
+      <p>Unity 로 <b>빌드한 실행 파일</b>을 화면 없이 돌려 대량 결과를 낼 수 있습니다. 평소에는 <a href="#batch">고속 반복</a>으로 충분합니다.</p>
+<pre>BalanceMaker.exe -batchmode -nographics -logFile batch.log -arpgBatch ^
+  --scenario 01_근접1대1_검사37_vs_기사단장37 --runs 1000 --seed 12345 ^
+  --output results --events first:3</pre>
+      <table>
+        <thead><tr><th style="width:11rem">인자</th><th>뜻</th></tr></thead>
+        <tbody>
+          <tr><td><code>--scenario</code></td><td>시나리오 이름 또는 파일 경로(필수)</td></tr>
+          <tr><td><code>--runs</code></td><td>판 수(없으면 시나리오의 반복 값)</td></tr>
+          <tr><td><code>--seed</code></td><td>masterSeed 덮어쓰기</td></tr>
+          <tr><td><code>--maxsec</code></td><td>제한 시간(초) 덮어쓰기</td></tr>
+          <tr><td><code>--output</code></td><td>결과 폴더(없으면 Exports 폴더)</td></tr>
+          <tr><td><code>--events</code></td><td><code>none</code>(기본) · <code>first:N</code> · <code>all</code></td></tr>
+        </tbody>
+      </table>
+      <p class="muted">끝날 때 돌려주는 값: 0 성공, 2 인자·입력 오류, 3 실행 오류.</p>
+    </section>
+
+    <!-- 14 -->
+    <section id="faq">
+      <h2><span class="num">14</span>문제 해결 · 자주 묻는 질문</h2>
+      <dl class="faq">
+        <dt>Play 를 눌렀는데 시뮬레이터 화면이 안 나와요.</dt>
+        <dd>열린 장면이 <code>SampleScene</code> 또는 <code>Simulator</code> 인지 확인하세요. 자동 생성은 이 두 장면에서만 됩니다. Console 에 빨간 오류가 있으면 먼저 해결해야 합니다.</dd>
+
+        <dt>왼쪽 위에 “데이터 로드 실패” 가 떠요.</dt>
+        <dd>JSON 데이터가 없거나 깨진 경우입니다. 메뉴 <span class="ui">ARPG › 2. 엑셀 → JSON 변환 실행</span> 을 한 번 실행한 뒤 <span class="ui">데이터 다시 읽기</span>.</dd>
+
+        <dt>“시나리오 오류” 가 떠서 시작이 안 돼요.</dt>
+        <dd>대표적인 원인은 ① 데이터에 없는 캐릭터 ID ② 검증에서 비활성 처리된 캐릭터 ③ <b>두 팀 이상에 1명 이상</b> 배치되지 않음 ④ 반복이 0 이하 ⑤ 제한 시간이 0 이하 입니다. 문구에 적힌 내용을 고치세요.</dd>
+
+        <dt>몇 번을 돌려도 결과가 똑같아요.</dt>
+        <dd>정상입니다. 같은 masterSeed 와 같은 회차는 항상 같은 결과가 나옵니다(재현을 위해). <span class="ui">다음 회차</span> 로 넘기거나 masterSeed 를 바꾸세요.</dd>
+
+        <dt>반복에 100 을 넣었는데 한 판만 돌고 끝나요.</dt>
+        <dd>관찰 모드는 한 판씩입니다. 화면으로 계속 보려면 <a href="#auto">자동 다음 회차</a>, 승률만 필요하면 <a href="#batch">고속 반복</a>을 쓰세요.</dd>
+
+        <dt>엑셀을 고쳤는데 반영이 안 돼요.</dt>
+        <dd>① 엑셀에서 저장했는지 ② 변환 메뉴를 실행했는지 ③ Play 중이면 데이터 다시 읽기를 눌렀는지 ④ 검증 보고서에 해당 행 오류가 없는지 확인하세요.</dd>
+
+        <dt>화면이 끊기거나 “처리 지연” 이 떠요.</dt>
+        <dd>배속을 낮추고, 로그를 “끔” 으로, 판정 범위 표시·공격 이펙트를 꺼 보세요. 많은 판을 돌릴 때는 고속 반복을 쓰세요.</dd>
+
+        <dt>Unity 를 켜 둔 채로 코드를 수정해도 되나요?</dt>
+        <dd>됩니다. 단 <b>Play 를 멈춘 상태</b>에서 수정하세요. 수정 후 Unity 창을 클릭하면 자동으로 다시 컴파일되고, 오른쪽 아래 진행 표시가 끝나면 Play 하면 됩니다.</dd>
+
+        <dt>결과 CSV 를 엑셀로 열면 한글이 깨져요.</dt>
+        <dd>시뮬레이터가 만든 CSV 는 엑셀용 표시(BOM)를 넣어 저장하므로 보통 깨지지 않습니다. 다른 프로그램에서 다시 저장한 파일이라면 원본을 다시 여세요.</dd>
+      </dl>
+    </section>
+
+    <!-- 15 -->
+    <section id="paths">
+      <h2><span class="num">15</span>파일 위치 한눈에</h2>
+      <p class="muted">기준 폴더: <span class="path">E:\<wbr>6.GIT\<wbr>BS\<wbr>BATTLE_SIMUL\<wbr></span></p>
+      <table>
+        <thead><tr><th style="width:12rem">무엇</th><th>어디</th></tr></thead>
+        <tbody>
+          <tr><td>Unity 프로젝트</td><td><span class="path">Unity_Project\<wbr>BalanceMaker</span></td></tr>
+          <tr><td>엑셀 원본 테이블</td><td><span class="path">Table_ARPG\<wbr></span></td></tr>
+          <tr><td>변환된 데이터(JSON)</td><td><span class="path">Unity_Project\<wbr>BalanceMaker\<wbr>Assets\<wbr>StreamingAssets\<wbr>ARPG\<wbr>Data\<wbr></span></td></tr>
+          <tr><td>검증 보고서</td><td><span class="path">…\<wbr>StreamingAssets\<wbr>ARPG\<wbr>Data\<wbr>validation_report.md</span></td></tr>
+          <tr><td>시나리오</td><td><span class="path">…\<wbr>StreamingAssets\<wbr>ARPG\<wbr>Scenarios\<wbr>*.json</span></td></tr>
+          <tr><td>전투 규칙 값</td><td><span class="path">…\<wbr>StreamingAssets\<wbr>ARPG\<wbr>rules.json</span></td></tr>
+          <tr><td>엑셀 변환기</td><td><span class="path">Unity_Project\<wbr>BalanceMaker\<wbr>Tools\<wbr>ExcelExport\<wbr>export_tables.py</span></td></tr>
+          <tr><td>결과(CSV)</td><td><span class="path">%USERPROFILE%\<wbr>AppData\<wbr>LocalLow\<wbr>DefaultCompany\<wbr>BalanceMaker\<wbr>Exports\<wbr></span></td></tr>
+          <tr><td>규칙 해석·구조 문서</td><td><span class="path">Unity_Project\<wbr>BalanceMaker\<wbr>Assets\<wbr>ARPG\<wbr>RULES.md</span>, <span class="path">Unity_Plan\<wbr>06_구조_도식.md</span></td></tr>
+          <tr><td>이 설명서</td><td><span class="path">Manual\<wbr>ARPG_전투시뮬레이터_사용설명서.html</span></td></tr>
+        </tbody>
+      </table>
+    </section>
+  <section id="ability-105-106" style="padding:18px;border:1px solid #b9cbe4;border-radius:8px;margin:18px"><h2>HP 회복과 도발 · 2026-11-05</h2>
+<table><thead><tr><th>어빌리티</th><th>BUFF 수치</th><th>효과</th></tr></thead><tbody><tr><td>105 HP_RECOVERY</td><td>25000 = 25%</td><td>적용될 때 대상 최대 HP의 해당 비율을 즉시 회복. 최대 HP 초과·부활 없음.</td></tr><tr><td>106 ADD_AGGRO</td><td>1 등 양수</td><td>걸린 대상이 스킬 사용자를 우선 타겟으로 선택. 0은 효과 없음.</td></tr></tbody></table>
+<h3>도발 연결 순서</h3><ol><li>BUFF 행의 Buff_Ability1에 106, Buff_Ability1_Stat에 1을 입력합니다.</li><li>스킬의 Buff_ID에 그 행의 버프 ID를 넣습니다. 어빌리티 번호 106과 버프 ID는 별개입니다.</li><li>Buff_Target=ENEMY, Buff_Duration=지속 밀리초(예: 5000 = 5초), Trigger_Condition=ON_CAST 또는 ON_HIT, Trigger_Chance=100000으로 설정합니다.</li><li>Excel 저장 후 기존 변환기를 실행하고 시뮬레이터에서 데이터를 다시 읽습니다.</li></ol>
+<p>도발 중에는 거리보다 시전자를 우선합니다. 여러 도발이 겹치면 최근 시전자가 우선하며, 만료하거나 시전자가 사망하면 다음 타겟 갱신(최대 0.1초)에 남은 도발 또는 기존 거리 규칙을 따릅니다. 이미 시작한 공격은 강제 취소하지 않습니다. ON_CAST는 사거리 내 현재 타겟 1명에게 적용됩니다.</p>
+<p><strong>현재 테이블:</strong> 외침은 버프 8번(106, 2초)으로 연결했습니다. 버프 5번 회복은 프리스트 치유로, 위치는 자신에게 중독 칼날 버프 10번을 적용하도록 수정했습니다.</p>
+<p>순수 회복은 Buff_Duration=0도 가능하고 발동 시 1회 회복입니다. 재적용하면 한 번 더 회복합니다. C# 검사 25개·변환 검사 7개 통과. Unity 화면 검증은 별도로 필요합니다.</p></section>
+<section><h2>클래스 연결 점검</h2><p><a href="../Unity_Plan/10_클래스_639-645_검사.html">639~645행 검사 결과와 신규 효과 설정</a></p></section><section><h2>인지거리 · 2026-11-05</h2><p>적 인지거리는 30m입니다(기존 18m에서 변경). 기본 시작 거리 10m와는 별도입니다. 적용하려면 데이터를 다시 읽고 전투를 새로 시작하세요.</p></section></main>
+</div>
+
+<script>
+(function () {
+  var root = document.documentElement, key = 'arpgManualFontPx', base = 19, v = base;
+  try { var s = parseFloat(localStorage.getItem(key)); if (s >= 14 && s <= 32) v = s; } catch (e) {}
+  function apply() {
+    root.style.fontSize = v + 'px';
+    var el = document.getElementById('fsv');
+    if (el) el.textContent = Math.round(v / base * 100) + '%';
+  }
+  window.fs = function (d) {
+    v = Math.max(14, Math.min(32, v + d * 2));
+    try { localStorage.setItem(key, String(v)); } catch (e) {}
+    apply();
+  };
+  apply();
+})();
+</script>
+<section style="padding:18px;border:1px solid #b9cbe4;border-radius:8px;margin:18px"><h2>빙결 중 구르기 무적 · 2026-11-03 변경</h2><p>빙결은 구르기 동작을 느리게 하지만 무적 시간을 늘리지 않습니다. 무적 구간은 정상·빙결 모두 구르기 시작 후 0.10~0.45초 설정을 사용합니다(30Hz tick 판정). 무적 시계는 배속·일시정지·한 tick 진행을 따릅니다.</p></section></body>
+</html>

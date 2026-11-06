@@ -34,7 +34,7 @@ except ImportError:  # pragma: no cover
     print("openpyxl 이 필요합니다: pip install openpyxl")
     sys.exit(2)
 
-TOOL_VERSION = "1.3.0"
+TOOL_VERSION = "1.6.0"
 SCHEMA_VERSION = 1
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -355,6 +355,14 @@ def export(tables_dir, out_dir, scenario_dir, write_scenarios=True, rules_path=N
                     report.warn(where, f"{sid}: Trigger_Condition ON_HIT 이지만 타격이 있는 ATTACK 스킬이 아님 -> 버프가 걸리지 않음 "
                                        f"(ON_CAST 또는 ON_END 사용)")
 
+            # [2026-11-06 사용자 요청] Max_Target: 한 번의 타격이 맞힐 수 있는 최대 대상 수. 빈칸/0 = 제한 없음(기존 판정 범위 그대로)
+            max_targets = 0
+            if "Max_Target" in sk.leaf:
+                mt_raw = num(r[c("Max_Target")], 0) or 0
+                if mt_raw < 0 or mt_raw != int(mt_raw):
+                    report.warn(where, f"{sid}: Max_Target {mt_raw} 는 0 이상의 정수가 아님 -> 0(제한 없음)으로 처리")
+                else:
+                    max_targets = int(mt_raw)
             ani_speed_raw = num(r[c("Ani_Speed")], 100000)
             skills.append({
                 "id": sid,
@@ -391,6 +399,10 @@ def export(tables_dir, out_dir, scenario_dir, write_scenarios=True, rules_path=N
                 "buffId": buff_id,
                 "triggerChance": (num(r[c("Trigger_Chance")], 0) or 0) / 100000.0,
                 "buffDurationMs": buff_dur,
+                "supportSingle": bool(num(r[c("Support_Single")], 0)) if "Support_Single" in sk.leaf else False,
+                "extraPoise": num(r[c("Skill_Poise")], 0) or 0 if "Skill_Poise" in sk.leaf else 0,
+                "extraFrost": num(r[c("Skill_Frost_Buildup")], 0) or 0 if "Skill_Frost_Buildup" in sk.leaf else 0,
+                "maxTargets": max_targets,
                 "accuracy": (num(r[c("Accuracy")], 100000) or 0) / 100000.0,
                 "nameKey": int(num(r[c("Name_Key")], 0) or 0),
             })
@@ -888,15 +900,21 @@ def read_buffs(tables_dir, sources, report, stat_names, skills):
                 report.warn(where, f"버프 {bid}: ABILITY 에 없는 Index {a} -> 무시")
                 continue
             enum_name, aname, dtype = abilities[a]
-            if enum_name not in stat_set:
+            if enum_name not in stat_set and enum_name not in ("HP_RECOVERY", "ADD_AGGRO", "FP_COST_PCT", "CLEANSE"):
                 report.warn(where, f"버프 {bid}: {a} {aname}({enum_name}) 는 캐릭터 스탯 열이 아님(면역·행동 제한 등은 시뮬레이터 미구현) -> 무시")
+                continue
+            if enum_name in ("HP_RECOVERY", "ADD_AGGRO", "FP_COST_PCT", "CLEANSE") and (not math.isfinite(v) or v < 0):
+                report.error(where, f"{enum_name}: 0 이상의 유한한 값 필요")
+                continue
+            if enum_name == "HP_RECOVERY" and v > 100000:
+                report.error(where, "HP_RECOVERY는 0~100000 십만분율 필요")
                 continue
             if v == 0:
                 continue
             effects.append({"abilityId": a, "stat": enum_name, "name": aname, "value": v, "dataType": dtype})
         if enabled and not effects:
             report.warn(where, f"버프 {bid}: 적용할 능력치가 없음")
-        buffs.append({"id": bid, "enabled": enabled, "name": name or f"BUFF_{bid}", "effects": effects})
+        buffs.append({"id": bid, "enabled": enabled, "name": name or f"BUFF_{bid}", "dispellable": bool(num(r[c("Dispellable")], 0)) if "Dispellable" in sh.leaf else False, "effects": effects})
 
     # SKILL 연결 확인
     bmap = {b["id"]: b for b in buffs}

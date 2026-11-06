@@ -196,8 +196,13 @@ namespace ARPG.Runtime
         private readonly string _finalPath;
         private string _tempPath;
         private StreamWriter _w;
+        // [2026-11-06 작업 목록 D] 같은 폴더에 개체별 결과(entity_<결과 파일 이름>)를 함께 기록한다. 모든 판, 판×개체 1줄.
+        private readonly string _entityFinalPath;
+        private string _entityTempPath;
+        private StreamWriter _ew;
         public string Error { get; private set; }
         public string WrittenPath { get; private set; }
+        public string EntityWrittenPath { get; private set; }
 
         public ResultsCsvWriter(string finalPath)
         {
@@ -212,6 +217,19 @@ namespace ARPG.Runtime
             catch (Exception ex)
             {
                 Error = ex.Message;
+            }
+            try
+            {
+                _entityFinalPath = Path.Combine(Path.GetDirectoryName(finalPath) ?? string.Empty, "entity_" + Path.GetFileName(finalPath));
+                _ew = Csv.OpenTemp(_entityFinalPath, out _entityTempPath);
+                _ew.WriteLine("schema_version,run_id,battle_index,entity_id,label,team_id,definition_id,class_name,alive,died,death_tick," +
+                              "alive_sec,max_hp,hp_end,damage_dealt,damage_taken,hits_landed,hits_taken,hits_guarded,hits_avoided," +
+                              "stagger_received,resource_blocked");
+            }
+            catch (Exception ex)
+            {
+                if (Error == null) Error = ex.Message;
+                _ew = null;
             }
         }
 
@@ -237,10 +255,46 @@ namespace ARPG.Runtime
             {
                 Error = ex.Message;
             }
+            WriteEntities(r);
+        }
+
+        private void WriteEntities(BattleResult r)
+        {
+            if (_ew == null) return;
+            try
+            {
+                double ticksPerSec = r.DurationSec > 0 ? r.Ticks / r.DurationSec : 30.0;
+                var sb = new StringBuilder();
+                foreach (var c in r.Combatants)
+                {
+                    bool died = !c.Alive && c.DeathTick >= 0;
+                    double aliveSec = died ? c.DeathTick / ticksPerSec : r.DurationSec;
+                    sb.Length = 0;
+                    sb.Append(Csv.SchemaVersion).Append(',').Append(Csv.Esc(r.RunId)).Append(',').Append(r.BattleIndex).Append(',');
+                    sb.Append(c.EntityId).Append(',').Append(Csv.Esc(c.Label)).Append(',').Append(c.TeamId).Append(',');
+                    sb.Append(Csv.Esc(c.DefinitionId)).Append(',').Append(Csv.Esc(c.Name)).Append(',');
+                    sb.Append(c.Alive ? 1 : 0).Append(',').Append(died ? 1 : 0).Append(',').Append(died ? Csv.Int(c.DeathTick) : string.Empty).Append(',');
+                    sb.Append(Csv.Num(aliveSec)).Append(',').Append(Csv.Num(c.MaxHp)).Append(',').Append(Csv.Num(Math.Max(0, c.Hp))).Append(',');
+                    sb.Append(Csv.Num(c.DamageDealt)).Append(',').Append(Csv.Num(c.DamageTaken)).Append(',');
+                    sb.Append(c.HitsLanded).Append(',').Append(c.HitsTaken).Append(',').Append(c.HitsGuarded).Append(',').Append(c.HitsAvoided).Append(',');
+                    sb.Append(c.StaggerCount).Append(',').Append(c.ResourceBlockedCount);
+                    _ew.WriteLine(sb.ToString());
+                }
+            }
+            catch (Exception ex)
+            {
+                if (Error == null) Error = ex.Message;
+            }
         }
 
         public string Close(bool partial)
         {
+            if (_ew != null)
+            {
+                try { EntityWrittenPath = Csv.Commit(_ew, _entityTempPath, _entityFinalPath, partial); }
+                catch (Exception ex) { if (Error == null) Error = ex.Message; }
+                _ew = null;
+            }
             if (_w == null) return null;
             try { WrittenPath = Csv.Commit(_w, _tempPath, _finalPath, partial); }
             catch (Exception ex) { Error = ex.Message; }
@@ -248,7 +302,7 @@ namespace ARPG.Runtime
             return WrittenPath;
         }
 
-        public void Dispose() { if (_w != null) Close(true); }
+        public void Dispose() { if (_w != null || _ew != null) Close(true); }
     }
 
     [Serializable]

@@ -12,27 +12,19 @@
             "name": "아군",
             "members": [
                 {
-                    "definitionId": "21060",
+                    "definitionId": "50002",
                     "count": 1
                 },
                 {
-                    "definitionId": "22060",
+                    "definitionId": "50003",
                     "count": 1
                 },
                 {
-                    "definitionId": "23060",
+                    "definitionId": "50004",
                     "count": 1
                 },
                 {
-                    "definitionId": "24060",
-                    "count": 1
-                },
-                {
-                    "definitionId": "25060",
-                    "count": 1
-                },
-                {
-                    "definitionId": "26060",
+                    "definitionId": "50005",
                     "count": 1
                 }
             ]

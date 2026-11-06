@@ -1,0 +1,35 @@
+{
+  "name": "03_기존결과_검사44x2_vs_대마도사+활병x4",
+  "description": "기존 4.전투시뮬레이터 결과 조합(재현 비교용 아님)",
+  "masterSeed": 12345,
+  "runs": 100,
+  "maxBattleSec": 300,
+  "spawnDistance": 10,
+  "spawnSpacing": 1.5,
+  "teams": [
+    {
+      "teamId": 0,
+      "name": "아군",
+      "members": [
+        {
+          "definitionId": "20044",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "teamId": 1,
+      "name": "적군",
+      "members": [
+        {
+          "definitionId": "10120",
+          "count": 1
+        },
+        {
+          "definitionId": "10106",
+          "count": 4
+        }
+      ]
+    }
+  ]
+}

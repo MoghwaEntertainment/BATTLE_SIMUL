@@ -1,0 +1,71 @@
+{
+    "name": "20_클래스미러_6대6",
+    "description": "6클래스 미러 6대6(기존 01 실행과 같은 구성, 이름만 바로잡음). 미러 편향·클래스 밸런스 기준선",
+    "masterSeed": 12345,
+    "runs": 1000,
+    "maxBattleSec": 300.0,
+    "spawnDistance": 10.0,
+    "spawnSpacing": 1.5,
+    "teams": [
+        {
+            "teamId": 0,
+            "name": "아군",
+            "members": [
+                {
+                    "definitionId": "50002",
+                    "count": 1
+                },
+                {
+                    "definitionId": "50003",
+                    "count": 1
+                },
+                {
+                    "definitionId": "50004",
+                    "count": 1
+                },
+                {
+                    "definitionId": "50005",
+                    "count": 1
+                },
+                {
+                    "definitionId": "50006",
+                    "count": 1
+                },
+                {
+                    "definitionId": "50007",
+                    "count": 1
+                }
+            ]
+        },
+        {
+            "teamId": 1,
+            "name": "적군",
+            "members": [
+                {
+                    "definitionId": "50002",
+                    "count": 1
+                },
+                {
+                    "definitionId": "50003",
+                    "count": 1
+                },
+                {
+                    "definitionId": "50004",
+                    "count": 1
+                },
+                {
+                    "definitionId": "50005",
+                    "count": 1
+                },
+                {
+                    "definitionId": "50006",
+                    "count": 1
+                },
+                {
+                    "definitionId": "50007",
+                    "count": 1
+                }
+            ]
+        }
+    ]
+}

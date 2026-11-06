@@ -1,0 +1,90 @@
+{
+  "schemaVersion": 1,
+  "toolVersion": "1.5.0",
+  "generatedAt": "2026-11-05T20:40:09",
+  "dataHash": "00acdcf3fc549a10",
+  "formulaPolicy": "openpyxl 캐시값 사용(재계산 아님)",
+  "sources": [
+    {
+      "file": "SKILL.xlsm",
+      "sha256": "a8905103f4f7fa5ba4a3a9287f76946523912511c48d999e39ddfe849d1a6cee",
+      "modified": "2026-11-05T20:39:29"
+    },
+    {
+      "file": "EX_PC_STAT.xlsm",
+      "sha256": "4cbfcaf15e02ec5669efccd305c5effce2d1ddba2d7d863b5b9f518c085a2466",
+      "modified": "2026-11-05T20:37:31"
+    },
+    {
+      "file": "MONSTER.xlsm",
+      "sha256": "859dc4c823e485ad35d206e3edb215d9a6a78856364eb58dc8313f4e5a0bd4a0",
+      "modified": "2026-11-01T23:23:46"
+    },
+    {
+      "file": "ITEM.xlsm",
+      "sha256": "f8775e9f074fea3e2646793ebfa7b5125c34d5e25d60d77c96fa5bd1bb44335e",
+      "modified": "2026-11-02T23:12:12"
+    },
+    {
+      "file": "AI.xlsx",
+      "sha256": "2af69ef593dc5f7623dcb859f93a3df092195a009a321f2e2ba3d27f47c43b00",
+      "modified": "2026-11-05T20:37:30"
+    },
+    {
+      "file": "BUFF.xlsx",
+      "sha256": "330a7b93c2839ed84ebb16bf8e0387f9acc19e05612b17df08605ca30c90b057",
+      "modified": "2026-11-05T20:37:30"
+    },
+    {
+      "file": "ABILITY.xlsm",
+      "sha256": "244d5724511fb9b48da7ec48afc06fc3cac464a90262d0ea405be4b63dad4b55",
+      "modified": "2026-11-05T20:37:30"
+    },
+    {
+      "file": "GameConfig.xlsm",
+      "sha256": "8a9f7ba619f8beadfa98e867c9716db3371eda9fe05fc4aa4c318e071a7b5f8b",
+      "modified": "2026-11-05T00:57:45"
+    }
+  ],
+  "outputs": [
+    {
+      "file": "characters.json",
+      "sha256": "310057d3b029a060a3a4156aa9af29f14b71d90f4ff2166a031177ee34a6810c"
+    },
+    {
+      "file": "skills.json",
+      "sha256": "acd4b14bc17aa15889c9ae251e41f8b0779da3a5b6b93d04b7b65f4ade920d07"
+    },
+    {
+      "file": "movesets.json",
+      "sha256": "8a0eff5ed232e9645ce6f2d9dcce116e9f015681964f4852e496879ddf027097"
+    },
+    {
+      "file": "ai.json",
+      "sha256": "7ab7c6311cd77c5ea9ce89cd3fc776751a3e7285442b0b9df734105ba38d6b7c"
+    },
+    {
+      "file": "buffs.json",
+      "sha256": "e0b40a5a69ed1638cfec0d84e9f556ce8d6a763d02aad823a9ad1c98c518d85b"
+    },
+    {
+      "file": "gameconfig.json",
+      "sha256": "3a820248696a8e55cf4c87837cc7f609ba08223948f8f2dc0d67caf99c86fb68"
+    }
+  ],
+  "counts": {
+    "gameConfigEntries": 11,
+    "characters": 1411,
+    "charactersEnabled": 1411,
+    "skills": 1826,
+    "skillsInvalid": 11,
+    "movesetNodes": 1769,
+    "aiBehaviors": 267,
+    "buffs": 11,
+    "buffsEnabled": 11,
+    "skillsWithBuff": 9
+  },
+  "errorCount": 0,
+  "disabledCount": 11,
+  "warningCount": 38
+}

@@ -1,0 +1,71 @@
+{
+  "name": "13_6직업_vs_6직업",
+  "description": "EX_PC 640~645: 가디언·워리어·아쳐·위치·매지션·프리스트 각 1명씩 양 팀 대전",
+  "masterSeed": 12345,
+  "runs": 100,
+  "maxBattleSec": 300,
+  "spawnDistance": 12,
+  "spawnSpacing": 1.5,
+  "teams": [
+    {
+      "teamId": 0,
+      "name": "아군 6직업",
+      "members": [
+        {
+          "definitionId": "50003",
+          "count": 1
+        },
+        {
+          "definitionId": "50002",
+          "count": 1
+        },
+        {
+          "definitionId": "50004",
+          "count": 1
+        },
+        {
+          "definitionId": "50005",
+          "count": 1
+        },
+        {
+          "definitionId": "50006",
+          "count": 1
+        },
+        {
+          "definitionId": "50007",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "teamId": 1,
+      "name": "적군 6직업",
+      "members": [
+        {
+          "definitionId": "50003",
+          "count": 1
+        },
+        {
+          "definitionId": "50002",
+          "count": 1
+        },
+        {
+          "definitionId": "50004",
+          "count": 1
+        },
+        {
+          "definitionId": "50005",
+          "count": 1
+        },
+        {
+          "definitionId": "50006",
+          "count": 1
+        },
+        {
+          "definitionId": "50007",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

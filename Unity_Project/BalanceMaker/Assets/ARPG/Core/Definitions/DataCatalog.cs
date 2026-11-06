@@ -32,6 +32,8 @@ namespace ARPG.Core
         public string WeaponType;
         public string Slot;
         public double CostHp, CostFp, CostStamina;
+        public bool SupportSingle;
+        public double ExtraPoise, ExtraFrost;
         public double AniSpeed;
         public double AniTimeMs;
         public double[] HitTimesMs;
@@ -42,6 +44,7 @@ namespace ARPG.Core
         public double MoveDistance;
         public double EffectiveRange;
         public double HitRange;
+        public int MaxTargets;             // [2026-11-06 사용자 요청] SKILL Max_Target: 타격 1회가 맞히는 최대 대상 수. 0 = 제한 없음
         public int HitCount;
         public int ProjectileId;
         public DamageType[] DamageTypes;
@@ -91,6 +94,10 @@ namespace ARPG.Core
         public int Id;
         public bool Enabled;
         public string Name;
+        public double HealRatio; // HP_RECOVERY: fraction of recipient MaxHp, instant per application.
+        public bool Cleanse, Dispellable;
+        public double FpCostRatio;
+        public bool Taunts; // ADD_AGGRO: force recipient target to the caster while active.
         public StatId[] Stats = new StatId[0];
         public double[] Values = new double[0];
         public int[] AbilityIds = new int[0];
@@ -104,6 +111,8 @@ namespace ARPG.Core
                 sb.Append(i == 0 ? " " : ", ").Append(Stats[i]).Append(' ')
                   .Append(Values[i] >= 0 ? "+" : "").Append(Values[i].ToString("0.###", System.Globalization.CultureInfo.InvariantCulture));
             }
+            if (HealRatio > 0) sb.Append(" HP 회복 ").Append(HealRatio * 100).Append("%");
+            if (Taunts) sb.Append(" 시전자 우선 공격");
             return sb.ToString();
         }
     }
@@ -234,11 +243,24 @@ namespace ARPG.Core
                 var stats = new List<StatId>();
                 var values = new List<double>();
                 var ids = new List<int>();
+                double healRatio = 0, fpCostRatio = 0;
+                bool cleanse = false;
+                bool taunts = false;
                 if (b.effects != null)
                 {
                     foreach (var e in b.effects)
                     {
                         if (e == null) continue;
+                        if (e.stat == "FP_COST_PCT") { fpCostRatio = Math.Max(fpCostRatio, e.value / 100000.0); continue; }
+                        if (e.stat == "CLEANSE") { cleanse |= e.value > 0; continue; }
+                        if (e.stat == "HP_RECOVERY" || e.stat == "ADD_AGGRO")
+                        {
+                            if (double.IsNaN(e.value) || double.IsInfinity(e.value) || e.value < 0 || (e.stat == "HP_RECOVERY" && e.value > 100000))
+                            { Issue("buffs.json " + b.id, "잘못된 회복/어그로 값", true); continue; }
+                            if (e.stat == "HP_RECOVERY") healRatio += e.value / 100000.0;
+                            else taunts |= e.value > 0;
+                            continue;
+                        }
                         StatId sid;
                         if (!Enum.TryParse(e.stat ?? string.Empty, false, out sid) || sid == StatId.COUNT)
                         {
@@ -260,6 +282,8 @@ namespace ARPG.Core
                     Id = b.id,
                     Enabled = b.enabled,
                     Name = string.IsNullOrEmpty(b.name) ? "BUFF_" + b.id : b.name,
+                    HealRatio = healRatio, Cleanse = cleanse, FpCostRatio = fpCostRatio, Dispellable = b.dispellable,
+                    Taunts = taunts,
                     Stats = stats.ToArray(),
                     Values = values.ToArray(),
                     AbilityIds = ids.ToArray(),
@@ -276,7 +300,7 @@ namespace ARPG.Core
                 BuffDefinition b;
                 if (!Buffs.TryGetValue(s.BuffId, out b)) { Issue("skills.json " + s.Id, "Buff_ID " + s.BuffId + " 가 buffs.json 에 없음 -> 효과 없음", false); continue; }
                 if (!b.Enabled) { Issue("skills.json " + s.Id, "Buff_ID " + s.BuffId + " 비활성 -> 효과 없음", false); continue; }
-                if (s.BuffDurationMs <= 0) { Issue("skills.json " + s.Id, "Buff_Duration 0 -> 버프 걸지 않음", false); continue; }
+                if (s.BuffDurationMs <= 0 && !((b.HealRatio > 0 || b.Cleanse) && b.Stats.Length == 0 && !b.Taunts && b.FpCostRatio == 0)) { Issue("skills.json " + s.Id, "Buff_Duration 0 -> 버프 걸지 않음", false); continue; }
                 if (s.BuffTrigger == BuffTrigger.Unsupported) { Issue("skills.json " + s.Id, "미구현 Trigger_Condition -> 버프 걸지 않음", false); continue; }
                 s.Buff = b;
             }
@@ -308,6 +332,7 @@ namespace ARPG.Core
                     Type = st,
                     WeaponType = s.weaponType,
                     Slot = s.slot,
+                    SupportSingle = s.supportSingle, ExtraPoise = s.extraPoise, ExtraFrost = s.extraFrost,
                     CostHp = s.costHp,
                     CostFp = s.costFp,
                     CostStamina = s.costStamina,
@@ -325,6 +350,7 @@ namespace ARPG.Core
                     MoveDistance = s.moveDistance,
                     EffectiveRange = s.effectiveRange,
                     HitRange = s.hitRange,
+                    MaxTargets = Math.Max(0, s.maxTargets),
                     HitCount = s.hitCount,
                     ProjectileId = s.projectileId,
                     DamageTypes = types.ToArray(),

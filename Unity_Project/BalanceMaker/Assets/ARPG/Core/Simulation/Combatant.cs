@@ -46,13 +46,14 @@ namespace ARPG.Core.Simulation
         }
     }
 
-    /// <summary>개체에 걸려 있는 버프 1개. 같은 Buff_ID 가 다시 걸리면 EndTick 만 갱신한다.</summary>
+    /// <summary>개체에 걸린 지속 버프. 같은 Buff_ID 재적용은 시간·시전자·적용 순서를 갱신한다.</summary>
     public sealed class ActiveBuff
     {
         public BuffDefinition Def;
         public int SourceId;      // 건 개체 EntityId
         public string SkillId;    // 건 스킬
         public long StartTick;
+        public long ApplyOrder;   // Most recently applied/refreshed taunt wins.
         public long EndTick;      // 이 tick 의 시간 처리에서 해제
     }
 
@@ -82,6 +83,7 @@ namespace ARPG.Core.Simulation
         public double Radius;
 
         public Vec2 Pos, PrevPos;
+        public Vec2 MoveRefPos;          // AdvanceActions 시작 시 위치(rules.simultaneousMovement 의 상대 위치 기준)
         public Vec2 Facing, PrevFacing;
 
         public double Hp, MaxHp, Fp, MaxFp, Stamina, MaxStamina, StaminaRegenPerSec;

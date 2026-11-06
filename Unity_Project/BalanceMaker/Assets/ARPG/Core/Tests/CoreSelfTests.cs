@@ -49,8 +49,16 @@ namespace ARPG.Core.Tests
             Run(list, "버프: 시전 시 자신 참격 +100(1초) → 피해 200, tick 30 해제 / 적중 시 적 감소율 -50% → 50·100·100, 재적용은 갱신", TestBuffs);
             Run(list, "구르기 무적은 논리 경과 시간: 정상·빙결·중도 발동/해제의 무적 tick 일치", TestDodgeRealTimeIFrames);
             Run(list, "GameConfig: 단위·초→tick·기절/가드 분리·원자적 검증·실제 피해/기절 기간", TestGameConfig);
+            Run(list, "105 HP recovery: instant, cap, repeat, no resurrection", TestHpRecovery);
+            Run(list, "106 taunt: caster priority, refresh, expiry, death, competing sources", TestTaunt);
+            Run(list, "Skill-only buildup and single-target ranged hits", TestSkillOnlyEffects);
+            Run(list, "Class support: single ally heal/cleanse and FP surcharge", TestClassSupport);
+            Run(list, "Max_Target: 근접·원거리 범위 모두 1 이면 시작 대상 1명, 0 이면 판정 범위 안 전원", TestMaxTargets);
+            Run(list, "인지 거리 밖 재탐색: 켜면 가장 가까운 적을 타겟으로, 끄면 이전처럼 타겟 없음", TestReacquireBeyondPerception);
+            Run(list, "동시 이동: 같은 정의 2대2 미러는 매 tick 위치(x=0 대칭)·HP 동일", TestMirrorSymmetry);
             if (realCatalog != null && realScenario != null)
             {
+                Run(list, "Rows 639-645: real class skills execute", () => TestClassData(realCatalog));
                 Run(list, "결정성: 같은 시드 2회 이벤트 해시 일치", () => TestDeterminism(realCatalog, realRules, realScenario));
                 Run(list, "모드 동등성: 구독자 유무와 무관하게 결과 동일", () => TestSinkIndependence(realCatalog, realRules, realScenario));
             }
@@ -292,6 +300,275 @@ namespace ARPG.Core.Tests
             var cat = DataCatalog.Build(chars, skills, moves, ai, new DataManifestDto { dataHash = "synthetic" }, buffs);
             cat.SortRules(true);
             return cat;
+        }
+
+        private static string TestSkillOnlyEffects()
+        {
+            foreach (double radius in new[] { 0.0, 3.0 })
+            {
+                var cat = BuildSynthetic(a => { }, d => { d[(int)StatId.STAGGER_ENDURANCE] = 100; d[(int)StatId.FROST_RESIST] = 1000; }, "T_IDLE", new[] { 300.0 }, new[] { 1.0 }, 0, 0, 1000,
+                    "TG", sk => { sk.effectiveRange = 12; sk.hitRange = radius; sk.extraPoise = 150; sk.extraFrost = 180; });
+                var sc = Duel(2); sc.GetOrAddTeam(1).members[0].count = 2;
+                var rec = new EventRecorder(); var sim = new BattleSimulation(cat, FixedRandomRules(), sc, "skill-only", 0, 1, rec);
+                for (int i = 0; i < 9; i++) sim.Step();
+                int hits = 0;
+                foreach (var e in rec.Events) if (e.Type == BattleEventType.HitResolved) hits++;
+                if (hits != (radius == 0 ? 1 : 2)) return "Single target/splash target count: " + hits;
+                int affected = 0;
+                foreach (var c in sim.Combatants) if (c.TeamId == 1 && c.Buildup[(int)StatusKind.Frost] > 0)
+                { affected++; if (!Near(c.Buildup[(int)StatusKind.Frost], 180) || !c.IsStaggered(8)) return "Skill buildup or poise not applied"; }
+                if (affected != hits) return "Buildup applied outside hit targets";
+                if (sim.Combatants[0].Stat(StatId.FROST_BUILDUP) != 0 || sim.Combatants[0].Stat(StatId.STAGGER_BUILDUP) != 0) return "Skill effects leaked into base stats";
+            }
+            return null;
+        }
+
+        // [2026-11-06] SKILL Max_Target
+        private static string TestMaxTargets()
+        {
+            foreach (bool ranged in new[] { false, true })
+            {
+                foreach (int max in new[] { 0, 1 })
+                {
+                    int maxLocal = max;
+                    bool rangedLocal = ranged;
+                    var cat = BuildSynthetic(a => { }, d => { }, "T_IDLE", new[] { 300.0 }, new[] { 1.0 }, 0, 0, 1000, "TG",
+                        sk => { if (rangedLocal) { sk.effectiveRange = 12; sk.hitRange = 3; } sk.maxTargets = maxLocal; });
+                    var sc = Duel(2); sc.GetOrAddTeam(1).members[0].count = 2;
+                    var rec = new EventRecorder();
+                    var sim = new BattleSimulation(cat, FixedRandomRules(), sc, "max-target", 0, 1, rec);
+                    for (int i = 0; i < 12; i++) sim.Step();
+                    var hit = new List<int>();
+                    foreach (var e in rec.Events)
+                        if (e.Type == BattleEventType.HitResolved && e.ActorId == 0 && e.TargetId >= 0 && e.Result != "MISS") hit.Add(e.TargetId);
+                    int expect = max == 1 ? 1 : 2;
+                    string kind = ranged ? "원거리 범위" : "근접";
+                    if (hit.Count != expect) return kind + " Max_Target=" + max + " 적중 " + hit.Count + " (기대 " + expect + ")";
+                    var tg = sim.Combatants[0].Target;
+                    if (max == 1 && (tg == null || hit[0] != tg.EntityId)) return kind + " Max_Target=1 인데 시작 대상이 아닌 개체를 맞힘";
+                }
+            }
+            return null;
+        }
+
+        // [2026-11-06] 인지 거리 밖 재탐색(미인지 대기 정지 방지)
+        private static string TestReacquireBeyondPerception()
+        {
+            foreach (bool on in new[] { true, false })
+            {
+                var cat = BuildSynthetic(a => { }, d => { }, "T_IDLE", new[] { 300.0 }, new[] { 1.0 }, 0, 0, 1000);
+                var rules = FixedRandomRules();
+                rules.perceptionRange = 30;
+                rules.reacquireBeyondPerception = on;
+                var rec = new EventRecorder();
+                var sim = new BattleSimulation(cat, rules, Duel(40), "reacquire", 0, 1, rec);
+                sim.Step();
+                var tg = sim.Combatants[0].Target;
+                if (on && (tg == null || tg.EntityId != 1)) return "인지 거리(30m) 밖 40m 적을 다시 잡지 않음";
+                if (!on && tg != null) return "끄면 이전처럼 타겟 없음이어야 함";
+                if (on)
+                {
+                    bool reason = false;
+                    foreach (var e in rec.Events)
+                        if (e.Type == BattleEventType.TargetChanged && e.ActorId == 0 && e.Reason == "인지 범위 밖 재탐색") reason = true;
+                    if (!reason) return "재탐색 사유 기록 없음";
+                }
+            }
+            return null;
+        }
+
+        // [2026-11-06] 동시 이동·겹침 해소: 처리 순서와 무관하게 미러 대칭 유지
+        private static string TestMirrorSymmetry()
+        {
+            var names = Enum.GetNames(typeof(StatId));
+            var statNames = new List<string>();
+            foreach (var n in names) if (n != "COUNT") statNames.Add(n);
+            double[] st = new double[statNames.Count];
+            st[(int)StatId.HP] = 100000;
+            st[(int)StatId.SLASH_ATTACK] = 100;
+            var chars = new CharacterFileDto
+            {
+                statNames = statNames.ToArray(),
+                characters = new[] { new CharacterDto { id = "M", enabled = true, displayName = "미러", movesetId = "TG", aiProfileId = "M_AI", stats = st } },
+            };
+            var skills = new SkillFileDto { skills = new[] { MakeSkill("T_ATK", new[] { 300.0 }, new[] { 1.0 }, 800, 0, 0) } };
+            var moves = new MovesetFileDto
+            {
+                nodes = new[] { new MovesetNodeDto { nodeId = "TG_L1", enabled = true, groupId = "TG", prevNodeId = "NONE", inputSlot = "LIGHT_ATK", skillId = "T_ATK" } },
+            };
+            var ai = new AiFileDto
+            {
+                actions = new[]
+                {
+                    new ActionDefDto { actionId = "IDLE", enabled = true, actionType = "BUILTIN", inputSlot = "NONE" },
+                    new ActionDefDto { actionId = "LIGHT_ATK", enabled = true, actionType = "INPUT", inputSlot = "LIGHT_ATK", cooldownSec = 0 },
+                    new ActionDefDto { actionId = "WALK_APPROACH", enabled = true, actionType = "BUILTIN", inputSlot = "NONE" },
+                },
+                behaviors = new[]
+                {
+                    new BehaviorDto { behaviorIndex = 1, enabled = true, aiId = "M_AI", phaseNo = 1, evalOrder = 10, condition1 = "dist==melee", chancePct = 100, actionId = "LIGHT_ATK", skillId = "NONE" },
+                    new BehaviorDto { behaviorIndex = 2, enabled = true, aiId = "M_AI", phaseNo = 1, evalOrder = 20, chancePct = 100, actionId = "WALK_APPROACH", skillId = "NONE" },
+                },
+                phases = new PhaseDto[0],
+                maps = new AiMapDto[0],
+            };
+            var cat = DataCatalog.Build(chars, skills, moves, ai, new DataManifestDto { dataHash = "mirror" }, null);
+            cat.SortRules(true);
+            var sc = new BattleScenario { name = "mirror", masterSeed = 7, maxBattleSec = 20, spawnDistance = 8, spawnSpacing = 0.6 };
+            sc.GetOrAddTeam(0).members.Add(new ScenarioMember { definitionId = "M", count = 2 });
+            sc.GetOrAddTeam(1).members.Add(new ScenarioMember { definitionId = "M", count = 2 });
+            var rules = FixedRandomRules();
+            if (!rules.simultaneousMovement) return "simultaneousMovement 기본값은 true 여야 함";
+            var sim = new BattleSimulation(cat, rules, sc, "mirror", 0, 1, new EventRecorder());
+            for (int t = 0; t < 150; t++)
+            {
+                sim.Step();
+                for (int k = 0; k < 2; k++)
+                {
+                    var a = sim.Combatants[k];
+                    var b = sim.Combatants[k + 2];
+                    if (Math.Abs(a.Pos.x + b.Pos.x) > 1e-7 || Math.Abs(a.Pos.y - b.Pos.y) > 1e-7)
+                        return "tick " + t + " 위치 비대칭 " + a.Label + "(" + a.Pos.x.ToString("R", Inv) + "," + a.Pos.y.ToString("R", Inv) + ") / "
+                               + b.Label + "(" + b.Pos.x.ToString("R", Inv) + "," + b.Pos.y.ToString("R", Inv) + ")";
+                    if (Math.Abs(a.Hp - b.Hp) > 1e-7) return "tick " + t + " HP 비대칭 " + a.Hp.ToString("R", Inv) + " / " + b.Hp.ToString("R", Inv);
+                }
+            }
+            return null;
+        }
+
+        private static string TestClassData(DataCatalog cat)
+        {
+            if (!cat.Characters.ContainsKey("50001")) return "Missing sandbox";
+            string[][] expected = {
+                new[] { "WARRIOR_LIGHT_ATK_001", "WARRIOR_SKILL_001" },
+                new[] { "GUARDIAN_LIGHT_ATK_001", "GUARDIAN_SKILL_001", "GUARDIAN_SKILL_002" },
+                new[] { "ARCHER_LIGHT_ATK_001", "ARCHER_SKILL_001", "ARCHER_SKILL_002" },
+                new[] { "WITCH_LIGHT_ATK_001", "WITCH_SKILL_001", "WITCH_SKILL_002" },
+                new[] { "MAGE_LIGHT_ATK_001", "MAGE_SKILL_001", "MAGE_SKILL_002" },
+                new[] { "PRIEST_LIGHT_ATK_001", "PRIEST_SKILL_001", "PRIEST_SKILL_002" }
+            };
+            for (int index = 0; index < expected.Length; index++)
+            {
+                string id = (50002 + index).ToString();
+                if (!cat.Characters.ContainsKey(id) || !cat.Characters[id].Enabled) return id + " disabled";
+                var sc = new BattleScenario { name = "class-audit", masterSeed = 7, maxBattleSec = 60, spawnDistance = 7 };
+                sc.GetOrAddTeam(0).members.Add(new ScenarioMember { definitionId = id, count = 1 });
+                sc.GetOrAddTeam(1).members.Add(new ScenarioMember { definitionId = "50001", count = 1 });
+                var rec = new EventRecorder(); var sim = new BattleSimulation(cat, FixedRandomRules(), sc, "audit", 0, 1, rec);
+                sim.Combatants[1].Hp = sim.Combatants[1].MaxHp = 1e7;
+                sim.Combatants[0].Fp = sim.Combatants[0].MaxFp = 1e6;
+                if (index == 5) { sim.Combatants[0].Hp *= 0.5; sim.Combatants[0].PoisonTicksLeft = 10; sim.Combatants[0].PoisonNextTick = 30; sim.Combatants[0].PoisonEndTick = 300; }
+                for (int tick = 0; tick < 1200; tick++) sim.Step();
+                foreach (var skill in expected[index])
+                {
+                    bool found = false;
+                    foreach (var ev in rec.Events) if (ev.Type == BattleEventType.ActionStarted && ev.SkillId == skill) found = true;
+                    if (!found) return id + " never used " + skill;
+                }
+            }
+            return null;
+        }
+
+        private static string TestClassSupport()
+        {
+            foreach (bool cleanse in new[] { false, true })
+            {
+                var cat = BuildSynthetic(a => { }, d => { }, "T_IDLE", new[] { 300.0 }, new[] { 0.0 }, 0, 0, 1000,
+                    "TG", sk => { sk.buffId = 105; sk.buffTarget = "ALLY"; sk.triggerCondition = "ON_CAST"; sk.buffDurationMs = 0; sk.supportSingle = true; sk.effectiveRange = 12; }, SpecialBuffs());
+                cat.Buffs[105].Cleanse = cleanse;
+                if (cleanse) cat.Buffs[105].HealRatio = 0;
+                var sc = Duel(2); sc.GetOrAddTeam(0).members[0].count = 3;
+                var sim = new BattleSimulation(cat, FixedRandomRules(), sc, "support", 0, 1, null);
+                var a = sim.Combatants[1]; var b = sim.Combatants[2];
+                a.Ai = b.Ai = sim.Combatants[3].Ai;
+                a.Hp = 10000; b.Hp = 20000;
+                a.PoisonTicksLeft = b.PoisonTicksLeft = 10; a.PoisonNextTick = b.PoisonNextTick = 30;
+                a.PoisonEndTick = b.PoisonEndTick = 300;
+                a.Buffs.Add(new ActiveBuff { Def = new BuffDefinition { Id = 99, Dispellable = true }, EndTick = 100 });
+                sim.Step();
+                if (cleanse) { if (a.PoisonTicksLeft != 0 || a.Buffs.Count != 0 || b.PoisonTicksLeft != 10) return "Cleanse must affect one eligible ally"; }
+                else if (!Near(a.Hp, 35000) || !Near(b.Hp, 20000)) return "Heal must affect only the most injured ally";
+            }
+            var fc = BuildSynthetic(a => { a[(int)StatId.FP] = 100; }, d => { }, "T_IDLE", new[] { 300.0 }, new[] { 0.0 }, 0, 0, 1000,
+                "TG", sk => { sk.costFp = 20; }, null);
+            var fs = new BattleSimulation(fc, FixedRandomRules(), Duel(2), "fp-cost", 0, 1, null);
+            fs.Combatants[0].Buffs.Add(new ActiveBuff { Def = new BuffDefinition { FpCostRatio = 0.25 }, EndTick = 30 });
+            fs.Combatants[0].Buffs.Add(new ActiveBuff { Def = new BuffDefinition { FpCostRatio = 0.25 }, EndTick = 30 });
+            fs.Step();
+            if (!Near(fs.Combatants[0].Fp, 75)) return "FP surcharge must be applied once, without stacking";
+            return null;
+        }
+
+        private static BuffFileDto SpecialBuffs()
+        {
+            return new BuffFileDto { buffs = new[] {
+                new BuffDto { id = 105, enabled = true, effects = new[] {
+                    new BuffEffectDto { abilityId = 105, stat = "HP_RECOVERY", value = 25000 } } },
+                new BuffDto { id = 106, enabled = true, effects = new[] {
+                    new BuffEffectDto { abilityId = 106, stat = "ADD_AGGRO", value = 1 } } },
+                new BuffDto { id = 107, enabled = true, effects = new[] {
+                    new BuffEffectDto { abilityId = 106, stat = "ADD_AGGRO", value = 1 } } },
+            } };
+        }
+
+        private static string TestHpRecovery()
+        {
+            var cat = BuildSynthetic(a => { }, d => { }, "T_IDLE", new[] { 300.0 }, new[] { 0.0 }, 0, 0, 1000,
+                "TG", sk => { sk.buffId = 105; sk.buffTarget = "ALLY"; sk.triggerCondition = "ON_CAST"; sk.buffDurationMs = 0; }, SpecialBuffs());
+            if (cat.Skills["T_ATK"].Buff == null) return "Zero-duration heal was not linked";
+            var scenario = Duel(2);
+            scenario.GetOrAddTeam(0).members[0].count = 3;
+            var sim = new BattleSimulation(cat, FixedRandomRules(), scenario, "heal", 0, 1, null);
+            var caster = sim.Combatants[0];
+            var ally = sim.Combatants[1];
+            var deadAlly = sim.Combatants[2];
+            ally.Ai = deadAlly.Ai = sim.Combatants[3].Ai;
+            caster.Hp = 10000; ally.Hp = 95000; deadAlly.Hp = 0;
+            sim.Step();
+            if (!Near(caster.Hp, 35000) || !Near(caster.MaxHp, 100000)) return "Heal must add 25% of MaxHp";
+            if (!Near(ally.Hp, ally.MaxHp)) return "Heal must clamp to MaxHp";
+            if (deadAlly.Hp != 0) return "Heal resurrected HP-zero ally";
+            if (caster.Buffs.Count != 0) return "Instant heal persisted";
+            caster.Action = null; caster.CooldownReadyTick.Clear();
+            for (int i = 0; i < 3; i++) sim.Step();
+            if (!Near(caster.Hp, 60000)) return "Reapplication must heal once again";
+            return null;
+        }
+
+        private static string TestTaunt()
+        {
+            foreach (bool death in new[] { false, true })
+            {
+                var cat = BuildSynthetic(a => { }, d => { }, "T_IDLE", new[] { 300.0 }, new[] { 0.0 }, 0, 0, 1000,
+                    "TG", sk => { sk.buffId = 106; sk.buffTarget = "ENEMY"; sk.triggerCondition = "ON_CAST"; sk.buffDurationMs = 300; }, SpecialBuffs());
+                var scenario = Duel(2);
+                scenario.GetOrAddTeam(0).members[0].count = 2;
+                var sim = new BattleSimulation(cat, FixedRandomRules(), scenario, "taunt", 0, 1, null);
+                var caster = sim.Combatants[0]; var ally = sim.Combatants[1]; var target = sim.Combatants[2];
+                ally.Ai = target.Ai;
+                caster.Pos = new Vec2(2, 0); ally.Pos = new Vec2(0.5, 0); target.Pos = new Vec2(0, 0);
+                sim.Step();
+                if (target.Target != caster || target.Buffs.Count != 1) return "On-cast taunt did not override nearest enemy";
+                // Same Buff_ID refresh changes the owner without adding another persistent effect.
+                ally.Ai = caster.Ai; ally.Action = null; ally.CooldownReadyTick.Clear();
+                for (int i = 0; i < 3; i++) sim.Step();
+                if (target.Target != ally || target.Buffs.Count != 1 || target.Buffs[0].SourceId != ally.EntityId)
+                    return "Refresh must transfer taunt to the most recent caster";
+                ally.Ai = target.Ai;
+                ally.Pos = new Vec2(40, 0);
+                // A different, newer taunt overrides; when its source dies the older live source wins.
+                target.Buffs.Add(new ActiveBuff { Def = cat.Buffs[107], SourceId = caster.EntityId, ApplyOrder = 100, EndTick = 100 });
+                for (int i = 0; i < 3; i++) sim.Step();
+                if (target.Target != caster) return "Newest competing taunt did not win";
+                target.Buffs.RemoveAt(target.Buffs.Count - 1);
+                if (death) { ally.Hp = 0; ally.Dead = true; }
+                for (int i = 0; i < 3; i++) sim.Step();
+                if (!death && target.Target != ally) return "Taunt must override distance-based switching while active";
+                if (death && target.Target != caster) return "Dead caster must not remain a forced target";
+                for (int i = 0; i < 3; i++) sim.Step();
+                if (target.Target != caster || target.Buffs.Count != 0) return "Expiry must restore normal targeting";
+            }
+            return null;
         }
 
         private static BattleScenario Duel(double distance)

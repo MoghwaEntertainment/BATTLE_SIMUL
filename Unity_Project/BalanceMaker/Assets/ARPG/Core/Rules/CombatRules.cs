@@ -11,7 +11,7 @@ namespace ARPG.Core
     [Serializable]
     public sealed class CombatRules
     {
-        public string rulesVersion = "2026.11.04-r7";
+        public string rulesVersion = "2026.11.06-r11";
 
         // ---- 시간 ----
         public int tickRate = 30;                 // [확정] 30Hz
@@ -25,9 +25,10 @@ namespace ARPG.Core
         public double spawnSpacing = 1.5;         // [임시]
 
         // ---- AI 전역(config.py 대체) ----
-        public double perceptionRange = 18;       // [기획] AI README
+        public double perceptionRange = 30;       // [사용자 확정 2026-11-05] 인지거리 30m
         public double aggroReleaseRange = 30;     // [기획]
         public double targetSwitchRatio = 0.8;    // [기획] 20% 히스테리시스: 새 거리 < 기존 × 0.8
+        public bool reacquireBeyondPerception = true; // [2026-11-06 작업 목록 A] 인지 거리 안에 적이 없으면 가장 가까운 적을 타겟으로 다시 잡음(미인지 대기 정지 방지). false = 이전처럼 타겟 없음
         public double distMeleeMax = 2.5;         // [기획]
         public double distMidMax = 6.0;           // [기획]
         public int recentActionMemory = 8;
@@ -36,6 +37,7 @@ namespace ARPG.Core
         public bool commonRowsFirst = true;           // [해석] Phase_No=0 행을 먼저(표의 위→아래 순서)
 
         // ---- 이동(BUILTIN) ----
+        public bool simultaneousMovement = true;  // [2026-11-06 작업 목록 C] 이동·추적·겹침 해소가 tick 시작 위치를 기준으로 동시에 계산됨(개체 처리 순서 편향 제거). false = 이전처럼 앞 개체가 먼저 움직인 위치를 뒤 개체가 봄
         public double walkSpeed = 2.0;            // [기획] ACTION_DEF 설명 2m/s
         public double runSpeed = 4.0;             // [기획] ACTION_DEF 설명 4m/s
         public double strafeSpeed = 2.0;          // [임시]

@@ -1,0 +1,296 @@
+[
+ {
+  "cell": "G218",
+  "value": "dist_m<=7",
+  "previousXml": "<c r=\"G218\" s=\"2\" t=\"inlineStr\"><is><t>dist_m&lt;=7.5</t></is></c>",
+  "file": "AI.xlsx",
+  "sheet": "AI_BEHAVIOR"
+ },
+ {
+  "cell": "K218",
+  "value": "돌진 베기로 접근·재접근(도달 약 7.3m 안, 붙어 있으면 생략)",
+  "previousXml": "<c r=\"K218\" s=\"2\" t=\"inlineStr\"><is><t>돌진 베기로 접근·재접근(붙어 있으면 생략)</t></is></c>",
+  "file": "AI.xlsx",
+  "sheet": "AI_BEHAVIOR"
+ },
+ {
+  "cell": "F220",
+  "value": "dist_m>2.3",
+  "previousXml": "<c r=\"F220\" s=\"2\" t=\"inlineStr\"><is><t>dist==mid</t></is></c>",
+  "file": "AI.xlsx",
+  "sheet": "AI_BEHAVIOR"
+ },
+ {
+  "cell": "G220",
+  "value": "dist_m<=6",
+  "previousXml": "<c r=\"G220\" s=\"2\"/>",
+  "file": "AI.xlsx",
+  "sheet": "AI_BEHAVIOR"
+ },
+ {
+  "cell": "K220",
+  "value": "평타 도달(2.3m) 밖 중거리면 걸어서 접근(돌진 쿨다운 중)",
+  "previousXml": "<c r=\"K220\" s=\"2\" t=\"inlineStr\"><is><t>돌진 쿨다운 중 접근</t></is></c>",
+  "file": "AI.xlsx",
+  "sheet": "AI_BEHAVIOR"
+ },
+ {
+  "cell": "F221",
+  "value": "dist_m<=2.3",
+  "previousXml": "<c r=\"F221\" s=\"2\" t=\"inlineStr\"><is><t>dist==melee</t></is></c>",
+  "file": "AI.xlsx",
+  "sheet": "AI_BEHAVIOR"
+ },
+ {
+  "cell": "K221",
+  "value": "빠른 평타 반복(평타 도달 2.3m)",
+  "previousXml": "<c r=\"K221\" s=\"2\" t=\"inlineStr\"><is><t>빠른 평타 반복</t></is></c>",
+  "file": "AI.xlsx",
+  "sheet": "AI_BEHAVIOR"
+ },
+ {
+  "cell": "G226",
+  "value": "dist_m<=7",
+  "previousXml": "<c r=\"G226\" s=\"2\" t=\"inlineStr\"><is><t>dist_m&lt;=20</t></is></c>",
+  "file": "AI.xlsx",
+  "sheet": "AI_BEHAVIOR"
+ },
+ {
+  "cell": "K226",
+  "value": "스태미나 회복 이탈(타겟 7m 이내일 때만, 사거리 10m − 3m)",
+  "previousXml": "<c r=\"K226\" s=\"2\" t=\"inlineStr\"><is><t>스태미나 회복 이탈(타겟 20m 이내일 때만)</t></is></c>",
+  "file": "AI.xlsx",
+  "sheet": "AI_BEHAVIOR"
+ },
+ {
+  "cell": "F229",
+  "value": "dist_m<=10",
+  "previousXml": "<c r=\"F229\" s=\"2\" t=\"inlineStr\"><is><t>dist_m&lt;=18</t></is></c>",
+  "file": "AI.xlsx",
+  "sheet": "AI_BEHAVIOR"
+ },
+ {
+  "cell": "K229",
+  "value": "출혈 부여 유지(사거리 10m 안, 쿨다운 12초 = 지속)",
+  "previousXml": "<c r=\"K229\" s=\"2\" t=\"inlineStr\"><is><t>출혈 부여 유지(쿨다운 12초 = 지속)</t></is></c>",
+  "file": "AI.xlsx",
+  "sheet": "AI_BEHAVIOR"
+ },
+ {
+  "cell": "F230",
+  "value": "dist_m<=10",
+  "previousXml": "<c r=\"F230\" s=\"2\" t=\"inlineStr\"><is><t>dist_m&lt;=18</t></is></c>",
+  "file": "AI.xlsx",
+  "sheet": "AI_BEHAVIOR"
+ },
+ {
+  "cell": "K230",
+  "value": "FP 소모 10% 증가, 10초, 같은 효과 중첩 없음(사거리 10m)",
+  "previousXml": "<c r=\"K230\" s=\"2\" t=\"inlineStr\"><is><t>FP 소모 10% 증가, 10초, 같은 효과 중첩 없음</t></is></c>",
+  "file": "AI.xlsx",
+  "sheet": "AI_BEHAVIOR"
+ },
+ {
+  "cell": "F231",
+  "value": "dist_m<=10",
+  "previousXml": "<c r=\"F231\" s=\"2\" t=\"inlineStr\"><is><t>dist_m&lt;=25</t></is></c>",
+  "file": "AI.xlsx",
+  "sheet": "AI_BEHAVIOR"
+ },
+ {
+  "cell": "K231",
+  "value": "10m 사격",
+  "previousXml": "<c r=\"K231\" s=\"2\" t=\"inlineStr\"><is><t>25m 사격</t></is></c>",
+  "file": "AI.xlsx",
+  "sheet": "AI_BEHAVIOR"
+ },
+ {
+  "cell": "K232",
+  "value": "사거리 10m 밖이면 접근",
+  "previousXml": "<c r=\"K232\" s=\"2\" t=\"inlineStr\"><is><t>9m 안으로</t></is></c>",
+  "file": "AI.xlsx",
+  "sheet": "AI_BEHAVIOR"
+ },
+ {
+  "cell": "G237",
+  "value": "dist_m<=5",
+  "previousXml": "<c r=\"G237\" s=\"2\" t=\"inlineStr\"><is><t>dist_m&lt;=9</t></is></c>",
+  "file": "AI.xlsx",
+  "sheet": "AI_BEHAVIOR"
+ },
+ {
+  "cell": "K237",
+  "value": "스태미나 회복 이탈(타겟 5m 이내일 때만, 사거리 8m − 3m)",
+  "previousXml": "<c r=\"K237\" s=\"2\" t=\"inlineStr\"><is><t>스태미나 회복 이탈(타겟 9m 이내일 때만)</t></is></c>",
+  "file": "AI.xlsx",
+  "sheet": "AI_BEHAVIOR"
+ },
+ {
+  "cell": "F240",
+  "value": "dist_m<=8",
+  "previousXml": "<c r=\"F240\" s=\"2\" t=\"inlineStr\"><is><t>dist_m&lt;=12</t></is></c>",
+  "file": "AI.xlsx",
+  "sheet": "AI_BEHAVIOR"
+ },
+ {
+  "cell": "K240",
+  "value": "자신 공격에 중독 유발 부여(사거리 8m 안)",
+  "previousXml": "<c r=\"K240\" s=\"2\" t=\"inlineStr\"><is><t>자신 공격에 중독 유발 부여</t></is></c>",
+  "file": "AI.xlsx",
+  "sheet": "AI_BEHAVIOR"
+ },
+ {
+  "cell": "F241",
+  "value": "dist_m<=8",
+  "previousXml": "<c r=\"F241\" s=\"2\" t=\"inlineStr\"><is><t>dist_m&lt;=12</t></is></c>",
+  "file": "AI.xlsx",
+  "sheet": "AI_BEHAVIOR"
+ },
+ {
+  "cell": "K241",
+  "value": "부식 유지(사거리 8m, 쿨다운 10초 = 지속)",
+  "previousXml": "<c r=\"K241\" s=\"2\" t=\"inlineStr\"><is><t>부식 유지(쿨다운 10초 = 지속)</t></is></c>",
+  "file": "AI.xlsx",
+  "sheet": "AI_BEHAVIOR"
+ },
+ {
+  "cell": "F242",
+  "value": "dist_m<=8",
+  "previousXml": "<c r=\"F242\" s=\"2\" t=\"inlineStr\"><is><t>dist_m&lt;=12</t></is></c>",
+  "file": "AI.xlsx",
+  "sheet": "AI_BEHAVIOR"
+ },
+ {
+  "cell": "K242",
+  "value": "저주탄으로 중독 누적(사거리 8m)",
+  "previousXml": "<c r=\"K242\" s=\"2\" t=\"inlineStr\"><is><t>저주탄으로 중독 누적</t></is></c>",
+  "file": "AI.xlsx",
+  "sheet": "AI_BEHAVIOR"
+ },
+ {
+  "cell": "K243",
+  "value": "사거리 8m 밖이면 접근",
+  "previousXml": "<c r=\"K243\" s=\"2\" t=\"inlineStr\"><is><t>12m 안으로</t></is></c>",
+  "file": "AI.xlsx",
+  "sheet": "AI_BEHAVIOR"
+ },
+ {
+  "cell": "G248",
+  "value": "dist_m<=5",
+  "previousXml": "<c r=\"G248\" s=\"2\" t=\"inlineStr\"><is><t>dist_m&lt;=12</t></is></c>",
+  "file": "AI.xlsx",
+  "sheet": "AI_BEHAVIOR"
+ },
+ {
+  "cell": "K248",
+  "value": "스태미나 회복 이탈(타겟 5m 이내일 때만, 사거리 8m − 3m)",
+  "previousXml": "<c r=\"K248\" s=\"2\" t=\"inlineStr\"><is><t>스태미나 회복 이탈(타겟 12m 이내일 때만)</t></is></c>",
+  "file": "AI.xlsx",
+  "sheet": "AI_BEHAVIOR"
+ },
+ {
+  "cell": "F251",
+  "value": "dist_m<=8",
+  "previousXml": "<c r=\"F251\" s=\"2\" t=\"inlineStr\"><is><t>dist_m&lt;=15</t></is></c>",
+  "file": "AI.xlsx",
+  "sheet": "AI_BEHAVIOR"
+ },
+ {
+  "cell": "K251",
+  "value": "경직된 적에게 폭발(안전한 시전 기회, 사거리 8m)",
+  "previousXml": "<c r=\"K251\" s=\"2\" t=\"inlineStr\"><is><t>경직된 적에게 폭발(안전한 시전 기회)</t></is></c>",
+  "file": "AI.xlsx",
+  "sheet": "AI_BEHAVIOR"
+ },
+ {
+  "cell": "F252",
+  "value": "dist_m<=8",
+  "previousXml": "<c r=\"F252\" s=\"2\" t=\"inlineStr\"><is><t>dist_m&lt;=15</t></is></c>",
+  "file": "AI.xlsx",
+  "sheet": "AI_BEHAVIOR"
+ },
+ {
+  "cell": "K252",
+  "value": "빙결 창으로 빙결 누적(사거리 8m)",
+  "previousXml": "<c r=\"K252\" s=\"2\" t=\"inlineStr\"><is><t>빙결 창으로 빙결 누적</t></is></c>",
+  "file": "AI.xlsx",
+  "sheet": "AI_BEHAVIOR"
+ },
+ {
+  "cell": "F253",
+  "value": "dist_m>=4",
+  "previousXml": "<c r=\"F253\" s=\"2\" t=\"inlineStr\"><is><t>dist_m&gt;=7</t></is></c>",
+  "file": "AI.xlsx",
+  "sheet": "AI_BEHAVIOR"
+ },
+ {
+  "cell": "G253",
+  "value": "dist_m<=8",
+  "previousXml": "<c r=\"G253\" s=\"2\" t=\"inlineStr\"><is><t>dist_m&lt;=15</t></is></c>",
+  "file": "AI.xlsx",
+  "sheet": "AI_BEHAVIOR"
+ },
+ {
+  "cell": "K253",
+  "value": "안전 거리(4m 이상)에서 폭발(사거리 8m, 임시값)",
+  "previousXml": "<c r=\"K253\" s=\"2\" t=\"inlineStr\"><is><t>안전 거리(7m 이상)에서 폭발</t></is></c>",
+  "file": "AI.xlsx",
+  "sheet": "AI_BEHAVIOR"
+ },
+ {
+  "cell": "F254",
+  "value": "dist_m<=8",
+  "previousXml": "<c r=\"F254\" s=\"2\" t=\"inlineStr\"><is><t>dist_m&lt;=15</t></is></c>",
+  "file": "AI.xlsx",
+  "sheet": "AI_BEHAVIOR"
+ },
+ {
+  "cell": "K254",
+  "value": "FP 부족·쿨다운 중 견제(사거리 8m)",
+  "previousXml": "<c r=\"K254\" s=\"2\" t=\"inlineStr\"><is><t>FP 부족·쿨다운 중 견제</t></is></c>",
+  "file": "AI.xlsx",
+  "sheet": "AI_BEHAVIOR"
+ },
+ {
+  "cell": "K255",
+  "value": "사거리 8m 밖이면 접근",
+  "previousXml": "<c r=\"K255\" s=\"2\" t=\"inlineStr\"><is><t>15m 안으로</t></is></c>",
+  "file": "AI.xlsx",
+  "sheet": "AI_BEHAVIOR"
+ },
+ {
+  "cell": "G260",
+  "value": "dist_m<=5",
+  "previousXml": "<c r=\"G260\" s=\"2\" t=\"inlineStr\"><is><t>dist_m&lt;=9</t></is></c>",
+  "file": "AI.xlsx",
+  "sheet": "AI_BEHAVIOR"
+ },
+ {
+  "cell": "K260",
+  "value": "스태미나 회복 이탈(타겟 5m 이내일 때만, 사거리 8m − 3m)",
+  "previousXml": "<c r=\"K260\" s=\"2\" t=\"inlineStr\"><is><t>스태미나 회복 이탈(타겟 9m 이내일 때만)</t></is></c>",
+  "file": "AI.xlsx",
+  "sheet": "AI_BEHAVIOR"
+ },
+ {
+  "cell": "F265",
+  "value": "dist_m<=8",
+  "previousXml": "<c r=\"F265\" s=\"2\" t=\"inlineStr\"><is><t>dist_m&lt;=12</t></is></c>",
+  "file": "AI.xlsx",
+  "sheet": "AI_BEHAVIOR"
+ },
+ {
+  "cell": "K265",
+  "value": "평타 견제(사거리 8m)",
+  "previousXml": "<c r=\"K265\" s=\"2\" t=\"inlineStr\"><is><t>평타 견제</t></is></c>",
+  "file": "AI.xlsx",
+  "sheet": "AI_BEHAVIOR"
+ },
+ {
+  "cell": "K266",
+  "value": "사거리 8m 밖이면 접근",
+  "previousXml": "<c r=\"K266\" s=\"2\" t=\"inlineStr\"><is><t>12m 안으로</t></is></c>",
+  "file": "AI.xlsx",
+  "sheet": "AI_BEHAVIOR"
+ }
+]

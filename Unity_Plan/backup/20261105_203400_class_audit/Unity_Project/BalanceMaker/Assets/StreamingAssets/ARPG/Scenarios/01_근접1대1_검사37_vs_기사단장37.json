@@ -1,0 +1,31 @@
+{
+    "name": "01_근접1대1_검사37_vs_기사단장37",
+    "description": "근접 1대1: 대미지메이커 예시 조합",
+    "masterSeed": 12345,
+    "runs": 100,
+    "maxBattleSec": 300.0,
+    "spawnDistance": 10.0,
+    "spawnSpacing": 1.5,
+    "teams": [
+        {
+            "teamId": 0,
+            "name": "아군",
+            "members": [
+                {
+                    "definitionId": "20037",
+                    "count": 1
+                }
+            ]
+        },
+        {
+            "teamId": 1,
+            "name": "적군",
+            "members": [
+                {
+                    "definitionId": "10115",
+                    "count": 1
+                }
+            ]
+        }
+    ]
+}

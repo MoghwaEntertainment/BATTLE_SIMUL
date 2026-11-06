@@ -712,7 +712,21 @@
         </tbody>
       </table>
     </section>
-  </main>
+  <section id="ability-105-106" style="padding:18px;border:1px solid #b9cbe4;border-radius:8px;margin:18px"><h2>HP 회복과 도발 · 2026-11-05</h2>
+<table><thead><tr><th>어빌리티</th><th>BUFF 수치</th><th>효과</th></tr></thead><tbody><tr><td>105 HP_RECOVERY</td><td>25000 = 25%</td><td>적용될 때 대상 최대 HP의 해당 비율을 즉시 회복. 최대 HP 초과·부활 없음.</td></tr><tr><td>106 ADD_AGGRO</td><td>1 등 양수</td><td>걸린 대상이 스킬 사용자를 우선 타겟으로 선택. 0은 효과 없음.</td></tr></tbody></table>
+<h3>도발 연결 순서</h3><ol><li>BUFF 행의 Buff_Ability1에 106, Buff_Ability1_Stat에 1을 입력합니다.</li><li>스킬의 Buff_ID에 그 행의 버프 ID를 넣습니다. 어빌리티 번호 106과 버프 ID는 별개입니다.</li><li>Buff_Target=ENEMY, Buff_Duration=지속 밀리초(예: 5000 = 5초), Trigger_Condition=ON_CAST 또는 ON_HIT, Trigger_Chance=100000으로 설정합니다.</li><li>Excel 저장 후 기존 변환기를 실행하고 시뮬레이터에서 데이터를 다시 읽습니다.</li></ol>
+<p>도발 중에는 거리보다 시전자를 우선합니다. 여러 도발이 겹치면 최근 시전자가 우선하며, 만료하거나 시전자가 사망하면 다음 타겟 갱신(최대 0.1초)에 남은 도발 또는 기존 거리 규칙을 따릅니다. 이미 시작한 공격은 강제 취소하지 않습니다. ON_CAST는 사거리 내 현재 타겟 1명에게 적용됩니다.</p>
+<p><strong>현재 테이블:</strong> 외침은 버프 8번(106, 2초)으로 연결했습니다. 버프 5번 회복은 프리스트 치유로, 위치는 자신에게 중독 칼날 버프 10번을 적용하도록 수정했습니다.</p>
+<p>순수 회복은 Buff_Duration=0도 가능하고 발동 시 1회 회복입니다. 재적용하면 한 번 더 회복합니다. C# 검사 25개·변환 검사 7개 통과. Unity 화면 검증은 별도로 필요합니다.</p></section>
+<section><h2>클래스 연결 점검</h2><p><a href="../Unity_Plan/10_클래스_639-645_검사.html">639~645행 검사 결과와 신규 효과 설정</a></p></section><section><h2>인지거리 · 2026-11-05</h2><p>적 인지거리는 30m입니다(기존 18m에서 변경). 기본 시작 거리 10m와는 별도입니다. 적용하려면 데이터를 다시 읽고 전투를 새로 시작하세요.</p></section><section id="single-target-20261106" style="padding:18px;border:1px solid #b9cbe4;border-radius:8px;margin:18px"><h2>스킬 대상 수 · 정지 방지 · 결과 분석 · 2026-11-06</h2>
+<ul>
+<li><b>스킬 1명만 맞히기</b>: SKILL 표의 <code>Max_Target</code> 열(AM열)에 숫자를 넣으면 한 번 칠 때 그 수만큼만 맞습니다. 빈칸이나 0은 제한 없음(판정 범위 안 전원). 지금은 6클래스 스킬 18개가 1입니다. 범위 안에 여러 명이면 공격을 시작할 때 노린 대상이 먼저, 다음은 가까운 순입니다. 바꾼 뒤에는 변환 → 데이터 다시 읽기.</li>
+<li><b>멀리 떨어져 멈추는 문제</b>: 인지거리(30m) 밖에 적만 남아도 가장 가까운 적을 다시 찾아갑니다(규칙 <code>reacquireBeyondPerception</code>, 기본 켬). 끄면 예전처럼 제자리 대기.</li>
+<li><b>같은 조합인데 한쪽이 더 이기는 문제</b>: 이동과 밀어내기를 모든 캐릭터가 같은 순간의 위치로 계산합니다(규칙 <code>simultaneousMovement</code>, 기본 켬). 끄면 예전 방식.</li>
+<li><b>새 결과 파일</b>: 고속 반복 결과 폴더에 <code>entity_results.csv</code>가 생깁니다. 판마다 캐릭터별 생존 여부·생존 시간·준/받은 피해·적중·경직이 한 줄씩 있습니다.</li>
+<li><b>결과 분석</b>: 프로젝트 폴더에서 <code>python Tools/BatchAnalysis/analyze_batch.py "결과 폴더" --out report.md</code>. 이전 결과와 비교하려면 <code>--baseline "이전 결과 폴더"</code>를 붙입니다. 미러 조합 편향 검사, 시간 초과 원인(전투 정지) 찾기, 스킬·클래스별 피해 비중을 보여 줍니다.</li>
+<li><b>점검용 시나리오</b>: <code>20_클래스미러_6대6</code>, <code>21~26_미러1대1_클래스</code>(각 1000판).</li>
+</ul></section></main>
 </div>
 
 <script>

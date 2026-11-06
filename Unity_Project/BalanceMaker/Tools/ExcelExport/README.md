@@ -25,9 +25,9 @@ python Tools/ExcelExport/export_tables.py --tables <Table_ARPG 경로> --out <�
 | `~AbilityN_Name` | 참고용 이름 자동 표시(읽지 않음) |
 
 - N 은 몇 개든 된다(`Buff_Ability6` / `Buff_Ability6_Stat` 열을 추가하면 자동으로 읽음).
-- ABILITY `ENUM_Name` 이 캐릭터 스탯 열(EX_PC 의 `Ability.*`)에 있어야 적용된다. 면역·행동 제한(88~104번)처럼 스탯 열이 없는 능력치는 경고 후 무시.
+- ABILITY `ENUM_Name` 이 캐릭터 스탯 열(EX_PC 의 `Ability.*`)에 있어야 적용된다. 예외: 1.4.0부터 HP_RECOVERY(105), ADD_AGGRO(106)는 스탯 열 없이 특수 효과로 전달한다. 면역·행동 제한(88~104번)처럼 스탯 열이 없는 능력치는 경고 후 무시.
 - 스킬의 Damage_Type 에 없는 타입의 공격력을 바꾸면(예: 물리 공격력인데 PHYSICAL 스킬이 없음) "지금은 피해에 영향 없음" 경고.
-- SKILL 쪽 연결 열(`Additional_Effect`): `Buff_ID`, `Buff_Duration`(ms, 0 이면 안 걸림), `Buff_Target`(SELF/ENEMY/ALLY, 0 = Skill_Type 기본값),
+- SKILL 쪽 연결 열(`Additional_Effect`): `Buff_ID`, `Buff_Duration`(ms, 지속 효과는 양수 필요, 순수 HP_RECOVERY는 0도 허용), `Buff_Target`(SELF/ENEMY/ALLY, 0 = Skill_Type 기본값),
   `Trigger_Condition`(ON_CAST/ON_HIT/ON_END, 0 = 기본값), `Trigger_Chance`(10만분율, 0 = 항상). 숫자로 저장된 enum 은 템플릿 순서로 이름을 찾는다.
   지원하지 않는 값(ON_KILL·ON_GUARD·ON_DAMAGED, STACK·DOT 등)은 경고한다.
 
@@ -68,3 +68,25 @@ RATE는 100000으로 나눠 JSON value에 저장하고 rawValue도 보존한다.
 | STAGGER_TIME | FLAT | 0.5 | 경직 0.5초 | staggerTicks=15 |
 | GUARD_BREAK_TIME | FLAT | 3 | 가드 브레이크 3초 | guardBreakTicks=90 |
 | GUARD_BREAK_ADD_DAMAGE_PCT | RATE | 0 | 가드 브레이크 추가 피해 0% | guardBreakDamageMult=1 |
+
+
+## 특수 버프 (1.4.0, 2026-11-05)
+
+- 105 `HP_RECOVERY`: BUFF 수치 / 100000 × 대상 최대 HP를 적용 시 즉시 회복. 최대 HP 상한, HP 0·사망 대상 부활 없음. 25000=25%. 지속 회복이 아니며 재적용 시 한 번 더 회복한다. 순수 회복 버프는 Buff_Duration=0도 허용하고 활성 버프 목록에 남기지 않는다.
+- 106 `ADD_AGGRO`: 양수면 도발, 0이면 효과 없음. 위협 누적·확률로 해석하지 않는다. 대상은 효과를 건 살아 있는 적 시전자를 우선 타겟으로 삼는다. 적용 즉시 TargetChanged, 이후 3tick AI 갱신에서도 18m 인지·30m 해제·거리 비율보다 우선한다.
+- 같은 Buff_ID 재적용은 시간·시전자·적용 순서를 갱신. 서로 다른 도발은 최근 적용/갱신 효과가 우선. 시전자가 죽으면 남은 유효 도발, 없으면 기존 거리 규칙을 사용한다. 만료·사망 후 재평가는 다음 AI 갱신(최대 0.1초).
+- 이미 시작한 행동을 강제 취소하거나 TargetAtStart를 바꾸지 않는다. 다음 행동이 새 타겟을 사용하며 기존 AI 조건·스킬 사거리는 유지한다.
+
+- 도발 설정: BUFF 행의 `Buff_Ability1=106`, `Buff_Ability1_Stat=1`(양수). SKILL에 해당 행 `Buff_ID`, `Buff_Target=ENEMY`, 양수 `Buff_Duration`(ms), `Trigger_Condition=ON_CAST` 또는 `ON_HIT`, `Trigger_Chance=100000`(100%) 설정. 어빌리티 번호와 Buff_ID는 별개다. ON_CAST는 사거리 내 현재 타겟 1명에게 적용한다.
+- 현재 원본에는 106을 쓰는 BUFF 행이 없다. 코드·컨버터 지원은 완료했지만 실제 스킬 연결은 테이블 설정이 필요하다. 임의 Buff_ID·스킬 배정이나 Excel 저장은 하지 않았다.
+- Buff_ID 5는 105=25000이며 `WITCH_SKILL_001`이 `Buff_ID=5`, `Buff_Target=ENEMY`로 사용한다. 현재 설정대로면 적을 25% 회복시킨다. 사용자에게 알렸고 원본을 보존했다.
+
+음수·비유한 특수 효과 값, HP_RECOVERY>100000은 변환 오류로 배포 차단. 검증: 저장소 루트에서 `python -m unittest discover -s Unity_Project/BalanceMaker/Tools/ExcelExport -p "test_*.py"`.
+
+## 2026-11-05 20:44 KST 클래스 추가 효과 (1.5.0 / r9)
+
+107 FP_COST_PCT: 최대 증가율 1개만 선검사·실제 차감에 적용. 108 CLEANSE: 누적·중독·빙결·기절 및 Dispellable=1 버프 해제, 면역 없음. SKILL Support_Single=1은 회복/정화 필요한 단일 아군(자신 포함)을 선택. Skill_Poise/Skill_Frost_Buildup은 해당 스킬 타격에만 적용되는 추가값. 원거리 Hit_Range=0은 단일 대상. 상세 설정·임시 수치·검증은 Unity_Plan/10_클래스_639-645_검사.html 및 07 최신 절 참조.
+
+## 2026-11-06 Max_Target (1.6.0)
+
+SKILL 시트의 선택 열 `Max_Target`(1행 머리글)을 읽어 skills.json `maxTargets`로 쓴다. 빈칸/0 = 제한 없음, 1 이상 정수 = 타격 1회 최대 대상 수. 음수·소수는 경고 후 0. 열이 없으면 모든 스킬 0(이전과 같음). 현재 원본: SKILL.xlsm AM1 머리글, 6클래스 스킬 AM1835~AM1852 = 1. 셀 변경 기록은 Unity_Plan/11_단일타격_AI거리_수정셀.json.

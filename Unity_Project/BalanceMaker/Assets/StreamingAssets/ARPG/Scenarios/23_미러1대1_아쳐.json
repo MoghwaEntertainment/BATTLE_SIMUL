@@ -1,0 +1,31 @@
+{
+    "name": "23_미러1대1_아쳐",
+    "description": "아쳐 1대1 미러. 처리 순서 편향 확인(승패 난 판 기준 50%와 비교) · 미인지 대기 정지(시간 초과) 재현·수정 확인용",
+    "masterSeed": 12345,
+    "runs": 1000,
+    "maxBattleSec": 300.0,
+    "spawnDistance": 10.0,
+    "spawnSpacing": 1.5,
+    "teams": [
+        {
+            "teamId": 0,
+            "name": "아군",
+            "members": [
+                {
+                    "definitionId": "50004",
+                    "count": 1
+                }
+            ]
+        },
+        {
+            "teamId": 1,
+            "name": "적군",
+            "members": [
+                {
+                    "definitionId": "50004",
+                    "count": 1
+                }
+            ]
+        }
+    ]
+}

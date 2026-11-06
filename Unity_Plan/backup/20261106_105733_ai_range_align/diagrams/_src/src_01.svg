@@ -1,0 +1,105 @@
+<svg width="100%" viewBox="0 0 680 999" role="img">
+<title>ARPG 전투 시뮬레이터 전체 구조</title>
+<desc>엑셀 테이블이 변환기로 JSON이 되고, DataLoader와 DataCatalog를 거쳐 세 가지 실행기가 BattleSimulation.Step을 호출하며, 발생한 이벤트는 네 종류의 구독자로 전달되는 흐름. BUFF.xlsx 는 buffs.json 으로 변환되어 DataCatalog 에서 스킬의 Buff_ID 와 연결되고, Step 안에서 버프가 걸리고 풀린다. ViewEventSink 는 이벤트의 스킬 Damage_Type 으로 AttackLooks 모양(막대·화살·망치·구체)을 골라 AttackFx 로 공격 연출을 만들고 착탄 시 CombatantView 를 점멸시킨다. CombatantView 는 공격 스킬 중 들고 있는 무기도 같은 모양으로 바꾼다</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<g class="node">
+<rect class="box" x="40" y="30" width="170" height="56" rx="8" stroke-width="0.5"/>
+<text class="th" x="125" y="50" text-anchor="middle" dominant-baseline="central">엑셀 테이블</text>
+<text class="ts" x="125" y="68" text-anchor="middle" dominant-baseline="central">*.xlsm · BUFF.xlsx</text>
+</g>
+<line x1="212" y1="58" x2="246" y2="58" class="arr" marker-end="url(#arrow)"/>
+<g class="node">
+<rect class="box" x="250" y="30" width="170" height="56" rx="8" stroke-width="0.5"/>
+<text class="th" x="335" y="50" text-anchor="middle" dominant-baseline="central">export_tables.py</text>
+<text class="ts" x="335" y="68" text-anchor="middle" dominant-baseline="central">검증·변환·AI 사거리·버프</text>
+</g>
+<line x1="422" y1="58" x2="456" y2="58" class="arr" marker-end="url(#arrow)"/>
+<g class="node">
+<rect class="box" x="460" y="30" width="180" height="56" rx="8" stroke-width="0.5"/>
+<text class="th" x="550" y="50" text-anchor="middle" dominant-baseline="central">JSON 데이터</text>
+<text class="ts" x="550" y="68" text-anchor="middle" dominant-baseline="central">ARPG/Data · buffs.json</text>
+</g>
+<path d="M550 88 L550 108 L200 108 L200 126" fill="none" class="arr" marker-end="url(#arrow)"/>
+<g class="node c-teal">
+<rect x="100" y="130" width="200" height="56" rx="8" stroke-width="0.5"/>
+<text class="th" x="200" y="150" text-anchor="middle" dominant-baseline="central">DataLoader.Load()</text>
+<text class="ts" x="200" y="168" text-anchor="middle" dominant-baseline="central">JSON·rules.json 읽기</text>
+</g>
+<line x1="302" y1="158" x2="376" y2="158" class="arr" marker-end="url(#arrow)"/>
+<g class="node c-purple">
+<rect x="380" y="130" width="200" height="56" rx="8" stroke-width="0.5"/>
+<text class="th" x="480" y="150" text-anchor="middle" dominant-baseline="central">DataCatalog.Build()</text>
+<text class="ts" x="480" y="168" text-anchor="middle" dominant-baseline="central">읽기 전용 정의·버프 연결</text>
+</g>
+<line x1="480" y1="188" x2="480" y2="207" stroke="var(--s)" stroke-width="1.5" fill="none"/>
+<line x1="130" y1="207" x2="550" y2="207" stroke="var(--s)" stroke-width="1.5" fill="none"/>
+<line x1="130" y1="207" x2="130" y2="226" class="arr" marker-end="url(#arrow)"/>
+<line x1="340" y1="207" x2="340" y2="226" class="arr" marker-end="url(#arrow)"/>
+<line x1="550" y1="207" x2="550" y2="226" class="arr" marker-end="url(#arrow)"/>
+<g class="node c-teal">
+<rect x="40" y="230" width="180" height="56" rx="8" stroke-width="0.5"/>
+<text class="th" x="130" y="250" text-anchor="middle" dominant-baseline="central">SimulationBootstrap</text>
+<text class="ts" x="130" y="268" text-anchor="middle" dominant-baseline="central">UI·관찰(자동 회차)·배속</text>
+</g>
+<g class="node c-purple">
+<rect x="250" y="230" width="180" height="56" rx="8" stroke-width="0.5"/>
+<text class="th" x="340" y="250" text-anchor="middle" dominant-baseline="central">BatchCoordinator</text>
+<text class="ts" x="340" y="268" text-anchor="middle" dominant-baseline="central">고속 반복 N회 · 개체별 결과 CSV</text>
+</g>
+<g class="node c-teal">
+<rect x="460" y="230" width="180" height="56" rx="8" stroke-width="0.5"/>
+<text class="th" x="550" y="250" text-anchor="middle" dominant-baseline="central">HeadlessBatch</text>
+<text class="ts" x="550" y="268" text-anchor="middle" dominant-baseline="central">-batchmode 실행</text>
+</g>
+<line x1="130" y1="288" x2="130" y2="307" stroke="var(--s)" stroke-width="1.5" fill="none"/>
+<line x1="340" y1="288" x2="340" y2="307" stroke="var(--s)" stroke-width="1.5" fill="none"/>
+<line x1="550" y1="288" x2="550" y2="307" stroke="var(--s)" stroke-width="1.5" fill="none"/>
+<line x1="130" y1="307" x2="550" y2="307" stroke="var(--s)" stroke-width="1.5" fill="none"/>
+<line x1="340" y1="307" x2="340" y2="326" class="arr" marker-end="url(#arrow)"/>
+<g class="node c-purple">
+<rect x="170" y="330" width="340" height="56" rx="8" stroke-width="0.5"/>
+<text class="th" x="340" y="350" text-anchor="middle" dominant-baseline="central">BattleSimulation.Step()</text>
+<text class="ts" x="340" y="368" text-anchor="middle" dominant-baseline="central">1 tick = 1/30초 · 버프 적용/만료</text>
+</g>
+<line x1="340" y1="388" x2="340" y2="418" class="arr" marker-end="url(#arrow)"/>
+<rect x="40" y="420" width="600" height="170" rx="16" fill="none" stroke="var(--b)" stroke-width="0.5" stroke-dasharray="4 4"/>
+<text class="ts" x="60" y="438" dominant-baseline="central">IBattleEventSink.OnEvent(in BattleEvent) 구독자</text>
+<g class="node c-teal">
+<rect x="60" y="454" width="270" height="50" rx="8" stroke-width="0.5"/>
+<text class="th" x="195" y="471" text-anchor="middle" dominant-baseline="central">UnityConsoleSink</text>
+<text class="ts" x="195" y="489" text-anchor="middle" dominant-baseline="central">Console·화면 로그</text>
+</g>
+<g class="node c-teal">
+<rect x="350" y="454" width="270" height="50" rx="8" stroke-width="0.5"/>
+<text class="th" x="485" y="471" text-anchor="middle" dominant-baseline="central">CsvEventSink</text>
+<text class="ts" x="485" y="489" text-anchor="middle" dominant-baseline="central">events.csv 기록</text>
+</g>
+<g class="node c-teal">
+<rect x="60" y="518" width="270" height="50" rx="8" stroke-width="0.5"/>
+<text class="th" x="195" y="535" text-anchor="middle" dominant-baseline="central">ViewEventSink</text>
+<text class="ts" x="195" y="553" text-anchor="middle" dominant-baseline="central">SkillId → 공격 모양·점멸 지시</text>
+</g>
+<g class="node c-purple">
+<rect x="350" y="518" width="270" height="50" rx="8" stroke-width="0.5"/>
+<text class="th" x="485" y="535" text-anchor="middle" dominant-baseline="central">SkillStatsCollector</text>
+<text class="ts" x="485" y="553" text-anchor="middle" dominant-baseline="central">스킬별 집계 → 결과</text>
+</g>
+<line x1="195" y1="570" x2="195" y2="616" class="arr" marker-end="url(#arrow)"/>
+<g class="node c-teal">
+<rect x="60" y="620" width="270" height="50" rx="8" stroke-width="0.5"/>
+<text class="th" x="195" y="637" text-anchor="middle" dominant-baseline="central">AttackFx.Spawn / Advance</text>
+<text class="ts" x="195" y="655" text-anchor="middle" dominant-baseline="central">AttackLooks: 막대·화살·망치·구체</text>
+</g>
+<line x1="332" y1="645" x2="346" y2="645" class="arr" marker-end="url(#arrow)"/>
+<g class="node c-teal">
+<rect x="350" y="620" width="270" height="50" rx="8" stroke-width="0.5"/>
+<text class="th" x="485" y="637" text-anchor="middle" dominant-baseline="central">CombatantView</text>
+<text class="ts" x="485" y="655" text-anchor="middle" dominant-baseline="central">몸 기울임·구르기·무기 모양·점멸</text>
+</g>
+<rect class="box" x="40" y="694" width="12" height="12" rx="2" stroke-width="0.5"/>
+<text class="ts" x="58" y="700" dominant-baseline="central">외부 파일·도구</text>
+<rect class="c-teal" x="200" y="694" width="12" height="12" rx="2" stroke-width="0.5"/>
+<text class="ts" x="218" y="700" dominant-baseline="central">Unity 연결 (ARPG.Runtime)</text>
+<rect class="c-purple" x="430" y="694" width="12" height="12" rx="2" stroke-width="0.5"/>
+<text class="ts" x="448" y="700" dominant-baseline="central">순수 C# 코어 (ARPG.Core)</text>
+<rect class="box" x="40" y="730" width="600" height="48" rx="6"/><text class="th" x="340" y="746" text-anchor="middle">AIHarness CLI / MCP → harness.py → CoreRunner / Unity Verify</text><text class="ts" x="340" y="765" text-anchor="middle">Excel staging · actual Core · JSON execution reports</text><text class="th" x="340" y="820" text-anchor="middle">GameConfig.xlsm → gameconfig.json → GameConfigRules.Apply</text><text class="ts" x="340" y="840" text-anchor="middle">Unity / CoreRunner: defaults → rules.json → GameConfig</text><text class="ts" x="40" y="874">ABILITY 105 / 106 → BUFF effects → DataCatalog.BuildBuffs</text><text class="ts" x="40" y="895">HP_RECOVERY → ApplyBuff: MaxHp 비율 즉시 회복</text><text class="ts" x="40" y="916">ADD_AGGRO → ActiveBuff.SourceId / ApplyOrder → TauntTarget</text><text class="ts" x="40" y="962">r9: SupportTarget → 단일 치유 / Cleanse · FP 비용 증가</text><text class="ts" x="40" y="982">스킬 전용 강인도·빙결 · 단일/범위 타격 · Max_Target</text></svg>

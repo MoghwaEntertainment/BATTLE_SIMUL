@@ -75,6 +75,9 @@ namespace ARPG.Core
         public double triggerChance;
         public double buffDurationMs;
         public double accuracy;
+        public bool supportSingle;
+        public double extraPoise, extraFrost;
+        public int maxTargets;              // [2026-11-06] SKILL Max_Target. 0 = 제한 없음
         public int nameKey;
     }
 
@@ -93,6 +96,7 @@ namespace ARPG.Core
         public bool enabled;
         public string name;            // ~Name
         public BuffEffectDto[] effects;
+        public bool dispellable;
     }
 
     [Serializable]

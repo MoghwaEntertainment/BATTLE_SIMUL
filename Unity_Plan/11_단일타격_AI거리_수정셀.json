@@ -1,0 +1,191 @@
+[
+ {
+  "cell": "AM1",
+  "value": "Max_Target",
+  "previousXml": null,
+  "file": "SKILL.xlsm",
+  "sheet": "SKILL"
+ },
+ {
+  "cell": "AM1835",
+  "value": 1,
+  "previousXml": null,
+  "file": "SKILL.xlsm",
+  "sheet": "SKILL"
+ },
+ {
+  "cell": "AM1836",
+  "value": 1,
+  "previousXml": null,
+  "file": "SKILL.xlsm",
+  "sheet": "SKILL"
+ },
+ {
+  "cell": "AM1837",
+  "value": 1,
+  "previousXml": null,
+  "file": "SKILL.xlsm",
+  "sheet": "SKILL"
+ },
+ {
+  "cell": "AM1838",
+  "value": 1,
+  "previousXml": null,
+  "file": "SKILL.xlsm",
+  "sheet": "SKILL"
+ },
+ {
+  "cell": "AM1839",
+  "value": 1,
+  "previousXml": null,
+  "file": "SKILL.xlsm",
+  "sheet": "SKILL"
+ },
+ {
+  "cell": "AM1840",
+  "value": 1,
+  "previousXml": null,
+  "file": "SKILL.xlsm",
+  "sheet": "SKILL"
+ },
+ {
+  "cell": "AM1841",
+  "value": 1,
+  "previousXml": null,
+  "file": "SKILL.xlsm",
+  "sheet": "SKILL"
+ },
+ {
+  "cell": "AM1842",
+  "value": 1,
+  "previousXml": null,
+  "file": "SKILL.xlsm",
+  "sheet": "SKILL"
+ },
+ {
+  "cell": "AM1843",
+  "value": 1,
+  "previousXml": null,
+  "file": "SKILL.xlsm",
+  "sheet": "SKILL"
+ },
+ {
+  "cell": "AM1844",
+  "value": 1,
+  "previousXml": null,
+  "file": "SKILL.xlsm",
+  "sheet": "SKILL"
+ },
+ {
+  "cell": "AM1845",
+  "value": 1,
+  "previousXml": null,
+  "file": "SKILL.xlsm",
+  "sheet": "SKILL"
+ },
+ {
+  "cell": "AM1846",
+  "value": 1,
+  "previousXml": null,
+  "file": "SKILL.xlsm",
+  "sheet": "SKILL"
+ },
+ {
+  "cell": "AM1847",
+  "value": 1,
+  "previousXml": null,
+  "file": "SKILL.xlsm",
+  "sheet": "SKILL"
+ },
+ {
+  "cell": "AM1848",
+  "value": 1,
+  "previousXml": null,
+  "file": "SKILL.xlsm",
+  "sheet": "SKILL"
+ },
+ {
+  "cell": "AM1849",
+  "value": 1,
+  "previousXml": null,
+  "file": "SKILL.xlsm",
+  "sheet": "SKILL"
+ },
+ {
+  "cell": "AM1850",
+  "value": 1,
+  "previousXml": null,
+  "file": "SKILL.xlsm",
+  "sheet": "SKILL"
+ },
+ {
+  "cell": "AM1851",
+  "value": 1,
+  "previousXml": null,
+  "file": "SKILL.xlsm",
+  "sheet": "SKILL"
+ },
+ {
+  "cell": "AM1852",
+  "value": 1,
+  "previousXml": null,
+  "file": "SKILL.xlsm",
+  "sheet": "SKILL"
+ },
+ {
+  "cell": "G226",
+  "value": "dist_m<=20",
+  "previousXml": "<c r=\"G226\" s=\"2\"/>",
+  "file": "AI.xlsx",
+  "sheet": "AI_BEHAVIOR"
+ },
+ {
+  "cell": "K226",
+  "value": "스태미나 회복 이탈(타겟 20m 이내일 때만)",
+  "previousXml": "<c r=\"K226\" s=\"2\" t=\"inlineStr\"><is><t>스태미나 회복 이탈</t></is></c>",
+  "file": "AI.xlsx",
+  "sheet": "AI_BEHAVIOR"
+ },
+ {
+  "cell": "G237",
+  "value": "dist_m<=9",
+  "previousXml": "<c r=\"G237\" s=\"2\"/>",
+  "file": "AI.xlsx",
+  "sheet": "AI_BEHAVIOR"
+ },
+ {
+  "cell": "K237",
+  "value": "스태미나 회복 이탈(타겟 9m 이내일 때만)",
+  "previousXml": "<c r=\"K237\" s=\"2\" t=\"inlineStr\"><is><t>스태미나 회복 이탈</t></is></c>",
+  "file": "AI.xlsx",
+  "sheet": "AI_BEHAVIOR"
+ },
+ {
+  "cell": "G248",
+  "value": "dist_m<=12",
+  "previousXml": "<c r=\"G248\" s=\"2\"/>",
+  "file": "AI.xlsx",
+  "sheet": "AI_BEHAVIOR"
+ },
+ {
+  "cell": "K248",
+  "value": "스태미나 회복 이탈(타겟 12m 이내일 때만)",
+  "previousXml": "<c r=\"K248\" s=\"2\" t=\"inlineStr\"><is><t>스태미나 회복 이탈</t></is></c>",
+  "file": "AI.xlsx",
+  "sheet": "AI_BEHAVIOR"
+ },
+ {
+  "cell": "G260",
+  "value": "dist_m<=9",
+  "previousXml": "<c r=\"G260\" s=\"2\"/>",
+  "file": "AI.xlsx",
+  "sheet": "AI_BEHAVIOR"
+ },
+ {
+  "cell": "K260",
+  "value": "스태미나 회복 이탈(타겟 9m 이내일 때만)",
+  "previousXml": "<c r=\"K260\" s=\"2\" t=\"inlineStr\"><is><t>스태미나 회복 이탈</t></is></c>",
+  "file": "AI.xlsx",
+  "sheet": "AI_BEHAVIOR"
+ }
+]

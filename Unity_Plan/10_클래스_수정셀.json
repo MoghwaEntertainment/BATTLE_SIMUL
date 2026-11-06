@@ -1,0 +1,1066 @@
+[
+  {
+    "file": "EX_PC_STAT.xlsm",
+    "sheet": "EX_PC",
+    "cell": "H639",
+    "value": "WARRIOR_001",
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"H639\" s=\"1\" t=\"s\"><ns0:v>3079</ns0:v></ns0:c>"
+  },
+  {
+    "file": "EX_PC_STAT.xlsm",
+    "sheet": "EX_PC",
+    "cell": "H644",
+    "value": "MAGE_001",
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"H644\" s=\"1\" t=\"s\"><ns0:v>3086</ns0:v></ns0:c>"
+  },
+  {
+    "file": "EX_PC_STAT.xlsm",
+    "sheet": "EX_PC",
+    "cell": "AF645",
+    "value": 0,
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"AF645\" s=\"1\"><ns0:v>182</ns0:v></ns0:c>"
+  },
+  {
+    "file": "EX_PC_STAT.xlsm",
+    "sheet": "EX_PC",
+    "cell": "AJ645",
+    "value": 182,
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"AJ645\" s=\"1\"><ns0:v>0</ns0:v></ns0:c>"
+  },
+  {
+    "file": "EX_PC_STAT.xlsm",
+    "sheet": "EX_PC",
+    "cell": "AO642",
+    "value": 0,
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"AO642\" s=\"1\"><ns0:v>100</ns0:v></ns0:c>"
+  },
+  {
+    "file": "EX_PC_STAT.xlsm",
+    "sheet": "EX_PC",
+    "cell": "AP643",
+    "value": 0,
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"AP643\" s=\"1\"><ns0:v>100</ns0:v></ns0:c>"
+  },
+  {
+    "file": "EX_PC_STAT.xlsm",
+    "sheet": "EX_PC",
+    "cell": "AQ644",
+    "value": 0,
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"AQ644\" s=\"1\"><ns0:v>60</ns0:v></ns0:c>"
+  },
+  {
+    "file": "EX_PC_STAT.xlsm",
+    "sheet": "EX_PC",
+    "cell": "D639",
+    "value": "샌드백",
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"D639\" s=\"27\" t=\"e\"><ns0:v>#N/A</ns0:v></ns0:c>"
+  },
+  {
+    "file": "EX_PC_STAT.xlsm",
+    "sheet": "EX_PC",
+    "cell": "D640",
+    "value": "워리어",
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"D640\" s=\"27\" t=\"e\"><ns0:v>#N/A</ns0:v></ns0:c>"
+  },
+  {
+    "file": "EX_PC_STAT.xlsm",
+    "sheet": "EX_PC",
+    "cell": "D641",
+    "value": "가디언",
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"D641\" s=\"27\" t=\"e\"><ns0:v>#N/A</ns0:v></ns0:c>"
+  },
+  {
+    "file": "EX_PC_STAT.xlsm",
+    "sheet": "EX_PC",
+    "cell": "D642",
+    "value": "아쳐",
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"D642\" s=\"27\" t=\"e\"><ns0:v>#N/A</ns0:v></ns0:c>"
+  },
+  {
+    "file": "EX_PC_STAT.xlsm",
+    "sheet": "EX_PC",
+    "cell": "D643",
+    "value": "위치",
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"D643\" s=\"27\" t=\"e\"><ns0:v>#N/A</ns0:v></ns0:c>"
+  },
+  {
+    "file": "EX_PC_STAT.xlsm",
+    "sheet": "EX_PC",
+    "cell": "D644",
+    "value": "매지션",
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"D644\" s=\"27\" t=\"e\"><ns0:v>#N/A</ns0:v></ns0:c>"
+  },
+  {
+    "file": "EX_PC_STAT.xlsm",
+    "sheet": "EX_PC",
+    "cell": "D645",
+    "value": "프리스트",
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"D645\" s=\"27\" t=\"e\"><ns0:v>#N/A</ns0:v></ns0:c>"
+  },
+  {
+    "file": "ABILITY.xlsm",
+    "sheet": "Ability",
+    "cell": "A108",
+    "value": 107,
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"A108\" />"
+  },
+  {
+    "file": "ABILITY.xlsm",
+    "sheet": "Ability",
+    "cell": "B108",
+    "value": "All",
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"B108\" />"
+  },
+  {
+    "file": "ABILITY.xlsm",
+    "sheet": "Ability",
+    "cell": "C108",
+    "value": 0,
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"C108\" />"
+  },
+  {
+    "file": "ABILITY.xlsm",
+    "sheet": "Ability",
+    "cell": "D108",
+    "value": "FP 소모 증가",
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"D108\" />"
+  },
+  {
+    "file": "ABILITY.xlsm",
+    "sheet": "Ability",
+    "cell": "E108",
+    "value": "FP_COST_PCT",
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"E108\" />"
+  },
+  {
+    "file": "ABILITY.xlsm",
+    "sheet": "Ability",
+    "cell": "F108",
+    "value": 1,
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"F108\" />"
+  },
+  {
+    "file": "ABILITY.xlsm",
+    "sheet": "Ability",
+    "cell": "G108",
+    "value": 100000,
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"G108\" />"
+  },
+  {
+    "file": "ABILITY.xlsm",
+    "sheet": "Ability",
+    "cell": "A109",
+    "value": 108,
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"A109\" />"
+  },
+  {
+    "file": "ABILITY.xlsm",
+    "sheet": "Ability",
+    "cell": "B109",
+    "value": "All",
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"B109\" />"
+  },
+  {
+    "file": "ABILITY.xlsm",
+    "sheet": "Ability",
+    "cell": "C109",
+    "value": 0,
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"C109\" />"
+  },
+  {
+    "file": "ABILITY.xlsm",
+    "sheet": "Ability",
+    "cell": "D109",
+    "value": "정화",
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"D109\" />"
+  },
+  {
+    "file": "ABILITY.xlsm",
+    "sheet": "Ability",
+    "cell": "E109",
+    "value": "CLEANSE",
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"E109\" />"
+  },
+  {
+    "file": "ABILITY.xlsm",
+    "sheet": "Ability",
+    "cell": "F109",
+    "value": 0,
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"F109\" />"
+  },
+  {
+    "file": "ABILITY.xlsm",
+    "sheet": "Ability",
+    "cell": "G109",
+    "value": 1,
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"G109\" />"
+  },
+  {
+    "file": "BUFF.xlsx",
+    "sheet": "BUFF",
+    "cell": "S1",
+    "value": "Dispellable",
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"S1\" />"
+  },
+  {
+    "file": "BUFF.xlsx",
+    "sheet": "BUFF",
+    "cell": "S5",
+    "value": 1,
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"S5\" />"
+  },
+  {
+    "file": "BUFF.xlsx",
+    "sheet": "BUFF",
+    "cell": "C4",
+    "value": "참기 - 물리 계열 피해 감소율 +20%p",
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"C4\" s=\"7\" t=\"s\"><ns0:v>21</ns0:v></ns0:c>"
+  },
+  {
+    "file": "BUFF.xlsx",
+    "sheet": "BUFF",
+    "cell": "A9",
+    "value": 8,
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"A9\" />"
+  },
+  {
+    "file": "BUFF.xlsx",
+    "sheet": "BUFF",
+    "cell": "B9",
+    "value": "All",
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"B9\" />"
+  },
+  {
+    "file": "BUFF.xlsx",
+    "sheet": "BUFF",
+    "cell": "C9",
+    "value": "외침 - 2초 도발",
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"C9\" />"
+  },
+  {
+    "file": "BUFF.xlsx",
+    "sheet": "BUFF",
+    "cell": "D9",
+    "value": 106,
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"D9\" />"
+  },
+  {
+    "file": "BUFF.xlsx",
+    "sheet": "BUFF",
+    "cell": "F9",
+    "value": 1,
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"F9\" />"
+  },
+  {
+    "file": "BUFF.xlsx",
+    "sheet": "BUFF",
+    "cell": "S9",
+    "value": 1,
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"S9\" />"
+  },
+  {
+    "file": "BUFF.xlsx",
+    "sheet": "BUFF",
+    "cell": "A10",
+    "value": 9,
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"A10\" />"
+  },
+  {
+    "file": "BUFF.xlsx",
+    "sheet": "BUFF",
+    "cell": "B10",
+    "value": "All",
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"B10\" />"
+  },
+  {
+    "file": "BUFF.xlsx",
+    "sheet": "BUFF",
+    "cell": "C10",
+    "value": "마력 교란 - FP 소모 +25%",
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"C10\" />"
+  },
+  {
+    "file": "BUFF.xlsx",
+    "sheet": "BUFF",
+    "cell": "D10",
+    "value": 107,
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"D10\" />"
+  },
+  {
+    "file": "BUFF.xlsx",
+    "sheet": "BUFF",
+    "cell": "F10",
+    "value": 25000,
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"F10\" />"
+  },
+  {
+    "file": "BUFF.xlsx",
+    "sheet": "BUFF",
+    "cell": "S10",
+    "value": 1,
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"S10\" />"
+  },
+  {
+    "file": "BUFF.xlsx",
+    "sheet": "BUFF",
+    "cell": "A11",
+    "value": 10,
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"A11\" />"
+  },
+  {
+    "file": "BUFF.xlsx",
+    "sheet": "BUFF",
+    "cell": "B11",
+    "value": "All",
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"B11\" />"
+  },
+  {
+    "file": "BUFF.xlsx",
+    "sheet": "BUFF",
+    "cell": "C11",
+    "value": "중독 칼날 - 중독 유발 +100",
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"C11\" />"
+  },
+  {
+    "file": "BUFF.xlsx",
+    "sheet": "BUFF",
+    "cell": "D11",
+    "value": 32,
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"D11\" />"
+  },
+  {
+    "file": "BUFF.xlsx",
+    "sheet": "BUFF",
+    "cell": "F11",
+    "value": 100,
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"F11\" />"
+  },
+  {
+    "file": "BUFF.xlsx",
+    "sheet": "BUFF",
+    "cell": "S11",
+    "value": 0,
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"S11\" />"
+  },
+  {
+    "file": "BUFF.xlsx",
+    "sheet": "BUFF",
+    "cell": "A12",
+    "value": 11,
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"A12\" />"
+  },
+  {
+    "file": "BUFF.xlsx",
+    "sheet": "BUFF",
+    "cell": "B12",
+    "value": "All",
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"B12\" />"
+  },
+  {
+    "file": "BUFF.xlsx",
+    "sheet": "BUFF",
+    "cell": "C12",
+    "value": "정화",
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"C12\" />"
+  },
+  {
+    "file": "BUFF.xlsx",
+    "sheet": "BUFF",
+    "cell": "D12",
+    "value": 108,
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"D12\" />"
+  },
+  {
+    "file": "BUFF.xlsx",
+    "sheet": "BUFF",
+    "cell": "F12",
+    "value": 1,
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"F12\" />"
+  },
+  {
+    "file": "BUFF.xlsx",
+    "sheet": "BUFF",
+    "cell": "S12",
+    "value": 0,
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"S12\" />"
+  },
+  {
+    "file": "SKILL.xlsm",
+    "sheet": "SKILL",
+    "cell": "AJ1",
+    "value": "Support_Single",
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"AJ1\" />"
+  },
+  {
+    "file": "SKILL.xlsm",
+    "sheet": "SKILL",
+    "cell": "AK1",
+    "value": "Skill_Poise",
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"AK1\" />"
+  },
+  {
+    "file": "SKILL.xlsm",
+    "sheet": "SKILL",
+    "cell": "AL1",
+    "value": "Skill_Frost_Buildup",
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"AL1\" />"
+  },
+  {
+    "file": "SKILL.xlsm",
+    "sheet": "SKILL",
+    "cell": "AC1837",
+    "value": "ON_CAST",
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"AC1837\" s=\"1\"><ns0:v>0</ns0:v></ns0:c>"
+  },
+  {
+    "file": "SKILL.xlsm",
+    "sheet": "SKILL",
+    "cell": "AD1837",
+    "value": "DURATION",
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"AD1837\" s=\"1\"><ns0:v>0</ns0:v></ns0:c>"
+  },
+  {
+    "file": "SKILL.xlsm",
+    "sheet": "SKILL",
+    "cell": "AE1837",
+    "value": "ENEMY",
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"AE1837\" s=\"1\"><ns0:v>0</ns0:v></ns0:c>"
+  },
+  {
+    "file": "SKILL.xlsm",
+    "sheet": "SKILL",
+    "cell": "AF1837",
+    "value": 8,
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"AF1837\" s=\"1\"><ns0:v>0</ns0:v></ns0:c>"
+  },
+  {
+    "file": "SKILL.xlsm",
+    "sheet": "SKILL",
+    "cell": "AG1837",
+    "value": 100000,
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"AG1837\" s=\"1\"><ns0:v>0</ns0:v></ns0:c>"
+  },
+  {
+    "file": "SKILL.xlsm",
+    "sheet": "SKILL",
+    "cell": "AH1837",
+    "value": 2000,
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"AH1837\" s=\"1\"><ns0:v>0</ns0:v></ns0:c>"
+  },
+  {
+    "file": "SKILL.xlsm",
+    "sheet": "SKILL",
+    "cell": "M1839",
+    "value": 830,
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"M1839\" s=\"1\"><ns0:v>830</ns0:v></ns0:c>"
+  },
+  {
+    "file": "SKILL.xlsm",
+    "sheet": "SKILL",
+    "cell": "N1839",
+    "value": 600,
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"N1839\" s=\"1\"><ns0:f t=\"shared\" ref=\"N1839:N1852\" si=\"61\">M1839</ns0:f><ns0:v>830</ns0:v></ns0:c>"
+  },
+  {
+    "file": "SKILL.xlsm",
+    "sheet": "SKILL",
+    "cell": "O1839",
+    "value": 650,
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"O1839\" s=\"1\"><ns0:f t=\"shared\" ref=\"O1839:O1852\" si=\"62\">M1839</ns0:f><ns0:v>830</ns0:v></ns0:c>"
+  },
+  {
+    "file": "SKILL.xlsm",
+    "sheet": "SKILL",
+    "cell": "AF1843",
+    "value": 7,
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"AF1843\" s=\"1\"><ns0:v>6</ns0:v></ns0:c>"
+  },
+  {
+    "file": "SKILL.xlsm",
+    "sheet": "SKILL",
+    "cell": "AC1842",
+    "value": "ON_HIT",
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"AC1842\" s=\"1\"><ns0:v>0</ns0:v></ns0:c>"
+  },
+  {
+    "file": "SKILL.xlsm",
+    "sheet": "SKILL",
+    "cell": "AD1842",
+    "value": "DURATION",
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"AD1842\" s=\"1\"><ns0:v>0</ns0:v></ns0:c>"
+  },
+  {
+    "file": "SKILL.xlsm",
+    "sheet": "SKILL",
+    "cell": "AE1842",
+    "value": "ENEMY",
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"AE1842\" s=\"1\"><ns0:v>0</ns0:v></ns0:c>"
+  },
+  {
+    "file": "SKILL.xlsm",
+    "sheet": "SKILL",
+    "cell": "AF1842",
+    "value": 9,
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"AF1842\" s=\"1\"><ns0:v>0</ns0:v></ns0:c>"
+  },
+  {
+    "file": "SKILL.xlsm",
+    "sheet": "SKILL",
+    "cell": "AG1842",
+    "value": 100000,
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"AG1842\" s=\"1\"><ns0:v>0</ns0:v></ns0:c>"
+  },
+  {
+    "file": "SKILL.xlsm",
+    "sheet": "SKILL",
+    "cell": "AH1842",
+    "value": 8000,
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"AH1842\" s=\"1\"><ns0:v>0</ns0:v></ns0:c>"
+  },
+  {
+    "file": "SKILL.xlsm",
+    "sheet": "SKILL",
+    "cell": "C1845",
+    "value": "BUFF",
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"C1845\" s=\"1\" t=\"s\"><ns0:v>4288</ns0:v></ns0:c>"
+  },
+  {
+    "file": "SKILL.xlsm",
+    "sheet": "SKILL",
+    "cell": "K1845",
+    "value": "SELF",
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"K1845\" s=\"1\" t=\"s\"><ns0:v>4264</ns0:v></ns0:c>"
+  },
+  {
+    "file": "SKILL.xlsm",
+    "sheet": "SKILL",
+    "cell": "W1845",
+    "value": 0,
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"W1845\" s=\"1\"><ns0:v>12</ns0:v></ns0:c>"
+  },
+  {
+    "file": "SKILL.xlsm",
+    "sheet": "SKILL",
+    "cell": "X1845",
+    "value": 0,
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"X1845\" s=\"1\"><ns0:v>4</ns0:v></ns0:c>"
+  },
+  {
+    "file": "SKILL.xlsm",
+    "sheet": "SKILL",
+    "cell": "AE1845",
+    "value": "SELF",
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"AE1845\" s=\"1\" t=\"s\"><ns0:v>4264</ns0:v></ns0:c>"
+  },
+  {
+    "file": "SKILL.xlsm",
+    "sheet": "SKILL",
+    "cell": "AF1845",
+    "value": 10,
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"AF1845\" s=\"1\"><ns0:v>5</ns0:v></ns0:c>"
+  },
+  {
+    "file": "SKILL.xlsm",
+    "sheet": "SKILL",
+    "cell": "AC1845",
+    "value": "ON_CAST",
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"AC1845\" s=\"1\" t=\"s\"><ns0:v>2561</ns0:v></ns0:c>"
+  },
+  {
+    "file": "SKILL.xlsm",
+    "sheet": "SKILL",
+    "cell": "M1848",
+    "value": 2500,
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"M1848\" s=\"1\"><ns0:v>1492</ns0:v></ns0:c>"
+  },
+  {
+    "file": "SKILL.xlsm",
+    "sheet": "SKILL",
+    "cell": "N1848",
+    "value": 2200,
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"N1848\" s=\"1\"><ns0:f t=\"shared\" si=\"61\" /><ns0:v>1492</ns0:v></ns0:c>"
+  },
+  {
+    "file": "SKILL.xlsm",
+    "sheet": "SKILL",
+    "cell": "O1848",
+    "value": 2500,
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"O1848\" s=\"1\"><ns0:f t=\"shared\" si=\"62\" /><ns0:v>1492</ns0:v></ns0:c>"
+  },
+  {
+    "file": "SKILL.xlsm",
+    "sheet": "SKILL",
+    "cell": "AB1848",
+    "value": 200000,
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"AB1848\" s=\"1\"><ns0:v>100000</ns0:v></ns0:c>"
+  },
+  {
+    "file": "SKILL.xlsm",
+    "sheet": "SKILL",
+    "cell": "AK1848",
+    "value": 150,
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"AK1848\" />"
+  },
+  {
+    "file": "SKILL.xlsm",
+    "sheet": "SKILL",
+    "cell": "AL1849",
+    "value": 180,
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"AL1849\" />"
+  },
+  {
+    "file": "SKILL.xlsm",
+    "sheet": "SKILL",
+    "cell": "AE1851",
+    "value": "ALLY",
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"AE1851\" s=\"1\"><ns0:v>0</ns0:v></ns0:c>"
+  },
+  {
+    "file": "SKILL.xlsm",
+    "sheet": "SKILL",
+    "cell": "AF1851",
+    "value": 5,
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"AF1851\" s=\"1\"><ns0:v>0</ns0:v></ns0:c>"
+  },
+  {
+    "file": "SKILL.xlsm",
+    "sheet": "SKILL",
+    "cell": "AC1851",
+    "value": "ON_END",
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"AC1851\" s=\"1\"><ns0:v>0</ns0:v></ns0:c>"
+  },
+  {
+    "file": "SKILL.xlsm",
+    "sheet": "SKILL",
+    "cell": "AD1851",
+    "value": "DURATION",
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"AD1851\" s=\"1\"><ns0:v>0</ns0:v></ns0:c>"
+  },
+  {
+    "file": "SKILL.xlsm",
+    "sheet": "SKILL",
+    "cell": "AG1851",
+    "value": 100000,
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"AG1851\" s=\"1\"><ns0:v>0</ns0:v></ns0:c>"
+  },
+  {
+    "file": "SKILL.xlsm",
+    "sheet": "SKILL",
+    "cell": "AH1851",
+    "value": 0,
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"AH1851\" s=\"1\"><ns0:v>0</ns0:v></ns0:c>"
+  },
+  {
+    "file": "SKILL.xlsm",
+    "sheet": "SKILL",
+    "cell": "AJ1851",
+    "value": 1,
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"AJ1851\" />"
+  },
+  {
+    "file": "SKILL.xlsm",
+    "sheet": "SKILL",
+    "cell": "AE1852",
+    "value": "ALLY",
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"AE1852\" s=\"1\"><ns0:v>0</ns0:v></ns0:c>"
+  },
+  {
+    "file": "SKILL.xlsm",
+    "sheet": "SKILL",
+    "cell": "AF1852",
+    "value": 11,
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"AF1852\" s=\"1\"><ns0:v>0</ns0:v></ns0:c>"
+  },
+  {
+    "file": "SKILL.xlsm",
+    "sheet": "SKILL",
+    "cell": "AC1852",
+    "value": "ON_END",
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"AC1852\" s=\"1\"><ns0:v>0</ns0:v></ns0:c>"
+  },
+  {
+    "file": "SKILL.xlsm",
+    "sheet": "SKILL",
+    "cell": "AD1852",
+    "value": "DURATION",
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"AD1852\" s=\"1\"><ns0:v>0</ns0:v></ns0:c>"
+  },
+  {
+    "file": "SKILL.xlsm",
+    "sheet": "SKILL",
+    "cell": "AG1852",
+    "value": 100000,
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"AG1852\" s=\"1\"><ns0:v>0</ns0:v></ns0:c>"
+  },
+  {
+    "file": "SKILL.xlsm",
+    "sheet": "SKILL",
+    "cell": "AH1852",
+    "value": 0,
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"AH1852\" s=\"1\"><ns0:v>0</ns0:v></ns0:c>"
+  },
+  {
+    "file": "SKILL.xlsm",
+    "sheet": "SKILL",
+    "cell": "AJ1852",
+    "value": 1,
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"AJ1852\" />"
+  },
+  {
+    "file": "AI.xlsx",
+    "sheet": "AI_BEHAVIOR",
+    "cell": "B207",
+    "value": "All",
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"B207\" s=\"2\" />"
+  },
+  {
+    "file": "AI.xlsx",
+    "sheet": "AI_BEHAVIOR",
+    "cell": "F207",
+    "value": "dist_m<=8",
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"F207\" s=\"2\" t=\"inlineStr\"><ns0:is><ns0:t>dist==melee</ns0:t></ns0:is></ns0:c>"
+  },
+  {
+    "file": "AI.xlsx",
+    "sheet": "AI_BEHAVIOR",
+    "cell": "G207",
+    "value": null,
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"G207\" s=\"2\" t=\"inlineStr\"><ns0:is><ns0:t>target_state==attacking</ns0:t></ns0:is></ns0:c>"
+  },
+  {
+    "file": "AI.xlsx",
+    "sheet": "AI_BEHAVIOR",
+    "cell": "K207",
+    "value": "2초 도발",
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"K207\" s=\"2\" t=\"inlineStr\"><ns0:is><ns0:t>[미구현: 어그로] 적 공격 유도·후열 보호 — 구현 후 활성</ns0:t></ns0:is></ns0:c>"
+  },
+  {
+    "file": "AI.xlsx",
+    "sheet": "AI_BEHAVIOR",
+    "cell": "B217",
+    "value": null,
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"B217\" s=\"2\" t=\"inlineStr\"><ns0:is><ns0:t>All</ns0:t></ns0:is></ns0:c>"
+  },
+  {
+    "file": "AI.xlsx",
+    "sheet": "AI_BEHAVIOR",
+    "cell": "K217",
+    "value": "첨부 사양에 없는 광폭화 자동 사용 제외",
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"K217\" s=\"2\" t=\"inlineStr\"><ns0:is><ns0:t>광폭화 유지(쿨다운 10초 = 지속)</ns0:t></ns0:is></ns0:c>"
+  },
+  {
+    "file": "AI.xlsx",
+    "sheet": "AI_BEHAVIOR",
+    "cell": "B230",
+    "value": "All",
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"B230\" s=\"2\" />"
+  },
+  {
+    "file": "AI.xlsx",
+    "sheet": "AI_BEHAVIOR",
+    "cell": "K230",
+    "value": "FP 소모 증가 8초, 같은 효과 중첩 없음",
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"K230\" s=\"2\" t=\"inlineStr\"><ns0:is><ns0:t>[미구현: FP 소모 증가] FP 쓰는 적에게 — 구현 후 활성</ns0:t></ns0:is></ns0:c>"
+  },
+  {
+    "file": "AI.xlsx",
+    "sheet": "AI_BEHAVIOR",
+    "cell": "F231",
+    "value": "dist_m<=25",
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"F231\" s=\"2\" t=\"inlineStr\"><ns0:is><ns0:t>dist_m&lt;=9</ns0:t></ns0:is></ns0:c>"
+  },
+  {
+    "file": "AI.xlsx",
+    "sheet": "AI_BEHAVIOR",
+    "cell": "K231",
+    "value": "25m 사격",
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"K231\" s=\"2\" t=\"inlineStr\"><ns0:is><ns0:t>사격으로 출혈 누적(9m 안: 사격 감쇄 없음)</ns0:t></ns0:is></ns0:c>"
+  },
+  {
+    "file": "AI.xlsx",
+    "sheet": "AI_BEHAVIOR",
+    "cell": "B240",
+    "value": "All",
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"B240\" s=\"2\" />"
+  },
+  {
+    "file": "AI.xlsx",
+    "sheet": "AI_BEHAVIOR",
+    "cell": "F240",
+    "value": "dist_m<=12",
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"F240\" s=\"2\" t=\"inlineStr\"><ns0:is><ns0:t>dist_m&lt;=12</ns0:t></ns0:is></ns0:c>"
+  },
+  {
+    "file": "AI.xlsx",
+    "sheet": "AI_BEHAVIOR",
+    "cell": "G240",
+    "value": null,
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"G240\" s=\"2\" t=\"inlineStr\"><ns0:is><ns0:t>target_state==attacking</ns0:t></ns0:is></ns0:c>"
+  },
+  {
+    "file": "AI.xlsx",
+    "sheet": "AI_BEHAVIOR",
+    "cell": "K240",
+    "value": "자신 공격에 중독 유발 부여",
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"K240\" s=\"2\" t=\"inlineStr\"><ns0:is><ns0:t>[미구현: 이동 제한] 접근 저지 — 구현 후 활성</ns0:t></ns0:is></ns0:c>"
+  },
+  {
+    "file": "AI.xlsx",
+    "sheet": "AI_BEHAVIOR",
+    "cell": "B263",
+    "value": "All",
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"B263\" s=\"2\" />"
+  },
+  {
+    "file": "AI.xlsx",
+    "sheet": "AI_BEHAVIOR",
+    "cell": "D263",
+    "value": 0,
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"D263\" s=\"2\"><ns0:v>1</ns0:v></ns0:c>"
+  },
+  {
+    "file": "AI.xlsx",
+    "sheet": "AI_BEHAVIOR",
+    "cell": "E263",
+    "value": 5,
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"E263\" s=\"2\"><ns0:v>30</ns0:v></ns0:c>"
+  },
+  {
+    "file": "AI.xlsx",
+    "sheet": "AI_BEHAVIOR",
+    "cell": "F263",
+    "value": null,
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"F263\" s=\"2\" t=\"inlineStr\"><ns0:is><ns0:t>hp_pct&lt;=60</ns0:t></ns0:is></ns0:c>"
+  },
+  {
+    "file": "AI.xlsx",
+    "sheet": "AI_BEHAVIOR",
+    "cell": "G263",
+    "value": null,
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"G263\" s=\"2\" />"
+  },
+  {
+    "file": "AI.xlsx",
+    "sheet": "AI_BEHAVIOR",
+    "cell": "K263",
+    "value": "HP 부족 아군 1명 완료 시 치유",
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"K263\" s=\"2\" t=\"inlineStr\"><ns0:is><ns0:t>[미구현: 회복] HP 부족 시 치유 — 구현 후 활성</ns0:t></ns0:is></ns0:c>"
+  },
+  {
+    "file": "AI.xlsx",
+    "sheet": "AI_BEHAVIOR",
+    "cell": "B264",
+    "value": "All",
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"B264\" s=\"2\" />"
+  },
+  {
+    "file": "AI.xlsx",
+    "sheet": "AI_BEHAVIOR",
+    "cell": "D264",
+    "value": 0,
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"D264\" s=\"2\"><ns0:v>1</ns0:v></ns0:c>"
+  },
+  {
+    "file": "AI.xlsx",
+    "sheet": "AI_BEHAVIOR",
+    "cell": "E264",
+    "value": 4,
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"E264\" s=\"2\"><ns0:v>40</ns0:v></ns0:c>"
+  },
+  {
+    "file": "AI.xlsx",
+    "sheet": "AI_BEHAVIOR",
+    "cell": "F264",
+    "value": null,
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"F264\" s=\"2\" t=\"inlineStr\"><ns0:is><ns0:t>dist_m&lt;=12</ns0:t></ns0:is></ns0:c>"
+  },
+  {
+    "file": "AI.xlsx",
+    "sheet": "AI_BEHAVIOR",
+    "cell": "G264",
+    "value": null,
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"G264\" s=\"2\" />"
+  },
+  {
+    "file": "AI.xlsx",
+    "sheet": "AI_BEHAVIOR",
+    "cell": "K264",
+    "value": "정화 가능한 아군 1명",
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"K264\" s=\"2\" t=\"inlineStr\"><ns0:is><ns0:t>[미구현: 정화·상태이상 조건 변수] — 구현 후 활성</ns0:t></ns0:is></ns0:c>"
+  },
+  {
+    "file": "AI.xlsx",
+    "sheet": "AI_BEHAVIOR",
+    "cell": "A268",
+    "value": 267,
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"A268\" />"
+  },
+  {
+    "file": "AI.xlsx",
+    "sheet": "AI_BEHAVIOR",
+    "cell": "B268",
+    "value": "All",
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"B268\" />"
+  },
+  {
+    "file": "AI.xlsx",
+    "sheet": "AI_BEHAVIOR",
+    "cell": "C268",
+    "value": "AI_50001",
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"C268\" />"
+  },
+  {
+    "file": "AI.xlsx",
+    "sheet": "AI_BEHAVIOR",
+    "cell": "D268",
+    "value": 0,
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"D268\" />"
+  },
+  {
+    "file": "AI.xlsx",
+    "sheet": "AI_BEHAVIOR",
+    "cell": "E268",
+    "value": 1,
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"E268\" />"
+  },
+  {
+    "file": "AI.xlsx",
+    "sheet": "AI_BEHAVIOR",
+    "cell": "F268",
+    "value": null,
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"F268\" />"
+  },
+  {
+    "file": "AI.xlsx",
+    "sheet": "AI_BEHAVIOR",
+    "cell": "G268",
+    "value": null,
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"G268\" />"
+  },
+  {
+    "file": "AI.xlsx",
+    "sheet": "AI_BEHAVIOR",
+    "cell": "H268",
+    "value": 100,
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"H268\" />"
+  },
+  {
+    "file": "AI.xlsx",
+    "sheet": "AI_BEHAVIOR",
+    "cell": "I268",
+    "value": "IDLE",
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"I268\" />"
+  },
+  {
+    "file": "AI.xlsx",
+    "sheet": "AI_BEHAVIOR",
+    "cell": "J268",
+    "value": "NONE",
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"J268\" />"
+  },
+  {
+    "file": "AI.xlsx",
+    "sheet": "AI_BEHAVIOR",
+    "cell": "K268",
+    "value": "샌드백 대기 전용",
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"K268\" />"
+  },
+  {
+    "file": "AI.xlsx",
+    "sheet": "ACTION_DEF",
+    "cell": "F23",
+    "value": "가디언 외침 2초 도발",
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"F23\" s=\"2\" t=\"inlineStr\"><ns0:is><ns0:t>가디언 외침(어그로 미구현)</ns0:t></ns0:is></ns0:c>"
+  },
+  {
+    "file": "AI.xlsx",
+    "sheet": "ACTION_DEF",
+    "cell": "F28",
+    "value": "위치 중독 칼날",
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"F28\" s=\"2\" t=\"inlineStr\"><ns0:is><ns0:t>위치 속박의 저주(이동 제한 미구현)</ns0:t></ns0:is></ns0:c>"
+  },
+  {
+    "file": "AI.xlsx",
+    "sheet": "ACTION_DEF",
+    "cell": "F32",
+    "value": "프리스트 단일 치유",
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"F32\" s=\"2\" t=\"inlineStr\"><ns0:is><ns0:t>프리스트 치유(회복 미구현)</ns0:t></ns0:is></ns0:c>"
+  },
+  {
+    "file": "AI.xlsx",
+    "sheet": "ACTION_DEF",
+    "cell": "F33",
+    "value": "프리스트 단일 정화",
+    "previousXml": "<ns0:c xmlns:ns0=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" r=\"F33\" s=\"2\" t=\"inlineStr\"><ns0:is><ns0:t>프리스트 정화(해제 미구현)</ns0:t></ns0:is></ns0:c>"
+  },
+  {
+    "file": "SKILL.xlsm",
+    "sheet": "SKILL",
+    "cell": "J1841",
+    "value": 10,
+    "previousXml": "<c xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\" xmlns:xdr=\"http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing\" xmlns:x14=\"http://schemas.microsoft.com/office/spreadsheetml/2009/9/main\" xmlns:mc=\"http://schemas.openxmlformats.org/markup-compatibility/2006\" xmlns:x14ac=\"http://schemas.microsoft.com/office/spreadsheetml/2009/9/ac\" xmlns:xr=\"http://schemas.microsoft.com/office/spreadsheetml/2014/revision\" xmlns:xr2=\"http://schemas.microsoft.com/office/spreadsheetml/2015/revision2\" xmlns:xr3=\"http://schemas.microsoft.com/office/spreadsheetml/2016/revision3\" r=\"J1841\" s=\"1\"><v>30</v></c>"
+  },
+  {
+    "file": "SKILL.xlsm",
+    "sheet": "SKILL",
+    "cell": "AB1844",
+    "value": 50000,
+    "previousXml": "<c xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\" xmlns:xdr=\"http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing\" xmlns:x14=\"http://schemas.microsoft.com/office/spreadsheetml/2009/9/main\" xmlns:mc=\"http://schemas.openxmlformats.org/markup-compatibility/2006\" xmlns:x14ac=\"http://schemas.microsoft.com/office/spreadsheetml/2009/9/ac\" xmlns:xr=\"http://schemas.microsoft.com/office/spreadsheetml/2014/revision\" xmlns:xr2=\"http://schemas.microsoft.com/office/spreadsheetml/2015/revision2\" xmlns:xr3=\"http://schemas.microsoft.com/office/spreadsheetml/2016/revision3\" r=\"AB1844\" s=\"1\"><v>100000</v></c>"
+  },
+  {
+    "file": "SKILL.xlsm",
+    "sheet": "SKILL",
+    "cell": "AB1847",
+    "value": 50000,
+    "previousXml": "<c xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\" xmlns:xdr=\"http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing\" xmlns:x14=\"http://schemas.microsoft.com/office/spreadsheetml/2009/9/main\" xmlns:mc=\"http://schemas.openxmlformats.org/markup-compatibility/2006\" xmlns:x14ac=\"http://schemas.microsoft.com/office/spreadsheetml/2009/9/ac\" xmlns:xr=\"http://schemas.microsoft.com/office/spreadsheetml/2014/revision\" xmlns:xr2=\"http://schemas.microsoft.com/office/spreadsheetml/2015/revision2\" xmlns:xr3=\"http://schemas.microsoft.com/office/spreadsheetml/2016/revision3\" r=\"AB1847\" s=\"1\"><v>100000</v></c>"
+  },
+  {
+    "file": "SKILL.xlsm",
+    "sheet": "SKILL",
+    "cell": "AB1850",
+    "value": 50000,
+    "previousXml": "<c xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\" xmlns:xdr=\"http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing\" xmlns:x14=\"http://schemas.microsoft.com/office/spreadsheetml/2009/9/main\" xmlns:mc=\"http://schemas.openxmlformats.org/markup-compatibility/2006\" xmlns:x14ac=\"http://schemas.microsoft.com/office/spreadsheetml/2009/9/ac\" xmlns:xr=\"http://schemas.microsoft.com/office/spreadsheetml/2014/revision\" xmlns:xr2=\"http://schemas.microsoft.com/office/spreadsheetml/2015/revision2\" xmlns:xr3=\"http://schemas.microsoft.com/office/spreadsheetml/2016/revision3\" r=\"AB1850\" s=\"1\"><v>100000</v></c>"
+  },
+  {
+    "file": "SKILL.xlsm",
+    "sheet": "SKILL",
+    "cell": "X1841",
+    "value": 0,
+    "previousXml": "<c xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\" xmlns:xdr=\"http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing\" xmlns:x14=\"http://schemas.microsoft.com/office/spreadsheetml/2009/9/main\" xmlns:mc=\"http://schemas.openxmlformats.org/markup-compatibility/2006\" xmlns:x14ac=\"http://schemas.microsoft.com/office/spreadsheetml/2009/9/ac\" xmlns:xr=\"http://schemas.microsoft.com/office/spreadsheetml/2014/revision\" xmlns:xr2=\"http://schemas.microsoft.com/office/spreadsheetml/2015/revision2\" xmlns:xr3=\"http://schemas.microsoft.com/office/spreadsheetml/2016/revision3\" r=\"X1841\" s=\"1\"><v>0.5</v></c>"
+  },
+  {
+    "file": "SKILL.xlsm",
+    "sheet": "SKILL",
+    "cell": "X1842",
+    "value": 0,
+    "previousXml": "<c xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\" xmlns:xdr=\"http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing\" xmlns:x14=\"http://schemas.microsoft.com/office/spreadsheetml/2009/9/main\" xmlns:mc=\"http://schemas.openxmlformats.org/markup-compatibility/2006\" xmlns:x14ac=\"http://schemas.microsoft.com/office/spreadsheetml/2009/9/ac\" xmlns:xr=\"http://schemas.microsoft.com/office/spreadsheetml/2014/revision\" xmlns:xr2=\"http://schemas.microsoft.com/office/spreadsheetml/2015/revision2\" xmlns:xr3=\"http://schemas.microsoft.com/office/spreadsheetml/2016/revision3\" r=\"X1842\" s=\"1\"><v>0.5</v></c>"
+  },
+  {
+    "file": "SKILL.xlsm",
+    "sheet": "SKILL",
+    "cell": "X1844",
+    "value": 0,
+    "previousXml": "<c xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\" xmlns:xdr=\"http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing\" xmlns:x14=\"http://schemas.microsoft.com/office/spreadsheetml/2009/9/main\" xmlns:mc=\"http://schemas.openxmlformats.org/markup-compatibility/2006\" xmlns:x14ac=\"http://schemas.microsoft.com/office/spreadsheetml/2009/9/ac\" xmlns:xr=\"http://schemas.microsoft.com/office/spreadsheetml/2014/revision\" xmlns:xr2=\"http://schemas.microsoft.com/office/spreadsheetml/2015/revision2\" xmlns:xr3=\"http://schemas.microsoft.com/office/spreadsheetml/2016/revision3\" r=\"X1844\" s=\"1\"><v>0.5</v></c>"
+  },
+  {
+    "file": "SKILL.xlsm",
+    "sheet": "SKILL",
+    "cell": "X1847",
+    "value": 0,
+    "previousXml": "<c xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\" xmlns:xdr=\"http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing\" xmlns:x14=\"http://schemas.microsoft.com/office/spreadsheetml/2009/9/main\" xmlns:mc=\"http://schemas.openxmlformats.org/markup-compatibility/2006\" xmlns:x14ac=\"http://schemas.microsoft.com/office/spreadsheetml/2009/9/ac\" xmlns:xr=\"http://schemas.microsoft.com/office/spreadsheetml/2014/revision\" xmlns:xr2=\"http://schemas.microsoft.com/office/spreadsheetml/2015/revision2\" xmlns:xr3=\"http://schemas.microsoft.com/office/spreadsheetml/2016/revision3\" r=\"X1847\" s=\"1\"><v>0.5</v></c>"
+  },
+  {
+    "file": "SKILL.xlsm",
+    "sheet": "SKILL",
+    "cell": "X1849",
+    "value": 0,
+    "previousXml": "<c xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\" xmlns:xdr=\"http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing\" xmlns:x14=\"http://schemas.microsoft.com/office/spreadsheetml/2009/9/main\" xmlns:mc=\"http://schemas.openxmlformats.org/markup-compatibility/2006\" xmlns:x14ac=\"http://schemas.microsoft.com/office/spreadsheetml/2009/9/ac\" xmlns:xr=\"http://schemas.microsoft.com/office/spreadsheetml/2014/revision\" xmlns:xr2=\"http://schemas.microsoft.com/office/spreadsheetml/2015/revision2\" xmlns:xr3=\"http://schemas.microsoft.com/office/spreadsheetml/2016/revision3\" r=\"X1849\" s=\"1\"><v>0.5</v></c>"
+  },
+  {
+    "file": "SKILL.xlsm",
+    "sheet": "SKILL",
+    "cell": "X1850",
+    "value": 0,
+    "previousXml": "<c xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\" xmlns:xdr=\"http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing\" xmlns:x14=\"http://schemas.microsoft.com/office/spreadsheetml/2009/9/main\" xmlns:mc=\"http://schemas.openxmlformats.org/markup-compatibility/2006\" xmlns:x14ac=\"http://schemas.microsoft.com/office/spreadsheetml/2009/9/ac\" xmlns:xr=\"http://schemas.microsoft.com/office/spreadsheetml/2014/revision\" xmlns:xr2=\"http://schemas.microsoft.com/office/spreadsheetml/2015/revision2\" xmlns:xr3=\"http://schemas.microsoft.com/office/spreadsheetml/2016/revision3\" r=\"X1850\" s=\"1\"><v>0.5</v></c>"
+  }
+]
