@@ -1,8 +1,8 @@
 # 데이터 변환 검증 보고서
 
-- 생성: 2026-11-06T01:58:01
+- 생성: 2026-11-06T16:22:16
 - 변환 도구: 1.6.0
-- dataHash: c5e6916b72cd9220
+- dataHash: 8b104d48d08c7e27
 - gameConfigEntries: 11
 - characters: 1411
 - charactersEnabled: 1411
